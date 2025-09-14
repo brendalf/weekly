@@ -1,10 +1,12 @@
+import { Card, CardBody, CardHeader, Chip, Divider } from '@heroui/react';
+import { Calendar, Clock, Target, TrendingUp } from 'lucide-react';
 import { useEffect } from 'react';
-import { Card, CardBody, CardHeader, Divider, Chip } from '@heroui/react';
-import { Calendar, Target, TrendingUp, Clock } from 'lucide-react';
+
 import { useWeeklyStore } from '@/stores/useWeeklyStore';
 import { mockCurrentWeek, mockHabits } from '@/utils/mockData';
-import { TaskList } from './TaskList';
+
 import { HabitTracker } from './HabitTracker';
+import { TaskList } from './TaskList';
 import { WeekHeader } from './WeekHeader';
 
 export function WeeklyDashboard() {
@@ -29,7 +31,7 @@ export function WeeklyDashboard() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <WeekHeader week={currentWeek} />
-      
+
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card>
@@ -40,7 +42,8 @@ export function WeeklyDashboard() {
             <div>
               <p className="text-sm text-default-500">Tasks</p>
               <p className="text-2xl font-bold">
-                {currentWeek.stats.completedTasks}/{currentWeek.stats.totalTasks}
+                {currentWeek.stats.completedTasks}/
+                {currentWeek.stats.totalTasks}
               </p>
             </div>
           </CardBody>
@@ -53,7 +56,9 @@ export function WeeklyDashboard() {
             </div>
             <div>
               <p className="text-sm text-default-500">Completion Rate</p>
-              <p className="text-2xl font-bold">{currentWeek.stats.completionRate}%</p>
+              <p className="text-2xl font-bold">
+                {currentWeek.stats.completionRate}%
+              </p>
             </div>
           </CardBody>
         </Card>
@@ -79,7 +84,9 @@ export function WeeklyDashboard() {
             </div>
             <div>
               <p className="text-sm text-default-500">Streak</p>
-              <p className="text-2xl font-bold">{currentWeek.stats.streakCount}</p>
+              <p className="text-2xl font-bold">
+                {currentWeek.stats.streakCount}
+              </p>
             </div>
           </CardBody>
         </Card>

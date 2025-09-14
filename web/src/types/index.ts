@@ -80,33 +80,33 @@ export enum TaskStatus {
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
   MOVED_TO_NEXT_WEEK = 'moved_to_next_week',
-  MOVED_TO_BACKLOG = 'moved_to_backlog'
+  MOVED_TO_BACKLOG = 'moved_to_backlog',
 }
 
 export enum TaskPriority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  URGENT = 'urgent'
+  URGENT = 'urgent',
 }
 
 export enum ProjectStatus {
   ACTIVE = 'active',
   COMPLETED = 'completed',
   ON_HOLD = 'on_hold',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 export enum WeekStatus {
   PLANNING = 'planning',
   ACTIVE = 'active',
-  CLOSED = 'closed'
+  CLOSED = 'closed',
 }
 
 export enum HabitFrequency {
   DAILY = 'daily',
   WEEKLY = 'weekly',
-  MONTHLY = 'monthly'
+  MONTHLY = 'monthly',
 }
 
 export enum RoutineFrequency {
@@ -114,5 +114,5 @@ export enum RoutineFrequency {
   WEEKLY = 'weekly',
   BIWEEKLY = 'biweekly',
   MONTHLY = 'monthly',
-  ANNUALLY = 'annually'
+  ANNUALLY = 'annually',
 }

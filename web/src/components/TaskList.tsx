@@ -1,7 +1,16 @@
-import { Checkbox, Chip, Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/react';
-import { MoreVertical, Flame } from 'lucide-react';
-import { Task, TaskStatus } from '@/types';
+import {
+  Button,
+  Checkbox,
+  Chip,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from '@heroui/react';
+import { Flame, MoreVertical } from 'lucide-react';
+
 import { useWeeklyStore } from '@/stores/useWeeklyStore';
+import { Task, TaskStatus } from '@/types';
 
 interface TaskListProps {
   tasks: Task[];
@@ -25,21 +34,24 @@ export function TaskList({ tasks }: TaskListProps) {
   };
 
   const handleTaskToggle = (task: Task) => {
-    const newStatus = task.status === TaskStatus.COMPLETED 
-      ? TaskStatus.PENDING 
-      : TaskStatus.COMPLETED;
-    
-    updateTask(task.id, { 
+    const newStatus =
+      task.status === TaskStatus.COMPLETED
+        ? TaskStatus.PENDING
+        : TaskStatus.COMPLETED;
+
+    updateTask(task.id, {
       status: newStatus,
-      completedAt: newStatus === TaskStatus.COMPLETED ? new Date() : undefined
+      completedAt: newStatus === TaskStatus.COMPLETED ? new Date() : undefined,
     });
   };
 
   const sortedTasks = [...tasks].sort((a, b) => {
     // Sort by status (incomplete first), then by creation date
-    if (a.status === TaskStatus.COMPLETED && b.status !== TaskStatus.COMPLETED) return 1;
-    if (a.status !== TaskStatus.COMPLETED && b.status === TaskStatus.COMPLETED) return -1;
-    
+    if (a.status === TaskStatus.COMPLETED && b.status !== TaskStatus.COMPLETED)
+      return 1;
+    if (a.status !== TaskStatus.COMPLETED && b.status === TaskStatus.COMPLETED)
+      return -1;
+
     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
   });
 
@@ -54,12 +66,12 @@ export function TaskList({ tasks }: TaskListProps) {
 
   return (
     <div className="space-y-2">
-      {sortedTasks.map((task) => (
+      {sortedTasks.map(task => (
         <div
           key={task.id}
           className={`p-3 border rounded-lg transition-all ${
-            task.status === TaskStatus.COMPLETED 
-              ? 'bg-default-50 border-default-200' 
+            task.status === TaskStatus.COMPLETED
+              ? 'bg-default-50 border-default-200'
               : 'bg-background border-default-300 hover:border-default-400'
           }`}
         >
@@ -68,18 +80,20 @@ export function TaskList({ tasks }: TaskListProps) {
               isSelected={task.status === TaskStatus.COMPLETED}
               onValueChange={() => handleTaskToggle(task)}
             />
-            
+
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 flex-1">
-                  <h4 className={`font-medium ${
-                    task.status === TaskStatus.COMPLETED 
-                      ? 'line-through text-default-500' 
-                      : 'text-foreground'
-                  }`}>
+                  <h4
+                    className={`font-medium ${
+                      task.status === TaskStatus.COMPLETED
+                        ? 'line-through text-default-500'
+                        : 'text-foreground'
+                    }`}
+                  >
                     {task.title}
                   </h4>
-                  
+
                   {/* Week label for old tasks */}
                   {task.createdWeek && task.weeksOpen && task.weeksOpen > 0 && (
                     <Chip
@@ -91,28 +105,26 @@ export function TaskList({ tasks }: TaskListProps) {
                       Week {task.createdWeek}
                     </Chip>
                   )}
-                  
+
                   {/* Streak fire icon for completed tasks */}
-                  {task.weekStreak && task.weekStreak > 1 && task.status === TaskStatus.COMPLETED && (
-                    <Chip
-                      size="sm"
-                      color="warning"
-                      variant="flat"
-                      startContent={<Flame className="w-3 h-3" />}
-                      className="text-xs"
-                    >
-                      {task.weekStreak}
-                    </Chip>
-                  )}
+                  {task.weekStreak &&
+                    task.weekStreak > 1 &&
+                    task.status === TaskStatus.COMPLETED && (
+                      <Chip
+                        size="sm"
+                        color="warning"
+                        variant="flat"
+                        startContent={<Flame className="w-3 h-3" />}
+                        className="text-xs"
+                      >
+                        {task.weekStreak}
+                      </Chip>
+                    )}
                 </div>
-                
+
                 <Dropdown>
                   <DropdownTrigger>
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                    >
+                    <Button isIconOnly size="sm" variant="light">
                       <MoreVertical className="w-4 h-4" />
                     </Button>
                   </DropdownTrigger>
@@ -120,7 +132,11 @@ export function TaskList({ tasks }: TaskListProps) {
                     <DropdownItem key="edit">Edit</DropdownItem>
                     <DropdownItem key="duplicate">Duplicate</DropdownItem>
                     <DropdownItem key="move">Move to Next Week</DropdownItem>
-                    <DropdownItem key="delete" className="text-danger" color="danger">
+                    <DropdownItem
+                      key="delete"
+                      className="text-danger"
+                      color="danger"
+                    >
                       Delete
                     </DropdownItem>
                   </DropdownMenu>

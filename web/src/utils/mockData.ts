@@ -1,5 +1,15 @@
-import { Task, Week, Project, Habit, TaskStatus, WeekStatus, ProjectStatus, HabitFrequency } from '@/types';
-import { startOfWeek, endOfWeek, subDays, getWeek } from 'date-fns';
+import { endOfWeek, getWeek, startOfWeek, subDays } from 'date-fns';
+
+import {
+  Habit,
+  HabitFrequency,
+  Project,
+  ProjectStatus,
+  Task,
+  TaskStatus,
+  Week,
+  WeekStatus,
+} from '@/types';
 
 const now = new Date();
 const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday
@@ -84,7 +94,8 @@ export const mockProjects: Project[] = [
   {
     id: 'project-1',
     name: 'Weekly Task Manager',
-    description: 'Build a comprehensive task management app with WASM integration',
+    description:
+      'Build a comprehensive task management app with WASM integration',
     color: '#3b82f6',
     status: ProjectStatus.ACTIVE,
     tasks: [],
@@ -163,11 +174,18 @@ export const mockCurrentWeek: Week = {
   projects: mockProjects,
   stats: {
     totalTasks: mockTasks.length,
-    completedTasks: mockTasks.filter(t => t.status === TaskStatus.COMPLETED).length,
+    completedTasks: mockTasks.filter(t => t.status === TaskStatus.COMPLETED)
+      .length,
     totalProjects: mockProjects.length,
-    completedProjects: mockProjects.filter(p => p.status === ProjectStatus.COMPLETED).length,
+    completedProjects: mockProjects.filter(
+      p => p.status === ProjectStatus.COMPLETED
+    ).length,
     totalTimeSpent: 0, // Simplified - no time tracking
-    completionRate: Math.round((mockTasks.filter(t => t.status === TaskStatus.COMPLETED).length / mockTasks.length) * 100),
+    completionRate: Math.round(
+      (mockTasks.filter(t => t.status === TaskStatus.COMPLETED).length /
+        mockTasks.length) *
+        100
+    ),
     streakCount: 3,
   },
   createdAt: weekStart,

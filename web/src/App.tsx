@@ -1,5 +1,6 @@
-import { HeroUIProvider } from '@heroui/react'
-import { WeeklyDashboard } from '@/components/WeeklyDashboard'
+import { HeroUIProvider } from '@heroui/react';
+
+import { WeeklyDashboard } from '@/components/WeeklyDashboard';
 
 function App() {
   return (
@@ -8,7 +9,7 @@ function App() {
         <WeeklyDashboard />
       </div>
     </HeroUIProvider>
-  )
+  );
 }
 
-export default App
+export default App;

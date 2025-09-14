@@ -1,5 +1,6 @@
-import { Button, Progress, Chip } from '@heroui/react';
+import { Button, Chip, Progress } from '@heroui/react';
 import { CheckCircle, Circle, Flame } from 'lucide-react';
+
 import { Habit, HabitFrequency } from '@/types';
 
 interface HabitTrackerProps {
@@ -24,9 +25,10 @@ export function HabitTracker({ habits }: HabitTrackerProps) {
     // Mock calculation - in real app this would check today's completions
     const today = new Date();
     const todayCompletions = habit.completions.filter(
-      completion => completion.completedAt.toDateString() === today.toDateString()
+      completion =>
+        completion.completedAt.toDateString() === today.toDateString()
     ).length;
-    
+
     return Math.min((todayCompletions / habit.targetCount) * 100, 100);
   };
 
@@ -44,7 +46,7 @@ export function HabitTracker({ habits }: HabitTrackerProps) {
 
   return (
     <div className="space-y-4">
-      {habits.map((habit) => (
+      {habits.map(habit => (
         <div key={habit.id} className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -60,7 +62,7 @@ export function HabitTracker({ habits }: HabitTrackerProps) {
                   <Circle className="w-4 h-4" />
                 )}
               </Button>
-              
+
               <div className="flex-1">
                 <h4 className="font-medium text-sm">{habit.name}</h4>
                 {habit.description && (
@@ -70,13 +72,13 @@ export function HabitTracker({ habits }: HabitTrackerProps) {
                 )}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
                 <Flame className="w-3 h-3 text-orange-500" />
                 <span className="text-xs font-medium">{habit.streak}</span>
               </div>
-              
+
               <Chip
                 size="sm"
                 color={getFrequencyColor(habit.frequency)}
@@ -86,7 +88,7 @@ export function HabitTracker({ habits }: HabitTrackerProps) {
               </Chip>
             </div>
           </div>
-          
+
           <div className="ml-11">
             <div className="flex justify-between text-xs text-default-500 mb-1">
               <span>Today's Progress</span>
@@ -99,7 +101,7 @@ export function HabitTracker({ habits }: HabitTrackerProps) {
               className="max-w-full"
             />
           </div>
-          
+
           <div className="ml-11 flex justify-between text-xs text-default-500">
             <span>Current streak: {habit.streak} days</span>
             <span>Best: {habit.longestStreak} days</span>
