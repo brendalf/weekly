@@ -1,0 +1,100 @@
+Goals:
+- [Week 5] Exercise:
+	- [ ] [Week 17] Chest
+	- [ ] [Week 17] Biceps
+	- [ ] [Week 6] Triceps
+	- [ ] [Week 22] Back
+	- [ ] [Week 7] Shoulders
+	- [ ] [Week 5] Butt
+	- [ ] [Week 7] Abs
+	- [ ] [Week 17] Legs
+	- [ ] [Week 7] Calves
+	- [ ] [Week 22] Run
+	- [x] [Week 18] Measure body fat
+- Get Dutch PR [1]
+	- [x] Finish 30 sections of Duolingo (3) [1]
+- Become interesting person [1]
+	- [ ] [Week 11] Write article on markdown
+	- [ ] [Week 11] Portrait Sketching (Section 2)
+	- [ ] Read coffee book (22) [1]
+- Be a great father [1]
+	- [ ] [Week 15] Send email about first pre-school
+	- [ ] [Week 15] Send email about new house
+	- [x] Read the gentle eating book (7% => 9%) [1]
+- [Week 17] Have fun:
+	- [ ] [Week 17] Do 5 side tasks in Rise of Fenyx
+- Furnish the house [2]
+	- [ ] [Week 22] Amanda's office
+		- [ ] [Week 22] Move setup to separate room
+	- [ ] Rhay and Vitor visit [1]
+		- [x] [Week 22] Organize clothes
+		- [x] [Week 22] Organize toys
+		- [x] Define chairs
+		- [x] Assemble chairs
+		- [x] Store outsider chairs
+		- [ ] Buy sun protector for outside
+		- [x] Pickup couch
+		- [x] Assemble couch
+		- [x] Clean bathroom
+		- [x] Assemble dining table
+	- [ ] Curtain in the main entrance [1]
+		- [ ] [Week 22] Hang curtain
+- [Week 16] Agnes bedroom
+	- [ ] [Week 17] Move Agnes bed upstairs
+	- [ ] [Week 16] Fix Agnes drawers
+- Smart house [2]
+	- [ ] Request solax support to unbound device
+	- [ ] Automate extractor with humidity [1]
+		- [ ] [Week 22] Define which smart switch to buy
+- Deliver personal objectives [3]
+	- [ ] Multi-vertical storefront [3]
+		- [x] Flights autocomplete [1]
+			 - [x] Update LX implementation for dates
+			 - [x] Investigate nearbyAirport
+			 - [x] Implement nearbyAirport gql call
+	- [ ] Run experiments [3]
+		- [x] Unblock MR
+		- [x] Merge TCS
+		- [x] Merge Index MFE
+		- [x] Rollout services
+		- [x] Stop and recreate experiments
+		- [x] Adjust experiments stages
+	- [ ] [Week 22] Documentation
+		- [ ] [Week 18] Create registry columns and prepare registry for first review.
+		- [ ] [Week 18] Check if we can combine the approval with the revision process.
+		- [ ] [Week 18] Do a documentation review.
+		- [ ] [Week 22] Create doc templates
+			- [ ] [Week 17] RFC
+			- [ ] [Week 17] ADR
+	- [ ] Multi-vertical data [3]
+		- [ ] [Week 18] Discuss with Wingston about SPIKE
+		- [ ] [Week 18] Discuss with someone from Attractions about SPIKE
+		- [ ] [Week 17] Fill request for offerKeyToHighlight
+		- [ ] [Week 18] Re-read wishlist RFC
+	- [ ] [Week 18] SmartAV follow-ups
+		- [ ] [Week 17] Read swagger and documentation
+- [ ] Deliver PDP goals [4]
+	- [ ] Master Java [1]
+		- [x] Java Backend Developer (Spring Boot) (2 => 3%)
+	- [ ] Books [6]
+		- [x] Read Computer Architectures (159 => 170) [3]
+- [ ] ID vertical supply [1]
+	- [ ] Prioritize tasks from Cezars message.
+
+Tasks:
+- [x] Request feedbacks
+- [ ] Call taxes Bgu to understand taxes from Houten
+- [x] Prepare slides for demo
+- [x] Buy garden scissors
+	- [x] Clean garden - main path
+	- [x] Clean remaining garden
+- [ ] [Week 15] Call vet about Pudim
+- [ ] [Week 16] Take trash to recycling center
+- [ ] [Week 18] Schedule BE session
+- [ ] [Week 6] Read article from Jeiks
+- [ ] [Week 6] Read launch pad related documents
+- [ ] [Week 6] Read [DeepSeek article](https://www.linkedin.com/posts/caiodallaqua_deepseek-r1-ugcPost-7289008586700025856-_-Uh?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAzeWZQBZRfRPRBrwtA7qtGa79PtMDirgPw)
+- [ ] [Week 11] Interview training
+- [ ] [Week 13] Read Capla docs
+- [ ] [Week 14] Read 5 items from Reading List
+- [x] [Week 15] Watch Marketplace All hands

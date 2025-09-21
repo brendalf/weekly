@@ -1,0 +1,48 @@
+Goals:
+- [ ] [Week 5] Exercise every muscle at least once
+	- [x] [Week 6] Chest
+	- [x] [Week 7] Biceps
+	- [ ] [Week 6] Triceps
+	- [ ] [Week 6] Back
+	- [ ] [Week 7] Shoulders
+	- [ ] [Week 5] Butt
+	- [ ] [Week 7] Abs
+	- [ ] [Week 5] Legs
+	- [ ] [Week 7] Calves
+- [ ] [Week 5] Run 5km
+- [ ] [Week 11] Don't exaggerate on sweets
+- [ ] Finish A Elite do Atraso (230) [1]
+- [ ] [Week 8] Read Computer Architectures (93)
+- [x] Finish Clean Architecture (415) [7]
+- [ ] Finish Duolingo 3-2 [1]
+- [ ] [Week 11] Write article on markdown
+- [ ] [Week 5] Send pasta email to Agnes
+- [ ] [Week 7] Send dragon wings email to Agnes
+- [ ] [Week 11] Send snow house email to Agnes
+- [ ] [Week 11] Portrait Sketching Section 2: Noses
+- [x] Do 4 side tasks in Rise of Fenyx
+- Deliver Hartingstraat getting more then 50% from safety deposit:
+	- [ ] [Week 8] Clean couch.
+	- [ ] [Week 8] Check blinds.
+	- [ ] [Week 7] Fix guest room curtains. 
+	- [ ] [Week 11] Fix white cabinet.
+	- [ ] [Week 11] Remove window markings (in the stones).
+
+Tasks:
+- [ ] [Week 7] Check if ABN AMRO offers joint savings, if not call 088 722 66 00 to get rabobank saving.
+- [ ] [Week 5] Check insurance gatos
+- [ ] [Week 6] Read article from Jeiks
+- [ ] [Week 6] Read [DeepSeek article](https://www.linkedin.com/posts/caiodallaqua_deepseek-r1-ugcPost-7289008586700025856-_-Uh?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAzeWZQBZRfRPRBrwtA7qtGa79PtMDirgPw)
+- [x] [Week 9] Adjust calendar
+- [ ] [Week 11] Vestido Agnes
+- [x] [Week 6] Finish one pagers
+- [ ] [Week 7] One mandatory compliance trainings
+- [ ] [Week 6] Read launch pad related documents
+- [ ] [Week 11] Interview training
+- [x] [Week 11] Read storefront research
+- [ ] [Week 11] Watch Storefront DEMO
+- [x] [Week 11] Feasibility SPIKE
+- [ ] Talk with Maartjeen again
+- [ ] [?] SPIKE for RS filters
+- [x] Goal related to inventory and documents
+- [x] Swap On-call days in Finland

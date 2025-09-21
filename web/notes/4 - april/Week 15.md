@@ -1,0 +1,73 @@
+Goals:
+- Health:
+	- [ ] [Week 5] Exercise every muscle at least once
+		- [ ] [Week 13] Chest
+		- [ ] [Week 13] Biceps
+		- [ ] [Week 6] Triceps
+		- [ ] [Week 6] Back
+		- [ ] [Week 7] Shoulders
+		- [ ] [Week 5] Butt
+		- [ ] [Week 7] Abs
+		- [ ] [Week 5] Legs
+		- [ ] [Week 7] Calves
+	- [ ] [Week 5] Run 5km
+	- [ ] [Week 11] Don't exaggerate on sweets
+- Become interesting person:
+	- [x] Finish A Elite do Atraso Posfacio (252) [2]
+	- [ ] Finish Duolingo 3-3 [1]
+	- [ ] [Week 11] Write article on markdown
+	- [ ] [Week 11] Portrait Sketching Section 2: Noses
+	- [x] Music theory: Finish section 3 [1]
+- Be a great father:
+	- [x] [Week 5] Send pasta email to Agnes
+	- [ ] [Week 7] Send dragon wings email to Agnes
+	- [ ] [Week 11] Send snow house email to Agnes
+	- [ ] Send email about first pre-school
+	- [ ] Send email about new house
+- Have fun:
+	- [ ] [Week 14] Do 5 side tasks in Rise of Fenyx
+- Work:
+	- [ ] [Week 8] Read Computer Architectures (93)
+	- [x] Read Agile Development (72 => 100)
+- Successfully move in the new house:
+	- [x] Put things in the storage
+	- [x] Assemble chairs
+	- [x] Assemble Amanda's desk
+	- [ ] Move Agnes bed into a bedroom
+	- [ ] Move cats tower into small bedroom
+	- [ ] Call vet about Pudim
+	- [x] Change address Vodafone
+	- [x] Prepare letter to neighbors
+	- [ ] Change CZ address
+- Deliver Hartingstraat getting more then 50% from safety deposit:
+	- [x] Deliver the keys.
+	- [x] Submit Eneco readings
+	- [x] Finish contract with Vitens
+	- [ ] Ask for taxes refund
+	- [x] Pay professional cleaners
+
+Tasks:
+- [x] [Week 7] Check if ABN AMRO offers joint savings, if not call 088 722 66 00 to get rabobank saving.
+- [x] [Week 5] Check insurance gatos
+- [ ] [Week 6] Read article from Jeiks
+- [ ] [Week 6] Read [DeepSeek article](https://www.linkedin.com/posts/caiodallaqua_deepseek-r1-ugcPost-7289008586700025856-_-Uh?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAzeWZQBZRfRPRBrwtA7qtGa79PtMDirgPw)
+- [ ] [Week 11] Vestido Agnes
+- [x] Pay kindergarden
+- [ ] Submit Agnes new school for benefit
+- [x] [Week 7]|[1/4] Mandatory compliance trainings
+- [ ] [Week 6] Read launch pad related documents
+- [ ] [Week 11] Interview training
+- [ ] [Week 11] Watch Storefront DEMO
+- [x] Talk with Alexander about RS filters
+- [x] [Week 14] Deliver Documentation Process Review
+	- [x] Discussion meeting.
+- [x] SPIKE for RVP multi-vertical
+- [ ] Reply Cezar's
+- [x] WBSO
+- [ ] [Week 13] Read Capla docs
+- [ ] [Week 13] Finish RFCs
+- [ ] [Week 14] Read 5 items from Reading List
+- [ ] [Week 13] Watch Research Video
+- [ ] [Week 13] Write PDP
+- [ ] Watch Marketplace All hands
+- [ ] Create proposal for objectives organization

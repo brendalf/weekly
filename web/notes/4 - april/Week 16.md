@@ -1,0 +1,88 @@
+Goals:
+- Health:
+	- [ ] [Week 5] Exercise every muscle at least once
+		- [x] [Week 13] Chest
+		- [x] [Week 13] Biceps
+		- [ ] [Week 6] Triceps
+		- [x] [Week 6] Back
+		- [ ] [Week 7] Shoulders
+		- [ ] [Week 5] Butt
+		- [ ] [Week 7] Abs
+		- [x] [Week 5] Legs
+		- [ ] [Week 7] Calves
+	- [x] [Week 5]|[1/2]Run twice a week
+	- [ ] [Week 11] Don't exaggerate on sweets
+- Become interesting person:
+	- [ ] [Week 15] Finish Duolingo 3-3
+	- [ ] [Week 11] Write article on markdown
+	- [ ] [Week 11] Portrait Sketching (Section 2)
+	- [x] Music theory (Section 4 => 5) [2]
+- Be a great father:
+	- [ ] [Week 7] Send dragon wings email to Agnes
+	- [ ] [Week 11] Send snow house email to Agnes
+	- [ ] [Week 15] Send email about first pre-school
+	- [ ] [Week 15] Send email about new house
+	- [x] One connection day
+- Have fun:
+	- [x] [Week 14] Do 5 side tasks in Rise of Fenyx
+- Work:
+	- [ ] [Week 8] Read Computer Architectures (93)
+	- [x] Read Agile Development (100 => 117) [1]
+- House:
+	- [x] [Week 15] Move Agnes mattress into a bedroom
+	- [x] [Week 15] Move cats tower into small bedroom
+	- [ ] Fix Agnes drawers
+	- [ ] [Week 15] Call vet about Pudim
+	- [ ] Finish sending letters to neighbors [1]
+	- [x] [Week 15] Change CZ address
+	- [x] Activate house insurances
+	- [x] Assemble barbecue
+	- [x] Buy trashes
+	- [x] Research vacuum cleaner
+	- [ ] Take trash to recycling center
+	- [ ] Buy stuff on IKEA 
+	- [x] Fix ground heater wood pieces
+- Smart house:
+	- [x] Create home assistant 
+	- [x] Configure door bell connection
+	- [x] Research Wifi mesh
+- Deliver Hartingstraat:
+	- [x] Pay Utrecht taxes from 2023
+	- [x] [Week 15] Ask for taxes refund
+		- [x] Call 088-0640200
+	- [x] Deal with owners' request
+
+Tasks:
+- [x] Get insurance for cats
+- [x] [Week 11] Vestido Agnes
+- [ ] Submit Agnes new school for benefit
+- [ ] [Week 6] Read article from Jeiks
+- [ ] [Week 6] Read [DeepSeek article](https://www.linkedin.com/posts/caiodallaqua_deepseek-r1-ugcPost-7289008586700025856-_-Uh?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAzeWZQBZRfRPRBrwtA7qtGa79PtMDirgPw)
+- [ ] Fill Cezar's initiative doc.
+- [x] Submit on-call hours
+- [x] WBSO [1]
+- [ ] Send dates on-call May
+- [ ] Submit PDP
+- [ ] SPIKE for RS multi-vertical [1]
+	- [ ] Follow up on Wingston messages
+- [x] Follow-up on smartav messages
+- [ ] [Week 6] Read launch pad related documents
+- [ ] [Week 11] Interview training
+- [x] Follow-up B.com Holdings RSUs account
+- [ ] [Week 13] Read Capla docs
+- [ ] [Week 13] Finish RFCs
+- [ ] [Week 14] Read [1/5] 5 items from Reading List
+- [ ] [Week 15] Watch Marketplace All hands
+- [ ] Create doc templates:
+	- [x] Experiment
+	- [x] SPIKE
+	- [ ] RFC
+	- [ ] ADR
+- [x] [4/4] Mandatory compliance trainings [1]
+- [x] [Week 11] Watch Storefront DEMO
+- [x] Reply Cezar's
+- [x] [Week 13] Watch Research Video
+- [x] [Week 13] Write PDP
+- [x] [Week 15] Create proposal for objectives organization
+- [x] Increase exposure to soft alerts
+- [x] SPIKE for booked items

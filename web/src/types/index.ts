@@ -3,13 +3,26 @@ export interface Task {
   title: string;
   description?: string;
   status: TaskStatus;
-  weekId: string;
+  
+  // Temporal data
   createdAt: Date;
-  updatedAt: Date;
+  createdWeekId: string; // Format: "2025-37"
   completedAt?: Date;
-  createdWeek?: number; // week number when task was created (e.g., 37 for week 37 of the year)
-  weeksOpen?: number; // number of weeks this task has been open (for color calculation)
-  weekStreak?: number; // number of consecutive weeks this task was completed
+  currentWeekId: string;
+  
+  // Recurrency relationship
+  templateId?: string; // Links to RecurrenceTemplate
+  templateInstanceId?: string; // Unique per template occurrence
+  
+  // Audit trail
+  actionHistory: TaskAction[];
+  
+  // Hierarchical relationships (strict hierarchy)
+  parentTaskId?: string;
+  subtaskIds: string[];
+  
+  // Goals relationship
+  goalIds: string[];
 }
 
 export interface Project {
@@ -115,4 +128,43 @@ export enum RoutineFrequency {
   BIWEEKLY = 'biweekly',
   MONTHLY = 'monthly',
   ANNUALLY = 'annually',
+}
+
+// New interfaces for enhanced data structure
+export interface RecurrenceTemplate {
+  id: string;
+  pattern: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'CUSTOM';
+  interval: number;
+  startWeekId: string; // "2025-37"
+  endWeekId?: string;
+  daysOfWeek?: number[]; // For weekly patterns
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TaskAction {
+  id: string;
+  taskId: string;
+  type: 'CREATED' | 'COMPLETED' | 'UNCOMPLETED' | 'MOVED_TO_WEEK' | 'MOVED_TO_BACKLOG' | 'TITLE_CHANGED' | 'TEMPLATE_UPDATED';
+  timestamp: Date;
+  weekId?: string;
+  oldValue?: any;
+  newValue?: any;
+  metadata?: {
+    templateUpdateScope?: 'THIS_ONLY' | 'FUTURE_ONLY' | 'ALL';
+    [key: string]: any;
+  };
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  year: number;
+  completed: boolean;
+  completedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  description?: string;
+  targetDate?: Date;
 }

@@ -1,0 +1,51 @@
+Goals:
+- [ ] [Week 5] Exercise every muscle at least once
+	- [ ] [Week 6] Chest
+	- [ ] Biceps [2]
+	- [ ] [Week 6] Triceps
+	- [ ] [Week 6] Back
+	- [ ] Shoulders [2]
+	- [ ] [Week 5] Butt
+	- [ ] Abs [1]
+	- [ ] [Week 5] Legs
+	- [ ] Calves [2]
+- [ ] [Week 5] Run 5km
+- [x] [Week 6] Don't exaggerate on sweets
+- [x] Read A Elite do Atraso (192 => 202) [2]
+- [x] Read Computer Architectures (88 => 93) [2]
+- [x] Read Clean Architecture (129 => 141) [2]
+- [x] [Week 6] Finish Duolingo 2-39
+- [ ] [Week 5] Write article on markdown
+- [ ] [Week 5] Send pasta email to Agnes
+- [ ] Send dragon wings email to Agnes
+
+Tasks:
+- [ ] Check if ABN AMRO offers joint savings, if not call 088 722 66 00 to get rabobank saving.
+- [ ] [Week 5] Check insurance gatos
+- [x] Buy thing to clean chairs and couch
+- [ ] Send message to professional cleaners
+- [ ] Buy curtain
+- [x] Fix kitchen support
+- [x] Send IRPF to Kamila
+- [ ] [Week 6] Read article from Jeiks
+- [ ] [Week 6] Read [DeepSeek article](https://www.linkedin.com/posts/caiodallaqua_deepseek-r1-ugcPost-7289008586700025856-_-Uh?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAzeWZQBZRfRPRBrwtA7qtGa79PtMDirgPw)
+- [x] Communicate Agnes school
+- [x] Sign new pre-school contract
+- [ ] [Week 5] Talk with Necati Aydin
+- [x] [Week 6] Enforce no prettier warnings
+- [x] [Week 6] WBSO
+- [x] WBSO
+- [ ] [Week 6] Write launch pad
+- [ ] [Week 6] Finish one pagers
+- [ ] Mandatory compliance trainings
+- [ ] [Week 6] Read launch pad related documents
+- [x] Make filters experiment ready
+	- [x] MR apollo cache
+	- [x] MR remove variant 2
+	- [x] Strategy with Rita
+	- [x] MR TCS
+	- [x] MR monolith
+- [x] Add goals as draft
+- [x] Finish goals
+- [x] Find replacement for on-call 21/02
+- [x] Update OpDocs

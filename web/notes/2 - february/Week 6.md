@@ -1,0 +1,48 @@
+Goals:
+- [ ] [Week 5] Exercise every muscle at least once
+	- [ ] Chest [1]
+	- [x] Biceps [1]
+	- [ ] Triceps [1]
+	- [ ] Back [1]
+	- [x] Shoulders [1]
+	- [ ] [Week 5] Butt
+	- [x] Abs
+	- [ ] [Week 5] Legs
+	- [x] Calves [1]
+- [ ] [Week 5] Run 5km
+- [ ] Don't exaggerate on sweets
+- [x] Read A Elite do Atraso (176 => 192) [1]
+- [x] Read Computer Architectures (82 => 88) [1]
+- [x] Read Clean Architecture (100 => 129) [1]
+- [ ] Finish Duolingo 2-39
+- [ ] [Week 5] Write article on markdown
+- [ ] [Week 5] Send pasta email to Agnes
+
+Tasks:
+- [x] Check if rabobank offers joint savings 
+	- [ ] For next week: calll 088 722 66 00.
+	- [ ] Check for Abn Amro, if so, close Rabobank.
+- [x] Register cat microchip
+- [ ] [Week 5] Check insurance gatos
+- [x] Buy cats' toys
+- [x] Sign mortgage
+- [x] Cut Amanda's hair
+- [x] Check with Marta about hosting the cats
+- [x] Inform house owners about moving out
+- [x] Create a moving plan and get agreement with Amanda
+- [x] Refer Tamaki
+- [x] Refer Lucas
+- [ ] [Week 5] Talk with Necati Aydin
+- [x] Plan objectives
+- [ ] Enforce no prettier warnings
+- [x] Publish RFO
+- [x] WBSO
+- [ ] Write launch pad
+- [ ] Finish one pagers
+- [ ] Read launch pad related documents
+- [x] Send message about CTD
+- [x] Read Anatoli's message on launch pad channel
+- [x] Check seo-core pipeline
+- [ ] Read article from Jeiks
+- [ ] Read [DeepSeek article](https://www.linkedin.com/posts/caiodallaqua_deepseek-r1-ugcPost-7289008586700025856-_-Uh?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAzeWZQBZRfRPRBrwtA7qtGa79PtMDirgPw)
+- [x] Feedback to Viktor

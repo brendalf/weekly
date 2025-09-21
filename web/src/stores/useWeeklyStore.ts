@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { Habit, Project, Task, Week } from '@/types';
+import { Habit, Project, Task, TaskStatus, Week } from '@/types';
 
 interface WeeklyStore {
   // State
@@ -10,7 +10,7 @@ interface WeeklyStore {
 
   // Actions
   setCurrentWeek: (week: Week) => void;
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'createdWeekId' | 'currentWeekId' | 'actionHistory' | 'subtaskIds' | 'goalIds'>) => void;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   deleteTask: (taskId: string) => void;
   addProject: (
@@ -29,12 +29,28 @@ export const useWeeklyStore = create<WeeklyStore>((set, get) => ({
   setCurrentWeek: week => set({ currentWeek: week }),
 
   addTask: taskData => {
+    const currentWeek = get().currentWeek;
+    if (!currentWeek) return;
+
     const newTask: Task = {
       ...taskData,
       id: crypto.randomUUID(),
       createdAt: new Date(),
-      updatedAt: new Date(),
+      createdWeekId: currentWeek.id,
+      currentWeekId: currentWeek.id,
+      actionHistory: [{
+        id: crypto.randomUUID(),
+        taskId: crypto.randomUUID(),
+        type: 'CREATED',
+        timestamp: new Date(),
+        weekId: currentWeek.id,
+      }],
+      subtaskIds: [],
+      goalIds: [],
     };
+
+    // Update the task ID in the action history
+    newTask.actionHistory[0].taskId = newTask.id;
 
     set(state => {
       if (!state.currentWeek) return state;
@@ -58,11 +74,30 @@ export const useWeeklyStore = create<WeeklyStore>((set, get) => ({
     set(state => {
       if (!state.currentWeek) return state;
 
-      const updatedTasks = state.currentWeek.tasks.map(task =>
-        task.id === taskId
-          ? { ...task, ...updates, updatedAt: new Date() }
-          : task
-      );
+      const updatedTasks = state.currentWeek.tasks.map(task => {
+        if (task.id === taskId) {
+          const updatedTask = { ...task, ...updates };
+          // Add action to history if status changed
+          if (updates.status && updates.status !== task.status) {
+            const actionType = updates.status === TaskStatus.COMPLETED ? 'COMPLETED' : 
+                             updates.status === TaskStatus.PENDING ? 'UNCOMPLETED' : 'MOVED_TO_WEEK';
+            updatedTask.actionHistory = [
+              ...task.actionHistory,
+              {
+                id: crypto.randomUUID(),
+                taskId: task.id,
+                type: actionType,
+                timestamp: new Date(),
+                weekId: state.currentWeek?.id,
+                oldValue: task.status,
+                newValue: updates.status,
+              }
+            ];
+          }
+          return updatedTask;
+        }
+        return task;
+      });
 
       const updatedWeek = {
         ...state.currentWeek,

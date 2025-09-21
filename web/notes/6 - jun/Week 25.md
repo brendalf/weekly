@@ -1,0 +1,84 @@
+Goals:
+- Exercise [2]
+	- [ ] [Week 17] Chest
+	- [ ] [Week 17] Biceps
+	- [ ] [Week 6] Triceps
+	- [ ] [Week 22] Back
+	- [ ] [Week 7] Shoulders
+	- [ ] [Week 5] Butt
+	- [ ] [Week 7] Abs
+	- [ ] [Week 17] Legs
+	- [ ] [Week 7] Calves
+	- [ ] Run [1]
+	- [ ] Measure body fat [2]
+- Get Dutch PR [3]
+	- [x] Finish 30 sections of Duolingo (4) [3]
+- Become interesting person [1]
+	- [ ] [Week 11] Write article on markdown
+	- [ ] [Week 11] Portrait Sketching (Section 2)
+	- [x] Read coffee book (41 => 44) [1]
+- Be a great father [2]
+	- [ ] [Week 15] Send email about first pre-school
+	- [ ] [Week 15] Send email about new house
+	- [ ] Send email about Brazil
+	- [ ] Send two emails from backlog
+	- [x] Read the gentle eating book (16% => 31%) [2]
+- [Week 17] Have fun:
+	- [ ] [Week 17] Do 5 side tasks in Rise of Fenyx
+- [Week 16] Agnes bedroom
+	- [x] [Week 17] Move Agnes bed upstairs
+	- [ ] [Week 16] Fix Agnes drawers
+- [Week 23] Smart house
+	- [x] [Week 23] Request solax support to unbound device
+	- [ ] [Week 23] Automate extractor with humidity
+		- [ ] [Week 22] Define which smart switch to buy
+- Deliver personal objectives [5]
+	- [x] Modernize SPIKE
+	- [x] RecP PoC
+	- [ ] Update Flights Searchbox SPIKE
+	- [ ] Write RFC for Flights Searchbox on RecP
+	- [ ] Documentation [1]
+		- [ ] [Week 18] Check if we can combine the approval with the revision process.
+		- [x] Finish review
+	- [ ] [Week 23] Multi-vertical data
+		- [ ] [Week 18] Discuss with Wingston about SPIKE
+		- [ ] [Week 18] Discuss with someone from Attractions about SPIKE
+		- [ ] [Week 17] Fill request for offerKeyToHighlight
+		- [ ] [Week 18] Re-read wishlist RFC
+	- [ ] [Week 18] SmartAV follow-ups
+		- [ ] [Week 17] Read swagger and documentation
+- [ ] Deliver PDP goals [7]
+	- [x] Master Java [3]
+		- [x] Java Backend Developer (Spring Boot) (18 => 22) [1]
+	- [x] Books
+		- [x] [Week 24] Read Computer Architectures (170 => 179)
+- [ ] [Week 24] ID vertical supply
+	- [ ] [Week 24] Prioritize tasks from Cezars message.
+
+Tasks:
+- [ ] [Week 23] Call taxes Bgu to understand taxes from Houten
+- [x] [Week 22] Amanda's office
+	- [ ] [Week 22] Move setup to separate room
+- [x] Onboard test engineer
+- [ ] Organize keys
+- [x] Feedbacks:
+	- [x] Anatoli
+	- [x] Aman
+	- [x] Subrat
+	- [x] Viktor
+	- [x] Myself
+	- [x] Nik
+- [x] Read Storefront vision document.
+- [x] Apply wax to cutting boards
+- [ ] Recover purple board
+- [ ] Buy sun protector for outside
+- [x] [Week 22] Hang curtain
+- [ ] [Week 15] Call vet about Pudim
+- [ ] [Week 16] Take trash to recycling center
+- [ ] [Week 18] Schedule BE session
+- [ ] [Week 6] Read article from Jeiks
+- [ ] [Week 6] Read launch pad related documents
+- [ ] [Week 6] Read [DeepSeek article](https://www.linkedin.com/posts/caiodallaqua_deepseek-r1-ugcPost-7289008586700025856-_-Uh?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAzeWZQBZRfRPRBrwtA7qtGa79PtMDirgPw)
+- [ ] [Week 11] Interview training
+- [ ] [Week 13] Read Capla docs
+- [ ] [Week 14] Read 5 items from Reading List

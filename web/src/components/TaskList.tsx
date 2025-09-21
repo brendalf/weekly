@@ -33,6 +33,28 @@ export function TaskList({ tasks }: TaskListProps) {
     return 'solid'; // most intense for 10+
   };
 
+  const calculateWeeksOpen = (task: Task) => {
+    if (task.createdWeekId === task.currentWeekId) return 0;
+    
+    // Extract week numbers from week IDs (format: "YYYY-WW")
+    const createdWeek = parseInt(task.createdWeekId.split('-')[1]);
+    const currentWeek = parseInt(task.currentWeekId.split('-')[1]);
+    
+    return Math.max(0, currentWeek - createdWeek);
+  };
+
+  const getWeekStreak = (task: Task) => {
+    // Count consecutive weeks where task was completed
+    const completedActions = task.actionHistory.filter(action => 
+      action.type === 'COMPLETED'
+    );
+    return completedActions.length;
+  };
+
+  const getCreatedWeekNumber = (task: Task) => {
+    return parseInt(task.createdWeekId.split('-')[1]);
+  };
+
   const handleTaskToggle = (task: Task) => {
     const newStatus =
       task.status === TaskStatus.COMPLETED
@@ -95,21 +117,25 @@ export function TaskList({ tasks }: TaskListProps) {
                   </h4>
 
                   {/* Week label for old tasks */}
-                  {task.createdWeek && task.weeksOpen && task.weeksOpen > 0 && (
-                    <Chip
-                      size="sm"
-                      color={getWeekLabelColor(task.weeksOpen)}
-                      variant={getWeekLabelIntensity(task.weeksOpen) as any}
-                      className="text-xs"
-                    >
-                      Week {task.createdWeek}
-                    </Chip>
-                  )}
+                  {(() => {
+                    const weeksOpen = calculateWeeksOpen(task);
+                    const createdWeek = getCreatedWeekNumber(task);
+                    return weeksOpen > 0 && (
+                      <Chip
+                        size="sm"
+                        color={getWeekLabelColor(weeksOpen)}
+                        variant={getWeekLabelIntensity(weeksOpen) as any}
+                        className="text-xs"
+                      >
+                        Week {createdWeek}
+                      </Chip>
+                    );
+                  })()}
 
                   {/* Streak fire icon for completed tasks */}
-                  {task.weekStreak &&
-                    task.weekStreak > 1 &&
-                    task.status === TaskStatus.COMPLETED && (
+                  {(() => {
+                    const weekStreak = getWeekStreak(task);
+                    return weekStreak > 1 && task.status === TaskStatus.COMPLETED && (
                       <Chip
                         size="sm"
                         color="warning"
@@ -117,9 +143,10 @@ export function TaskList({ tasks }: TaskListProps) {
                         startContent={<Flame className="w-3 h-3" />}
                         className="text-xs"
                       >
-                        {task.weekStreak}
+                        {weekStreak}
                       </Chip>
-                    )}
+                    );
+                  })()}
                 </div>
 
                 <Dropdown>

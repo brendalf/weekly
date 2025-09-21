@@ -3,19 +3,16 @@ import { Calendar, Clock, Target, TrendingUp } from 'lucide-react';
 import { useEffect } from 'react';
 
 import { useWeeklyStore } from '@/stores/useWeeklyStore';
-import { mockCurrentWeek, mockHabits } from '@/utils/mockData';
-
-import { HabitTracker } from './HabitTracker';
-import { TaskList } from './TaskList';
-import { WeekHeader } from './WeekHeader';
+import { currentWeek as mockCurrentWeek } from '@/utils/mockData';
+import { TaskList } from '@/components/TaskList';
+import { WeekHeader } from '@/components/WeekHeader';
 
 export function WeeklyDashboard() {
-  const { currentWeek, habits, setCurrentWeek } = useWeeklyStore();
+  const { currentWeek, setCurrentWeek } = useWeeklyStore();
 
   useEffect(() => {
     // Initialize with mock data
     setCurrentWeek(mockCurrentWeek);
-    // Note: We'll add habits to store later
   }, [setCurrentWeek]);
 
   if (!currentWeek) {
@@ -114,14 +111,20 @@ export function WeeklyDashboard() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Habits */}
+          {/* Goals */}
           <Card>
             <CardHeader>
-              <h3 className="text-lg font-semibold">Habits</h3>
+              <h3 className="text-lg font-semibold">Goals</h3>
             </CardHeader>
             <Divider />
             <CardBody>
-              <HabitTracker habits={mockHabits} />
+              <div className="space-y-2">
+                {currentWeek.goals.map((goal, index) => (
+                  <div key={index} className="p-2 bg-default-100 rounded-lg">
+                    <p className="text-sm">{goal}</p>
+                  </div>
+                ))}
+              </div>
             </CardBody>
           </Card>
         </div>

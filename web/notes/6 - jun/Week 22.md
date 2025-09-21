@@ -1,0 +1,123 @@
+Goals:
+- [Week 5] Exercise:
+	- [ ] [Week 17] Chest
+	- [ ] [Week 17] Biceps
+	- [ ] [Week 6] Triceps
+	- [ ] Back [1]
+	- [ ] [Week 7] Shoulders
+	- [ ] [Week 5] Butt
+	- [ ] [Week 7] Abs
+	- [ ] [Week 17] Legs
+	- [ ] [Week 7] Calves
+	- [ ] Run [1]
+	- [ ] [Week 18] Measure body fat
+- Get Dutch PR
+	- [x] [Week 20] Finish 30 sections of Duolingo (3)
+- Become interesting person:
+	- [ ] [Week 11] Write article on markdown
+	- [ ] [Week 11] Portrait Sketching (Section 2)
+	- [x] Read coffee book (0 => 22)
+- Be a great father:
+	- [x] [Week 7] Send dragon wings email to Agnes
+	- [x] [Week 11] Send snow house email to Agnes
+	- [ ] [Week 15] Send email about first pre-school
+	- [ ] [Week 15] Send email about new house
+	- [x] Read the gentle eating book (0 => 7%)
+	- [x] First word
+- [Week 17] Have fun:
+	- [ ] [Week 17] Do 5 side tasks in Rise of Fenyx
+- Furnish the house \[1]:
+	- [ ] Amanda's office
+		- [ ] Move setup to separate room
+	- [ ] Rhay and Vitor visit:
+		- [x] Buy mattress
+		- [x] Buy mattress protector
+		- [x] Buy pillows and pillow protector
+		- [x] Buy coberta
+		- [x] Buy dinning table
+		- [x] Buy chairs
+		- [x] Buy roupa de cama
+		- [x] Create plan and share with Vitor and Rhay
+		- [x] Buy couch
+	- [ ] Curtain in the main entrance:
+		- [x] Buy curtain
+		- [x] Buy curtain hanger
+		- [ ] Hang curtain
+- [Week 16] Agnes bedroom:
+	- [ ] [Week 17] Move Agnes bed upstairs
+	- [ ] [Week 16] Fix Agnes drawers
+- Smart house \[1]:
+	- [x] Wifi whole house
+		- [x] Buy Wifi mesh
+		- [x] Wifi networks for the whole house
+		- [x] Configure light strip connection
+		- [x] Configure solar panels connection
+	- [x] Zigbee network
+		- [x] Buy Zigbee hub
+		- [x] Configure on HA
+	- [ ] Automate extractor with humidity
+		- [x] Buy humidity sensor
+		- [x] Configure humidity sensor
+		- [ ] Define which smart switch to buy
+- Deliver personal objectives:
+	- [ ] Multi-vertical storefront \[2]:
+		- [ ] Flights autocomplete
+			- [x] Give Viktor an estimate for the anatoli's ticket
+			- [ ] Create use-case in RecP
+	- [ ] Run experiments \[2]:
+		- [x] Fix filters distribution errors on TCS
+		- [x] Adjust stages for filters on Index MFE]
+		- [ ] [Blocked] Unblock MR
+	- [ ] Documentation \[2]:
+		- [ ] [Week 18] Create registry columns and prepare registry for first review.
+		- [ ] [Week 18] Check if we can combine the approval with the revision process.
+		- [ ] [Week 18] Do a documentation review.
+		- [ ] Create doc templates \[2]:
+			- [ ] [Week 17] RFC
+			- [ ] [Week 17] ADR
+	- [ ] Multi-vertical data \[2]:
+		- [x] Reply Cezar's comments on SPIKE
+		- [x] Reply Cezar
+		- [ ] [Week 18] Discuss with Wingston about SPIKE
+		- [ ] [Week 18] Discuss with someone from Attractions about SPIKE
+		- [ ] [Week 17] Fill request for offerKeyToHighlight
+		- [ ] [Week 18] Re-read wishlist RFC
+	- [ ] [Week 18] SmartAV follow-ups:
+		- [ ] [Week 17] Read swagger and documentation
+- [ ] Deliver PDP goals \[3]:
+	- [ ] Master Java:
+		- [x] Java Backend Developer (Spring Boot) (0 => 2%)
+	- [ ] Books \[5]:
+		- [x] Read Computer Architectures (153 => 159) [2]
+- [ ] ID vertical supply:
+	- [x] Read Cezars message
+
+Tasks:
+- [x] Read past SPIKES
+- [x] Agnes GDD
+- [x] Subscribe to GP
+- [x] Imposto de Renda do Brasil
+- [x] Add tooth plan to CZ
+- [ ] [Week 15] Call vet about Pudim
+- [ ] [Week 16] Take trash to recycling center
+- [x] Buy MALA for Agnes
+- [ ] Organize clothes
+- [ ] Organize toys
+- [x] Follow-up channels
+- [x] Follow-up CDP features
+- [x] Write about recent searches distribution errors
+- [x] Check Subrat's fix for removed booked items
+- [x] Schedule catch-up meetings with Subrat and Viktor
+- [ ] [Week 18] Schedule BE session
+- [ ] [Week 6] Read article from Jeiks
+- [ ] [Week 6] Read launch pad related documents
+- [x] Submit on-call hours [3]
+- [x] WBSO [4]
+- [ ] [Week 6] Read [DeepSeek article](https://www.linkedin.com/posts/caiodallaqua_deepseek-r1-ugcPost-7289008586700025856-_-Uh?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAzeWZQBZRfRPRBrwtA7qtGa79PtMDirgPw)
+- [ ] [Week 11] Interview training
+- [ ] [Week 13] Read Capla docs
+- [x] [Week 13] Finish RFCs
+- [ ] [Week 14] Read 5 items from Reading List
+- [ ] [Week 15] Watch Marketplace All hands
+- [x] Buy Omega 3
+- [x] Refer Lucas
