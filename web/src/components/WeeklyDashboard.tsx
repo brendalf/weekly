@@ -8,10 +8,11 @@ import { TaskList } from '@/components/TaskList';
 import { WeekHeader } from '@/components/WeekHeader';
 
 export function WeeklyDashboard() {
-  const { currentWeek, setCurrentWeek } = useWeeklyStore();
+  const currentWeek = useWeeklyStore(state => state.currentWeek);
+  const setCurrentWeek = useWeeklyStore(state => state.setCurrentWeek);
 
   useEffect(() => {
-    // Initialize with mock data
+    // Initialize with mock data for the current week
     setCurrentWeek(mockCurrentWeek);
   }, [setCurrentWeek]);
 

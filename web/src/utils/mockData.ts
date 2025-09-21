@@ -14,17 +14,17 @@ export const mockTasks: Task[] = [
     title: 'Biceps',
     status: TaskStatus.PENDING,
     createdAt: new Date('2025-09-09T22:00:00.000Z'),
-    createdWeekId: '2025-37',
-    currentWeekId: '2025-37',
+    createdWeekId: '2025-38',
+    currentWeekId: '2025-38',
     templateId: 'template-biceps',
-    templateInstanceId: 'biceps-2025-37',
+    templateInstanceId: 'biceps-2025-38',
     actionHistory: [
       {
         id: 'action-1-1',
         taskId: 'task-1',
         type: 'CREATED',
         timestamp: new Date('2025-09-09T22:00:00.000Z'),
-        weekId: '2025-37',
+        weekId: '2025-38',
         metadata: {},
       }
     ],
@@ -36,17 +36,17 @@ export const mockTasks: Task[] = [
     title: 'Run',
     status: TaskStatus.PENDING,
     createdAt: new Date('2025-09-09T22:00:00.000Z'),
-    createdWeekId: '2025-37',
-    currentWeekId: '2025-37',
+    createdWeekId: '2025-38',
+    currentWeekId: '2025-38',
     templateId: 'template-run',
-    templateInstanceId: 'run-2025-37',
+    templateInstanceId: 'run-2025-38',
     actionHistory: [
       {
         id: 'action-2-1',
         taskId: 'task-2',
         type: 'CREATED',
         timestamp: new Date('2025-09-09T22:00:00.000Z'),
-        weekId: '2025-37',
+        weekId: '2025-38',
         metadata: {},
       }
     ],
@@ -76,7 +76,7 @@ export const mockTasks: Task[] = [
         taskId: 'task-3',
         type: 'COMPLETED',
         timestamp: new Date('2025-09-08T15:30:00.000Z'),
-        weekId: '2025-37',
+        weekId: '2025-38',
         metadata: {},
       }
     ],
@@ -163,7 +163,7 @@ export const mockRecurrenceTemplates: RecurrenceTemplate[] = [
     id: 'template-biceps',
     pattern: 'WEEKLY',
     interval: 1,
-    startWeekId: '2025-37',
+    startWeekId: '2025-38',
     daysOfWeek: [1, 3, 5], // Monday, Wednesday, Friday
     isActive: true,
     createdAt: new Date('2025-09-09T22:00:00.000Z'),
@@ -173,7 +173,7 @@ export const mockRecurrenceTemplates: RecurrenceTemplate[] = [
     id: 'template-run',
     pattern: 'WEEKLY',
     interval: 1,
-    startWeekId: '2025-37',
+    startWeekId: '2025-38',
     daysOfWeek: [2, 4, 6], // Tuesday, Thursday, Saturday
     isActive: true,
     createdAt: new Date('2025-09-09T22:00:00.000Z'),
@@ -214,11 +214,11 @@ export const mockGoals: Goal[] = [
 ];
 
 // Create current week data
-const currentWeekStart = new Date(2025, 8, 15); // Week 37 start
-const currentWeekEnd = new Date(2025, 8, 21); // Week 37 end
+const currentWeekStart = new Date(2025, 8, 15); // Week 38 start
+const currentWeekEnd = new Date(2025, 8, 21); // Week 38 end
 
 export const mockCurrentWeek: Week = {
-  id: '2025-37',
+  id: '2025-38',
   startDate: currentWeekStart,
   endDate: currentWeekEnd,
   status: WeekStatus.ACTIVE,

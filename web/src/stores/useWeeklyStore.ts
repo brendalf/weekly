@@ -1,15 +1,21 @@
 import { create } from 'zustand';
 
 import { Habit, Project, Task, TaskStatus, Week } from '@/types';
+import { createWeek, getCurrentWeekId, getNextWeekId, getPreviousWeekId } from '@/utils/weekUtils';
 
 interface WeeklyStore {
   // State
   currentWeek: Week | null;
-  weeks: Week[];
+  weeks: Map<string, Week>;
   habits: Habit[];
 
   // Actions
   setCurrentWeek: (week: Week) => void;
+  navigateToWeek: (weekId: string) => void;
+  goToPreviousWeek: () => void;
+  goToNextWeek: () => void;
+  goToCurrentWeek: () => void;
+  getOrCreateWeek: (weekId: string) => Week;
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'createdWeekId' | 'currentWeekId' | 'actionHistory' | 'subtaskIds' | 'goalIds'>) => void;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   deleteTask: (taskId: string) => void;
@@ -23,10 +29,90 @@ interface WeeklyStore {
 
 export const useWeeklyStore = create<WeeklyStore>((set, get) => ({
   currentWeek: null,
-  weeks: [],
+  weeks: new Map(),
   habits: [],
 
-  setCurrentWeek: week => set({ currentWeek: week }),
+  setCurrentWeek: week => {
+    set(state => {
+      const newWeeks = new Map(state.weeks);
+      newWeeks.set(week.id, week);
+      return { currentWeek: week, weeks: newWeeks };
+    });
+  },
+
+  getOrCreateWeek: (weekId: string) => {
+    const state = get();
+    const existingWeek = state.weeks.get(weekId);
+    if (existingWeek) {
+      return existingWeek;
+    }
+    
+    const newWeek = createWeek(weekId);
+    set(state => {
+      const newWeeks = new Map(state.weeks);
+      newWeeks.set(weekId, newWeek);
+      return { weeks: newWeeks };
+    });
+    return newWeek;
+  },
+
+  navigateToWeek: (weekId: string) => {
+    const state = get();
+    const week = state.getOrCreateWeek(weekId);
+    set({ currentWeek: week });
+  },
+
+  goToPreviousWeek: () => {
+    set(state => {
+      if (!state.currentWeek) return state;
+      
+      const previousWeekId = getPreviousWeekId(state.currentWeek.id);
+      let previousWeek = state.weeks.get(previousWeekId);
+      
+      if (!previousWeek) {
+        previousWeek = createWeek(previousWeekId);
+        const newWeeks = new Map(state.weeks);
+        newWeeks.set(previousWeekId, previousWeek);
+        return { ...state, currentWeek: previousWeek, weeks: newWeeks };
+      }
+      
+      return { ...state, currentWeek: previousWeek };
+    });
+  },
+
+  goToNextWeek: () => {
+    set(state => {
+      if (!state.currentWeek) return state;
+      
+      const nextWeekId = getNextWeekId(state.currentWeek.id);
+      let nextWeek = state.weeks.get(nextWeekId);
+      
+      if (!nextWeek) {
+        nextWeek = createWeek(nextWeekId);
+        const newWeeks = new Map(state.weeks);
+        newWeeks.set(nextWeekId, nextWeek);
+        return { ...state, currentWeek: nextWeek, weeks: newWeeks };
+      }
+      
+      return { ...state, currentWeek: nextWeek };
+    });
+  },
+
+  goToCurrentWeek: () => {
+    set(state => {
+      const currentWeekId = getCurrentWeekId();
+      let currentWeek = state.weeks.get(currentWeekId);
+      
+      if (!currentWeek) {
+        currentWeek = createWeek(currentWeekId);
+        const newWeeks = new Map(state.weeks);
+        newWeeks.set(currentWeekId, currentWeek);
+        return { ...state, currentWeek, weeks: newWeeks };
+      }
+      
+      return { ...state, currentWeek };
+    });
+  },
 
   addTask: taskData => {
     const currentWeek = get().currentWeek;
@@ -63,9 +149,11 @@ export const useWeeklyStore = create<WeeklyStore>((set, get) => ({
       return {
         ...state,
         currentWeek: updatedWeek,
-        weeks: state.weeks.map(w =>
-          w.id === updatedWeek.id ? updatedWeek : w
-        ),
+        weeks: (() => {
+          const newWeeks = new Map(state.weeks);
+          newWeeks.set(updatedWeek.id, updatedWeek);
+          return newWeeks;
+        })(),
       };
     });
   },
@@ -107,9 +195,11 @@ export const useWeeklyStore = create<WeeklyStore>((set, get) => ({
       return {
         ...state,
         currentWeek: updatedWeek,
-        weeks: state.weeks.map(w =>
-          w.id === updatedWeek.id ? updatedWeek : w
-        ),
+        weeks: (() => {
+          const newWeeks = new Map(state.weeks);
+          newWeeks.set(updatedWeek.id, updatedWeek);
+          return newWeeks;
+        })(),
       };
     });
   },
@@ -126,9 +216,11 @@ export const useWeeklyStore = create<WeeklyStore>((set, get) => ({
       return {
         ...state,
         currentWeek: updatedWeek,
-        weeks: state.weeks.map(w =>
-          w.id === updatedWeek.id ? updatedWeek : w
-        ),
+        weeks: (() => {
+          const newWeeks = new Map(state.weeks);
+          newWeeks.set(updatedWeek.id, updatedWeek);
+          return newWeeks;
+        })(),
       };
     });
   },
@@ -152,9 +244,11 @@ export const useWeeklyStore = create<WeeklyStore>((set, get) => ({
       return {
         ...state,
         currentWeek: updatedWeek,
-        weeks: state.weeks.map(w =>
-          w.id === updatedWeek.id ? updatedWeek : w
-        ),
+        weeks: (() => {
+          const newWeeks = new Map(state.weeks);
+          newWeeks.set(updatedWeek.id, updatedWeek);
+          return newWeeks;
+        })(),
       };
     });
   },
@@ -177,9 +271,11 @@ export const useWeeklyStore = create<WeeklyStore>((set, get) => ({
       return {
         ...state,
         currentWeek: updatedWeek,
-        weeks: state.weeks.map(w =>
-          w.id === updatedWeek.id ? updatedWeek : w
-        ),
+        weeks: (() => {
+          const newWeeks = new Map(state.weeks);
+          newWeeks.set(updatedWeek.id, updatedWeek);
+          return newWeeks;
+        })(),
       };
     });
   },

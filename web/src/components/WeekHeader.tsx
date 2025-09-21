@@ -2,13 +2,16 @@ import { Button, Card, CardBody, Chip } from '@heroui/react';
 import { format } from 'date-fns';
 import { Calendar, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
+import { useWeeklyStore } from '@/stores/useWeeklyStore';
 import { Week, WeekStatus } from '@/types';
+import { isCurrentWeek } from '@/utils/weekUtils';
 
 interface WeekHeaderProps {
   week: Week;
 }
 
 export function WeekHeader({ week }: WeekHeaderProps) {
+  const { goToPreviousWeek, goToNextWeek, goToCurrentWeek } = useWeeklyStore();
   const getStatusColor = (status: WeekStatus) => {
     switch (status) {
       case WeekStatus.PLANNING:
@@ -27,7 +30,12 @@ export function WeekHeader({ week }: WeekHeaderProps) {
       <CardBody>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button isIconOnly variant="light" size="sm">
+            <Button 
+              isIconOnly 
+              variant="light" 
+              size="sm"
+              onPress={goToPreviousWeek}
+            >
               <ChevronLeft className="w-4 h-4" />
             </Button>
 
@@ -45,7 +53,12 @@ export function WeekHeader({ week }: WeekHeaderProps) {
               </div>
             </div>
 
-            <Button isIconOnly variant="light" size="sm">
+            <Button 
+              isIconOnly 
+              variant="light" 
+              size="sm"
+              onPress={goToNextWeek}
+            >
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
@@ -54,6 +67,16 @@ export function WeekHeader({ week }: WeekHeaderProps) {
             <Chip color={getStatusColor(week.status)} variant="flat" size="sm">
               {week.status.replace('_', ' ').toUpperCase()}
             </Chip>
+
+            {!isCurrentWeek(week.id) && (
+              <Button
+                variant="bordered"
+                size="sm"
+                onPress={goToCurrentWeek}
+              >
+                Today
+              </Button>
+            )}
 
             <Button
               color="primary"
