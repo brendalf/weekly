@@ -1,0 +1,17 @@
+{
+  "name": "@weekly/domain",
+  "version": "0.0.1",
+  "description": "Shared domain logic for Weekly apps",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
