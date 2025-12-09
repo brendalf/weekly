@@ -3,5 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {},
-  "devDependencies": {}
+  "dependencies": {
+    "@tamagui/config": "^1.139.2",
+    "tamagui": "^1.139.2"
+  }
 }
