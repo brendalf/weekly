@@ -1,0 +1,15 @@
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getFirestore } from "firebase/firestore";
+
+const firebaseConfig = {
+  ...
+};
+
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
+if (typeof window !== "undefined") {
+  getAnalytics(app);
+}
+
+export const db = getFirestore(app);

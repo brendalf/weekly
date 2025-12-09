@@ -1,32 +1,39 @@
 "use client";
 
-import { useState, FormEvent } from "react";
-import { Task, createTask, toggleTaskCompleted } from "@weekly/domain";
+import { useState, useEffect, FormEvent } from "react";
+import { Task } from "@weekly/domain";
 import { YStack, H2, Paragraph } from "tamagui";
 import { TaskInput } from "./TaskInput";
 import { TaskList } from "./TaskList";
+import {
+  subscribeToTasks,
+  addTaskRemote,
+  toggleTaskRemote,
+} from "./lib/tasksStore";
 
 export default function Home() {
   const [title, setTitle] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
 
+  const userId = "dev-user";
+
+  useEffect(() => {
+    const unsub = subscribeToTasks(userId, (nextTasks) => setTasks(nextTasks));
+    return () => unsub();
+  }, [userId]);
+
   function handleAddTask(e: FormEvent) {
     e.preventDefault();
     const trimmed = title.trim();
     if (!trimmed) return;
-
-    const newTask: Task = createTask(trimmed);
-
-    setTasks((prev) => [newTask, ...prev]);
+    addTaskRemote(userId, trimmed);
     setTitle("");
   }
 
   function handleToggleTaskCompleted(taskId: string) {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === taskId ? toggleTaskCompleted(task) : task,
-      ),
-    );
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+    toggleTaskRemote(userId, task);
   }
 
   return (
