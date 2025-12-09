@@ -18,7 +18,7 @@ export function TaskList({ tasks, onToggleCompleted }: TaskListProps) {
   }
 
   return (
-    <YStack space="$2">
+    <YStack gap="$2">
       {tasks.map((task) => (
         <ListItem
           key={task.id}
@@ -28,7 +28,7 @@ export function TaskList({ tasks, onToggleCompleted }: TaskListProps) {
             minute: "2-digit",
           })}
           size="$3"
-          iconAfter={
+          icon={
             <Checkbox
               size="$2"
               checked={task.completed}

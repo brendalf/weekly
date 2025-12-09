@@ -1,1 +1,1 @@
-apps/web/app/lib/firebase.ts
+web/app/config/firebase.ts

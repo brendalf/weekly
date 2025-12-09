@@ -7,7 +7,7 @@ import {
   updateDoc,
   doc,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { db } from "../config/firebase";
 import { Task } from "@weekly/domain";
 
 function tasksCollection(userId: string) {

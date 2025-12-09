@@ -1,2 +1,2 @@
-export * from "./models/task";
-export * from "./core/task";
+export * from "./models";
+export * from "./core";

@@ -15,7 +15,7 @@ importers:
         specifier: ^1.139.2
         version: 1.139.2(react-dom@19.2.1(react@19.2.1))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.2.1))(react@19.2.1)
 
-  apps/app:
+  app:
     dependencies:
       '@expo/vector-icons':
         specifier: ^15.0.3
@@ -109,7 +109,7 @@ importers:
         specifier: ~5.9.2
         version: 5.9.3
 
-  apps/web:
+  web:
     dependencies:
       '@weekly/domain':
         specifier: workspace:*
