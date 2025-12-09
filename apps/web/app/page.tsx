@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { Task, createTask } from "@weekly/domain";
+import { Task, createTask, toggleTaskCompleted } from "@weekly/domain";
 import { YStack, H2, Paragraph } from "tamagui";
 import { TaskInput } from "./TaskInput";
 import { TaskList } from "./TaskList";
@@ -21,6 +21,14 @@ export default function Home() {
     setTitle("");
   }
 
+  function handleToggleTaskCompleted(taskId: string) {
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId ? toggleTaskCompleted(task) : task,
+      ),
+    );
+  }
+
   return (
     <YStack f={1} ai="center" jc="center" padding="$4" bg="$background">
       <YStack width="100%" maxWidth={600} space="$4">
@@ -37,7 +45,7 @@ export default function Home() {
           onSubmit={handleAddTask}
         />
 
-        <TaskList tasks={tasks} />
+        <TaskList tasks={tasks} onToggleCompleted={handleToggleTaskCompleted} />
       </YStack>
     </YStack>
   );

@@ -1,13 +1,14 @@
 "use client";
 
 import { Task } from "@weekly/domain";
-import { ListItem, YStack, Paragraph } from "tamagui";
+import { ListItem, YStack, Paragraph, Checkbox } from "tamagui";
 
 interface TaskListProps {
   tasks: Task[];
+  onToggleCompleted: (taskId: string) => void;
 }
 
-export function TaskList({ tasks }: TaskListProps) {
+export function TaskList({ tasks, onToggleCompleted }: TaskListProps) {
   if (tasks.length === 0) {
     return (
       <Paragraph size="$2" color="$color10">
@@ -27,6 +28,17 @@ export function TaskList({ tasks }: TaskListProps) {
             minute: "2-digit",
           })}
           size="$3"
+          iconAfter={
+            <Checkbox
+              size="$2"
+              checked={task.completed}
+              onCheckedChange={() => onToggleCompleted(task.id)}
+            >
+              <Checkbox.Indicator>
+                <span style={{ fontSize: 10 }}>✓</span>
+              </Checkbox.Indicator>
+            </Checkbox>
+          }
         />
       ))}
     </YStack>

@@ -17,3 +17,10 @@ export function createTask(title: string): Task {
     completed: false,
   };
 }
+
+export function toggleTaskCompleted(task: Task): Task {
+  return {
+    ...task,
+    completed: !task.completed,
+  };
+}
