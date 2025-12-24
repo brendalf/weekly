@@ -9,6 +9,7 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
+      "@/*": ["./*"],
       "@weekly/domain": ["packages/domain/src"]
     }
   }

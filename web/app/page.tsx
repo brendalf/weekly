@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, FormEvent } from "react";
-import { Task, Habit, getISOWeek } from "@weekly/domain";
-import { YStack, XStack, H2, Paragraph, Button } from "tamagui";
+import { Task, Habit } from "@weekly/domain";
+import { YStack, H2, Paragraph } from "tamagui";
 import { TaskInput } from "./components/tasks/TaskInput";
 import { TaskList } from "./components/tasks/TaskList";
 import { HabitInput } from "./components/habits/HabitInput";
 import { HabitList } from "./components/habits/HabitList";
+import { WeekPicker } from "./components/calendar/WeekPicker";
+import { WeekdaysCarousel } from "./components/calendar/WeekdaysCarousel";
 import {
   subscribeToTasks,
   addTaskRemote,
@@ -18,7 +20,6 @@ export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [habitName, setHabitName] = useState("");
   const [habits, setHabits] = useState<Habit[]>([]);
-  const [weekStart, setWeekStart] = useState<Date>(() => getStartOfWeek(new Date()));
 
   const userId = "dev-user";
 
@@ -56,64 +57,16 @@ export default function Home() {
     setHabitName("");
   }
 
-  function handlePrevWeek() {
-    setWeekStart((prev) => addDays(prev, -7));
-  }
-
-  function handleNextWeek() {
-    setWeekStart((prev) => addDays(prev, 7));
-  }
-
-  const { year, week } = getISOWeek(weekStart);
-  const weekDays = getWeekDays(weekStart);
-
   return (
-    <YStack f={1} ai="center" jc="center" padding="$4" bg="$background">
-      <YStack width="100%" maxWidth={600} gap="$4">
+    <YStack flex={1} items={"center"} justify="center" p="$4" bg="$background">
+      <YStack width="100%" maxW={600} gap="$4">
         <YStack gap="$2">
-          <H2>Weekly tasks (web)</H2>
+          <H2>Weekly</H2>
         </YStack>
 
         <YStack gap="$2">
-          <XStack ai="center" jc="space-between">
-            <Button size="$2" onPress={handlePrevWeek}>
-              ◀
-            </Button>
-            <Paragraph size="$2">
-              Week {week}, {year}
-            </Paragraph>
-            <Button size="$2" onPress={handleNextWeek}>
-              ▶
-            </Button>
-          </XStack>
-
-          <XStack gap="$2" overflow="auto" pt="$2">
-            {weekDays.map((day) => (
-              <YStack
-                key={day.toISOString()}
-                padding="$2"
-                borderRadius="$3"
-                borderWidth={1}
-                borderColor="$borderColor"
-                bg="$backgroundStrong"
-                minWidth={70}
-                ai="center"
-                gap="$1"
-              >
-                <Paragraph size="$1" color="$color10">
-                  {day.toLocaleDateString(undefined, {
-                    weekday: "short",
-                  })}
-                </Paragraph>
-                <Paragraph size="$2">
-                  {day.toLocaleDateString(undefined, {
-                    day: "2-digit",
-                    month: "short",
-                  })}
-                </Paragraph>
-              </YStack>
-            ))}
-          </XStack>
+          <WeekPicker />
+          <WeekdaysCarousel />
         </YStack>
 
         <YStack gap="$2">
@@ -145,25 +98,6 @@ export default function Home() {
       </YStack>
     </YStack>
   );
-}
-
-function getStartOfWeek(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay(); // 0 (Sun) - 6 (Sat)
-  const diff = (day === 0 ? -6 : 1) - day; // move to Monday
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function addDays(date: Date, days: number): Date {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-}
-
-function getWeekDays(weekStart: Date): Date[] {
-  return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 }
 
 function createLocalId(): string {

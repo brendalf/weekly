@@ -1,7 +1,7 @@
 "use client";
 
 import { Habit } from "@weekly/domain";
-import { YStack, Paragraph } from "tamagui";
+import { YStack, Paragraph, ListItem } from "tamagui";
 
 interface HabitListProps {
   habits: Habit[];
@@ -17,11 +17,14 @@ export function HabitList({ habits }: HabitListProps) {
   }
 
   return (
-    <YStack gap="$1">
+    <YStack gap="$2">
       {habits.map((habit) => (
-        <Paragraph key={habit.id} size="$2">
-          {habit.name} (target: {habit.weeklyTarget}/week)
-        </Paragraph>
+        <ListItem
+          key={habit.id}
+          title={habit.name}
+          subTitle={`Target: ${habit.weeklyTarget}/week`}
+          size="$3"
+        />
       ))}
     </YStack>
   );

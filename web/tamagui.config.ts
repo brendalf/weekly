@@ -1,12 +1,15 @@
 import { createTamagui } from "tamagui";
 import { defaultConfig } from "@tamagui/config/v4";
 
-// you usually export this from a tamagui.config.ts file
-export const config = createTamagui(defaultConfig);
+const config = createTamagui(defaultConfig);
 
-type Conf = typeof config;
+export type AppConfig = typeof config
 
-// make imports typed
-declare module "tamagui" {
-  interface TamaguiCustomConfig extends Conf {}
+declare module 'tamagui' {
+  // or '@tamagui/core'
+  // overrides TamaguiCustomConfig so your custom types
+  // work everywhere you import `tamagui`
+  interface TamaguiCustomConfig extends AppConfig {}
 }
+
+export default config

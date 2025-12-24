@@ -1,4 +1,8 @@
 packages:
-  - "web"
-  - "app"
-  - "packages/*"
+  - web
+  - app
+  - packages/*
+
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - protobufjs
