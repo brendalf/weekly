@@ -14,6 +14,7 @@ import {
   addTaskRemote,
   toggleTaskRemote,
 } from "./stores/tasks";
+import { addHabbitRemote, subscribeToHabbits } from "./stores/habbits";
 
 export default function Home() {
   const [title, setTitle] = useState("");
@@ -25,6 +26,11 @@ export default function Home() {
 
   useEffect(() => {
     const unsub = subscribeToTasks(userId, (nextTasks) => setTasks(nextTasks));
+    return () => unsub();
+  }, [userId]);
+
+  useEffect(() => {
+    const unsub = subscribeToHabbits(userId, (nextHabits) => setHabits(nextHabits));
     return () => unsub();
   }, [userId]);
 
@@ -53,6 +59,7 @@ export default function Home() {
       weeklyTarget: 1,
     };
 
+    addHabbitRemote(userId, trimmed, 1);
     setHabits((prev) => [newHabit, ...prev]);
     setHabitName("");
   }

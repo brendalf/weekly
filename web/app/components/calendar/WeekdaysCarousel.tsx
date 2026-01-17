@@ -36,12 +36,12 @@ export function WeekdaysCarousel() {
             cursor="pointer"
           >
             <Paragraph size="$1" color="$color10">
-              {day.toLocaleDateString(undefined, {
+              {day.toLocaleDateString("en-US", {
                 weekday: "short",
               })}
             </Paragraph>
             <Paragraph size="$2">
-              {day.toLocaleDateString(undefined, {
+              {day.toLocaleDateString("en-US", {
                 day: "2-digit",
                 month: "short",
               })}
