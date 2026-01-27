@@ -5,7 +5,6 @@ import { Task, Habit } from "@weekly/domain";
 import { YStack, H2, Paragraph } from "tamagui";
 import { TaskInput } from "./components/tasks/TaskInput";
 import { TaskList } from "./components/tasks/TaskList";
-import { HabitInput } from "./components/habits/HabitInput";
 import { HabitList } from "./components/habits/HabitList";
 import { WeekPicker } from "./components/calendar/WeekPicker";
 import { WeekdaysCarousel } from "./components/calendar/WeekdaysCarousel";
@@ -15,11 +14,11 @@ import {
   toggleTaskRemote,
 } from "./stores/tasks";
 import { addHabbitRemote, subscribeToHabbits } from "./stores/habbits";
+import { HabitAddModal, HabitPeriod } from "./components/habits/HabitAddModal";
 
 export default function Home() {
   const [title, setTitle] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [habitName, setHabitName] = useState("");
   const [habits, setHabits] = useState<Habit[]>([]);
 
   const userId = "dev-user";
@@ -48,20 +47,8 @@ export default function Home() {
     toggleTaskRemote(userId, task);
   }
 
-  function handleAddHabit(e: FormEvent) {
-    e.preventDefault();
-    const trimmed = habitName.trim();
-    if (!trimmed) return;
-
-    const newHabit: Habit = {
-      id: createLocalId(),
-      name: trimmed,
-      weeklyTarget: 1,
-    };
-
-    addHabbitRemote(userId, trimmed, 1);
-    setHabits((prev) => [newHabit, ...prev]);
-    setHabitName("");
+  function handleAddHabitModal(name: string, times: number, period: HabitPeriod) {
+    addHabbitRemote(userId, name, times, period);
   }
 
   return (
@@ -80,12 +67,8 @@ export default function Home() {
           <Paragraph size="$2" fontWeight="600">
             Habits
           </Paragraph>
-          <HabitInput
-            name={habitName}
-            onChangeName={setHabitName}
-            onSubmit={handleAddHabit}
-          />
-          <HabitList habits={habits} />
+          <HabitAddModal onSubmit={handleAddHabitModal} />
+          <HabitList habits={habits} userId={userId} />
         </YStack>
 
         <YStack gap="$2">

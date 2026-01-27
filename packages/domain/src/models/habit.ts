@@ -3,10 +3,17 @@ export type WeekOfYear = number; // 1-53
 
 export type HabitId = string;
 
+export enum HabitPeriod {
+  Day = "day",
+  Week = "week",
+  Month = "month",
+}
+
 export interface Habit {
   id: HabitId;
   name: string;
-  weeklyTarget: number; // number of times per week (e.g. 4 = 4 days/week)
+  times: number;
+  period: HabitPeriod;
 }
 
 export interface WeekId {
