@@ -27,10 +27,10 @@ export function subscribeToHabitProgress(
   userId: string,
   habitId: string,
   period: HabitPeriod,
+  referenceDate: Date,
   onProgress: (data: { count: number; dayCounts: Record<string, number> }) => void,
 ) {
-  const now = new Date();
-  const periodKey = periodKeyOf(now, period);
+  const periodKey = periodKeyOf(referenceDate, period);
   const ref = progressDocRef(userId, habitId, periodKey);
   return onSnapshot(ref, (snap) => {
     const data = snap.data() as HabitProgressDoc | undefined;
@@ -43,12 +43,12 @@ export async function incrementHabit(
   habitId: string,
   period: HabitPeriod,
   target: number,
+  referenceDate: Date,
 ) {
-  const now = new Date();
-  const dayKey = dayKeyOf(now);
-  const weekKey = weekKeyOf(now);
-  const monthKey = monthKeyOf(now);
-  const periodKey = periodKeyOf(now, period);
+  const dayKey = dayKeyOf(referenceDate);
+  const weekKey = weekKeyOf(referenceDate);
+  const monthKey = monthKeyOf(referenceDate);
+  const periodKey = periodKeyOf(referenceDate, period);
 
   const ref = progressDocRef(userId, habitId, periodKey);
   await runTransaction(db, async (tx) => {
