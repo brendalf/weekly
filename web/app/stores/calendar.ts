@@ -12,9 +12,11 @@ type Listener = () => void;
 
 let state: CalendarState = (() => {
   const weekStart = getStartOfWeek(new Date());
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   return {
     weekStart,
-    selectedDayISO: null,
+    selectedDayISO: today.toISOString(),
   };
 })();
 

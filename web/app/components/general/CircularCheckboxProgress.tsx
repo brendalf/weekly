@@ -33,7 +33,7 @@ export function CircularCheckboxProgress({
           cy={size / 2}
           r={radius}
           strokeWidth={stroke}
-          stroke="#5B9BFF"
+          stroke="purple"
           fill="none"
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
@@ -49,7 +49,7 @@ export function CircularCheckboxProgress({
           margin: 2,
           borderRadius: 9999,
           border: "1px solid #A0A0A0",
-          background: complete ? "#5B9BFF" : "white",
+          background: complete ? "purple" : "white",
           color: complete ? "white" : "transparent",
           display: "flex",
           alignItems: "center",

@@ -49,15 +49,13 @@ export function HabitList({ habits, userId }: HabitListProps) {
         </Paragraph>
       )}
       {habits.map((habit) => {
-        const target = habit.times;
-        const period = habit.period;
         return (
           <HabitItem
             key={habit.id}
             id={habit.id}
             name={habit.name}
-            target={target}
-            period={period}
+            target={habit.times}
+            period={habit.period}
             userId={userId}
           />
         );

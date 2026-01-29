@@ -13,10 +13,7 @@ export function WeekdaysCarousel() {
     <XStack
       key={weekStart.toISOString()}
       flex={1}
-      items="center"
-      justify="center"
-      overflow="scroll"
-      mt="$2"
+      style={{ alignItems: "center", justifyContent: "center", overflowX: "scroll", marginTop: 8 }}
       gap="$2"
     >
       {weekDays.map((day: Date) => {
@@ -25,15 +22,13 @@ export function WeekdaysCarousel() {
         return (
           <YStack
             key={day.toISOString()}
-            p="$2"
             borderWidth={2}
             borderColor={isSelected ? "purple" : "$borderColor"}
-            bg="$background"
             flex={1}
             minW={70}
             gap="$1"
             onPress={() => calendarStore.selectDay(day)}
-            cursor="pointer"
+            style={{ padding: 8, backgroundColor: "#f3f4f6", borderRadius: 10, cursor: "pointer" }}
           >
             <Paragraph size="$1" color="$color10">
               {day.toLocaleDateString("en-US", {

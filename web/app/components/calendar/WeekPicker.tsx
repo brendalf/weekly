@@ -9,7 +9,7 @@ export function WeekPicker() {
   const { year, week } = getISOWeek(weekStart);
 
   return (
-    <XStack justify="space-between" items="center">
+    <XStack style={{ justifyContent: "space-between", alignItems: "center" }}>
       <Button size="$2" onPress={() => calendarStore.prevWeek()}>
         ◀
       </Button>
