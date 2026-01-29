@@ -8,12 +8,7 @@ import { TaskList } from "./components/tasks/TaskList";
 import { HabitList } from "./components/habits/HabitList";
 import { WeekPicker } from "./components/calendar/WeekPicker";
 import { WeekdaysCarousel } from "./components/calendar/WeekdaysCarousel";
-import {
-  subscribeToTasks,
-  addTaskRemote,
-  toggleTaskRemote,
-} from "./stores/tasks";
-import { subscribeToHabbits } from "./stores/habbits";
+import { habitRepository, taskRepository } from "./repositories";
 
 export default function Home() {
   const [title, setTitle] = useState("");
@@ -23,12 +18,12 @@ export default function Home() {
   const userId = "dev-user";
 
   useEffect(() => {
-    const unsub = subscribeToTasks(userId, (nextTasks) => setTasks(nextTasks));
+    const unsub = taskRepository.subscribeTasks(userId, (nextTasks) => setTasks(nextTasks));
     return () => unsub();
   }, [userId]);
 
   useEffect(() => {
-    const unsub = subscribeToHabbits(userId, (nextHabits) => setHabits(nextHabits));
+    const unsub = habitRepository.subscribeHabits(userId, (nextHabits) => setHabits(nextHabits));
     return () => unsub();
   }, [userId]);
 
@@ -36,14 +31,14 @@ export default function Home() {
     e.preventDefault();
     const trimmed = title.trim();
     if (!trimmed) return;
-    addTaskRemote(userId, trimmed);
+    taskRepository.addTask(userId, trimmed);
     setTitle("");
   }
 
   function handleToggleTaskCompleted(taskId: string) {
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
-    toggleTaskRemote(userId, task);
+    taskRepository.toggleTask(userId, task);
   }
 
   return (

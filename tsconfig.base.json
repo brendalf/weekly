@@ -10,7 +10,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@weekly/domain": ["packages/domain/src"]
+      "@weekly/domain": ["packages/domain/src"],
+      "@weekly/firebase": ["packages/firebase/src"]
     }
   }
 }

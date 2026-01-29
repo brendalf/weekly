@@ -1,9 +1,9 @@
 "use client";
 
 import { XStack } from "tamagui";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HabitPeriod } from "@weekly/domain";
-import { subscribeToHabitProgress, incrementHabit } from "../../stores/habitProgress";
+import { habitProgressRepository } from "../../repositories";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
 import { useCalendarStore } from "../../stores/calendar";
 import { HabitDetailsDialog } from "./HabitDetailsDialog";
@@ -24,20 +24,16 @@ export function HabitItem({ id, name, target, period, userId }: HabitItemProps) 
   const weekStart = useCalendarStore((s) => s.weekStart);
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
 
-  const referenceDate = selectedDayISO
-    ? new Date(selectedDayISO)
-    : period === HabitPeriod.Week
-      ? weekStart
-      : today;
-
-  const referenceKey = selectedDayISO
-    ? selectedDayISO
-    : period === HabitPeriod.Week
-      ? weekStart.toISOString()
-      : today.toISOString();
+  const referenceDate = useMemo(() => {
+    return selectedDayISO
+      ? new Date(selectedDayISO)
+      : period === HabitPeriod.Week
+        ? weekStart
+        : today;
+  }, [selectedDayISO, period, weekStart, today]);
 
   useEffect(() => {
-    const unsub = subscribeToHabitProgress(
+    const unsub = habitProgressRepository.subscribeHabitProgress(
       userId,
       id,
       period,
@@ -47,7 +43,8 @@ export function HabitItem({ id, name, target, period, userId }: HabitItemProps) 
       }
     );
     return () => unsub();
-  }, [userId, id, period, referenceKey]);
+  }, [userId, id, period, referenceDate]);
+
   const size = 28;
   const stroke = 4;
   const progress = Math.max(0, Math.min(1, target > 0 ? value / target : 0));
@@ -70,7 +67,7 @@ export function HabitItem({ id, name, target, period, userId }: HabitItemProps) 
           stroke={stroke}
           progress={progress}
           complete={complete}
-          onClick={() => incrementHabit(userId, id, period, target, referenceDate)}
+          onClick={() => habitProgressRepository.incrementHabit(userId, id, period, target, referenceDate)}
           ariaLabel={complete ? "Completed" : "Mark one done"}
         />
 

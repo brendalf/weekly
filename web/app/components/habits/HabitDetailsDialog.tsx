@@ -3,11 +3,8 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Button, Dialog, Paragraph, XStack, YStack } from "tamagui";
 import { HabitPeriod } from "@weekly/domain";
-import {
-  deleteHabbitRemote,
-  subscribeToHabitCompletions,
-  HabitCompletionLog,
-} from "../../stores/habbits";
+import { HabitCompletionLog } from "@weekly/domain";
+import { habitRepository } from "../../repositories";
 
 interface HabitDetailsDialogProps {
   open: boolean;
@@ -38,12 +35,12 @@ export function HabitDetailsDialog({
 
   useEffect(() => {
     if (!open) return;
-    const unsub = subscribeToHabitCompletions(userId, habitId, setLogs);
+    const unsub = habitRepository.subscribeHabitCompletions(userId, habitId, setLogs);
     return () => unsub();
   }, [open, userId, habitId]);
 
   async function handleDelete() {
-    await deleteHabbitRemote(userId, habitId);
+    await habitRepository.deleteHabit(userId, habitId);
     onOpenChange(false);
   }
 

@@ -4,7 +4,7 @@ import { Habit, HabitPeriod } from "@weekly/domain";
 import { Button, XStack, YStack, Paragraph } from "tamagui";
 import { HabitItem } from "./HabitItem";
 import { HabitAddModal } from "./HabitAddModal";
-import { addHabbitRemote } from "../../stores/habbits";
+import { habitRepository } from "../../repositories";
 
 interface HabitListProps {
   habits: Habit[];
@@ -17,7 +17,7 @@ export function HabitList({ habits, userId }: HabitListProps) {
     times: number,
     period: HabitPeriod
   ) {
-    addHabbitRemote(userId, name, times, period);
+    habitRepository.addHabit(userId, name, times, period);
   }
 
   const header = (

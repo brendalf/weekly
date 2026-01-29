@@ -12,38 +12,6 @@ export function isHabitSucceeded(count: number, target: number): boolean {
 }
 
 /**
- * Compute weekly progress for a habit from its day logs.
- */
-export function computeWeeklyProgressFromDayLogs(
-  habit: Habit,
-  week: WeekId,
-  dayLogs: HabitDayLog[],
-): WeeklyHabitProgress {
-  const { id: habitId, weeklyTarget } = habit;
-
-  // Count distinct dates in this week for this habit
-  const dates = new Set(
-    dayLogs
-      .filter((log) => log.habitId === habitId)
-      .filter((log) => isDateInWeek(log.date, week))
-      .map((log) => log.date),
-  );
-
-  const count = dates.size;
-  const target = weeklyTarget;
-  const succeeded = isHabitSucceeded(count, target);
-
-  return {
-    habitId,
-    year: week.year,
-    week: week.week,
-    count,
-    target,
-    succeeded,
-  };
-}
-
-/**
  * Very small helper that lets us check if an ISO date belongs to a given Year/Week.
  *
  * For now this relies on a simple ISO week calculation; you can refine to match

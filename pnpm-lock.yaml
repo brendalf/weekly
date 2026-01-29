@@ -121,11 +121,30 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/firebase:
+    dependencies:
+      '@weekly/domain':
+        specifier: workspace:*
+        version: link:../domain
+      firebase:
+        specifier: ^12.6.0
+        version: 12.6.0
+    devDependencies:
+      '@types/node':
+        specifier: ^20.19.0
+        version: 20.19.26
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   web:
     dependencies:
       '@weekly/domain':
         specifier: workspace:*
         version: link:../packages/domain
+      '@weekly/firebase':
+        specifier: workspace:*
+        version: link:../packages/firebase
       firebase:
         specifier: ^12.6.0
         version: 12.6.0

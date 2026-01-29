@@ -23,13 +23,8 @@ export function TaskInput({ title, onChangeTitle, onSubmit }: TaskInputProps) {
           value={title}
           onChangeText={onChangeTitle}
         />
-        <Button
-          size="$3"
-          theme="active"
-          disabled={!title.trim()}
-          type="submit"
-        >
-          Add
+        <Button size="$3" disabled={!title.trim()} asChild>
+          <button type="submit">Add</button>
         </Button>
       </form>
     </XStack>

@@ -23,12 +23,8 @@ export function HabitInput({ name, onChangeName, onSubmit }: HabitInputProps) {
           value={name}
           onChangeText={onChangeName}
         />
-        <Button
-          size="$3"
-          disabled={!name.trim()}
-          type="submit"
-        >
-          Add
+        <Button size="$3" disabled={!name.trim()} asChild>
+          <button type="submit">Add</button>
         </Button>
       </form>
     </XStack>
