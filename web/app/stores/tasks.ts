@@ -6,9 +6,16 @@ import {
   orderBy,
   updateDoc,
   doc,
+  Timestamp,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { Task } from "@weekly/domain";
+
+type TaskDoc = {
+  title?: unknown;
+  createdAt?: Timestamp;
+  completed?: unknown;
+};
 
 function tasksCollection(userId: string) {
   return collection(db, "users", userId, "tasks");
@@ -21,13 +28,12 @@ export function subscribeToTasks(
   const q = query(tasksCollection(userId), orderBy("createdAt", "desc"));
   return onSnapshot(q, (snapshot) => {
     const tasks: Task[] = snapshot.docs.map((d) => {
-      const data = d.data() as any;
+      const data = d.data() as TaskDoc;
       return {
         id: d.id,
-        title: data.title ?? "",
-        createdAt: data.createdAt?.toDate?.().toISOString?.() ??
-          new Date().toISOString(),
-        completed: Boolean(data.completed),
+        title: typeof data.title === "string" ? data.title : "",
+        createdAt: data.createdAt?.toDate().toISOString() ?? new Date().toISOString(),
+        completed: typeof data.completed === "boolean" ? data.completed : false,
       };
     });
     onTasks(tasks);

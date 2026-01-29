@@ -13,8 +13,7 @@ import {
   addTaskRemote,
   toggleTaskRemote,
 } from "./stores/tasks";
-import { addHabbitRemote, subscribeToHabbits } from "./stores/habbits";
-import { HabitAddModal, HabitPeriod } from "./components/habits/HabitAddModal";
+import { subscribeToHabbits } from "./stores/habbits";
 
 export default function Home() {
   const [title, setTitle] = useState("");
@@ -47,13 +46,16 @@ export default function Home() {
     toggleTaskRemote(userId, task);
   }
 
-  function handleAddHabitModal(name: string, times: number, period: HabitPeriod) {
-    addHabbitRemote(userId, name, times, period);
-  }
-
   return (
-    <YStack flex={1} items={"center"} justify="center" p="$4" bg="$background">
-      <YStack width="100%" maxW={600} gap="$4">
+    <YStack
+      flex={1}
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+      }}
+    >
+      <YStack width="100%" style={{ maxWidth: 600 }} gap="$4">
         <YStack gap="$2">
           <H2>Weekly</H2>
         </YStack>
@@ -64,10 +66,6 @@ export default function Home() {
         </YStack>
 
         <YStack gap="$2">
-          <Paragraph size="$2" fontWeight="600">
-            Habits
-          </Paragraph>
-          <HabitAddModal onSubmit={handleAddHabitModal} />
           <HabitList habits={habits} userId={userId} />
         </YStack>
 
@@ -88,8 +86,4 @@ export default function Home() {
       </YStack>
     </YStack>
   );
-}
-
-function createLocalId(): string {
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }

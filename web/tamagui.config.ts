@@ -9,7 +9,9 @@ declare module 'tamagui' {
   // or '@tamagui/core'
   // overrides TamaguiCustomConfig so your custom types
   // work everywhere you import `tamagui`
-  interface TamaguiCustomConfig extends AppConfig {}
+  interface TamaguiCustomConfig extends AppConfig {
+    tamaguiCustomConfig?: never
+  }
 }
 
 export default config

@@ -2,6 +2,12 @@ import { addDoc, collection, onSnapshot, orderBy, query } from "firebase/firesto
 import { db } from "../config/firebase";
 import { Habit, HabitPeriod } from "@weekly/domain";
 
+type HabitDoc = {
+  name?: unknown;
+  times?: unknown;
+  period?: unknown;
+};
+
 function habbitsCollection(userId: string) {
   return collection(db, "users", userId, "habbits");
 }
@@ -13,28 +19,19 @@ export function subscribeToHabbits(
   const q = query(habbitsCollection(userId), orderBy("createdAt", "desc"));
   return onSnapshot(q, (snapshot) => {
     const habbits: Habit[] = snapshot.docs.map((d) => {
-      const data = d.data() as any;
-
-      const times: number =
-        typeof data?.times === "number"
-          ? data.times
-          : typeof data?.weeklyTarget === "number"
-            ? data.weeklyTarget
-            : 0;
-
-      const period: Habit["period"] =
-  data?.period === "day" ? HabitPeriod.Day
-  : data?.period === "week" ? HabitPeriod.Week
-  : data?.period === "month" ? HabitPeriod.Month
-  : typeof data?.weeklyTarget === "number" ? HabitPeriod.Week
-  : HabitPeriod.Week;
+      const data = d.data() as HabitDoc;
 
       return {
-  id: d.id,
-  name: data?.name ?? "",
-  times,
-  period,
-};
+        id: d.id,
+        name: typeof data?.name === "string" ? data.name : "",
+        times: typeof data?.times === "number" ? data.times : 0,
+        period:
+          data?.period === HabitPeriod.Day
+            ? HabitPeriod.Day
+            : data?.period === HabitPeriod.Month
+              ? HabitPeriod.Month
+              : HabitPeriod.Week,
+      };
     });
     onHabbits(habbits);
   });
