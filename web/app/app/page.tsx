@@ -118,49 +118,45 @@ export default function AppPage() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-4">
-              <p className="text-sm font-semibold text-gray-900">This week</p>
-              <p className="mt-1 text-sm text-gray-600">
-                Pick a week and a day — progress updates instantly.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <WeekPicker />
-              <WeekdaysCarousel />
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Habits</p>
-                <p className="mt-1 text-sm text-gray-600">Build streaks with daily clarity.</p>
+        <div className="grid grid-cols-1 gap-14 lg:grid-cols-2">
+          {/* left column */}
+          <div className="grid col-span-1 gap-4">
+            <section className="col-span-1 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="space-y-3">
+                <WeekPicker />
+                <WeekdaysCarousel />
               </div>
-            </div>
-            <HabitList habits={habits} userId={userId} />
-          </section>
+            </section>
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm lg:col-span-2">
-            <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Tasks</p>
-                <p className="mt-1 text-sm text-gray-600">
-                  Lightweight tasks that keep momentum.
-                </p>
+            <section className="col-span-1 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Habits</p>
+                  <p className="mt-1 text-sm text-gray-600">Build streaks with daily clarity.</p>
+                </div>
               </div>
-            </div>
-            <div className="space-y-3">
-              <TaskInput title={title} onChangeTitle={setTitle} onSubmit={handleAddTask} />
-              <TaskList tasks={tasks} onToggleCompleted={handleToggleTaskCompleted} />
-            </div>
-          </section>
+              <HabitList habits={habits} userId={userId} />
+            </section>
+          </div>
+
+          {/* right column */}
+          <div className="grid col-span-1 gap-4">
+            <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Tasks</p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Lightweight tasks that keep momentum.
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <TaskInput title={title} onChangeTitle={setTitle} onSubmit={handleAddTask} />
+                <TaskList tasks={tasks} onToggleCompleted={handleToggleTaskCompleted} />
+              </div>
+            </section>
+          </div>
         </div>
-
-        <footer className="mt-10 text-xs text-gray-500">
-          Data is stored per-user in Firebase under <code>users/{userId}</code>.
-        </footer>
       </div>
     </main>
   );
