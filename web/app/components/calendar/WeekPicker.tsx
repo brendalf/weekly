@@ -1,6 +1,6 @@
 "use client";
 
-import { XStack, Paragraph, Button } from "tamagui";
+import { XStack, Button } from "tamagui";
 import { getISOWeek } from "@weekly/domain";
 import { useCalendarStore, calendarStore } from "../../stores/calendar";
 
@@ -13,9 +13,9 @@ export function WeekPicker() {
       <Button size="$2" onPress={() => calendarStore.prevWeek()}>
         ◀
       </Button>
-      <Paragraph size="$2">
+      <p className="text-sm font-semibold text-gray-900">
         Week {week}, {year}
-      </Paragraph>
+      </p>
       <Button size="$2" onPress={() => calendarStore.nextWeek()}>
         ▶
       </Button>

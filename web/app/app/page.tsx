@@ -42,13 +42,17 @@ export default function AppPage() {
 
   useEffect(() => {
     if (!userId) return;
-    const unsub = taskRepository.subscribeTasks(userId, (nextTasks) => setTasks(nextTasks));
+    const unsub = taskRepository.subscribeTasks(userId, (nextTasks) =>
+      setTasks(nextTasks),
+    );
     return () => unsub();
   }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
-    const unsub = habitRepository.subscribeHabits(userId, (nextHabits) => setHabits(nextHabits));
+    const unsub = habitRepository.subscribeHabits(userId, (nextHabits) =>
+      setHabits(nextHabits),
+    );
     return () => unsub();
   }, [userId]);
 
@@ -136,14 +140,13 @@ export default function AppPage() {
           </section>
 
           <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm lg:col-span-2">
-            <TaskList tasks={tasks} onToggleCompleted={handleToggleTaskCompleted} />
+            <TaskList
+              tasks={tasks}
+              onToggleCompleted={handleToggleTaskCompleted}
+            />
           </section>
         </div>
-
-        <footer className="mt-10 text-xs text-gray-500">
-          Data is stored per-user in Firebase under <code>users/{userId}</code>.
-        </footer>
       </div>
     </main>
   );
-}
+
