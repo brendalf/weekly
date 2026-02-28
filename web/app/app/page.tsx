@@ -3,7 +3,6 @@
 import { useState, useEffect, FormEvent } from "react";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { Task, Habit } from "@weekly/domain";
-import { Paragraph } from "tamagui";
 import { TaskInput } from "../components/tasks/TaskInput";
 import { TaskList } from "../components/tasks/TaskList";
 import { HabitList } from "../components/habits/HabitList";
@@ -133,28 +132,11 @@ export default function AppPage() {
           </section>
 
           <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Habits</p>
-                <p className="mt-1 text-sm text-gray-600">Build streaks with daily clarity.</p>
-              </div>
-            </div>
             <HabitList habits={habits} userId={userId} />
           </section>
 
           <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm lg:col-span-2">
-            <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Tasks</p>
-                <p className="mt-1 text-sm text-gray-600">
-                  Lightweight tasks that keep momentum.
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <TaskInput title={title} onChangeTitle={setTitle} onSubmit={handleAddTask} />
-              <TaskList tasks={tasks} onToggleCompleted={handleToggleTaskCompleted} />
-            </div>
+            <TaskList tasks={tasks} onToggleCompleted={handleToggleTaskCompleted} />
           </section>
         </div>
 

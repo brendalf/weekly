@@ -12,19 +12,24 @@ interface HabitListProps {
 }
 
 export function HabitList({ habits, userId }: HabitListProps) {
-  function handleAddHabitModal(
+  const handleAddHabitModal = (
     name: string,
     times: number,
     period: HabitPeriod
-  ) {
+  ) => {
     habitRepository.addHabit(userId, name, times, period);
   }
 
   const header = (
     <XStack style={{ alignItems: "center", justifyContent: "space-between" }}>
-      <Paragraph size="$2" fontWeight="600">
-        Habits
-      </Paragraph>
+      <YStack>
+        <Paragraph size="$3" fontWeight="900" color="$color12">
+          Habits
+        </Paragraph>
+        <Paragraph size="$2" fontWeight="400" color="$color11">
+          Build streaks with daily clarity.
+        </Paragraph>
+      </YStack>
       <HabitAddModal
         onSubmit={handleAddHabitModal}
         trigger={
@@ -44,7 +49,7 @@ export function HabitList({ habits, userId }: HabitListProps) {
     <YStack gap="$2">
       {header}
       {habits.length === 0 && (
-        <Paragraph size="$2" color="$color10">
+        <Paragraph size="$2" color="$color11">
           No habits yet.
         </Paragraph>
       )}

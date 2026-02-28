@@ -29,13 +29,13 @@ export function HabitAddModal({ onSubmit, trigger }: HabitAddModalProps) {
   const [times, setTimes] = useState<string>("1");
   const [period, setPeriod] = useState<HabitPeriod>(HabitPeriod.Week);
 
-  function reset() {
+  const reset = () => {
     setName("");
     setTimes("1");
     setPeriod(HabitPeriod.Week);
-  }
+  };
 
-  function handleSave() {
+  const handleSave = () => {
     const trimmed = name.trim();
     const n = Number(times);
     if (!trimmed || !Number.isFinite(n) || n <= 0) return;

@@ -41,7 +41,7 @@ export const calendarStore = {
   },
   setWeekStart(nextWeekStart: Date) {
     const normalized = getStartOfWeek(nextWeekStart);
-    setState({ weekStart: normalized, selectedDayISO: null });
+    setState({ weekStart: normalized });
   },
   prevWeek() {
     calendarStore.setWeekStart(addDays(state.weekStart, -7));
