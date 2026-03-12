@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { Button, Dialog, Paragraph, XStack, YStack } from "tamagui";
-import { HabitPeriod } from "@weekly/domain";
-import { HabitCompletionLog } from "@weekly/domain";
+import { useEffect, useState } from "react";
+import {
+  Modal,
+  Button,
+  Surface,
+  useOverlayState,
+} from "@heroui/react";
+import { HabitPeriod, HabitCompletionLog } from "@weekly/domain";
 import { habitRepository } from "../../repositories";
 
 interface HabitDetailsDialogProps {
@@ -25,13 +29,9 @@ export function HabitDetailsDialog({
   times,
   period,
 }: HabitDetailsDialogProps) {
-  const isClient = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-
   const [logs, setLogs] = useState<HabitCompletionLog[]>([]);
+
+  const state = useOverlayState({ isOpen: open, onOpenChange });
 
   useEffect(() => {
     if (!open) return;
@@ -41,69 +41,54 @@ export function HabitDetailsDialog({
 
   async function handleDelete() {
     await habitRepository.deleteHabit(userId, habitId);
-    onOpenChange(false);
+    state.close();
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal>
-      {isClient && open && (
-        <Dialog.Portal>
-          <Dialog.Overlay
-            key="overlay"
-            opacity={0.5}
-            enterStyle={{ opacity: 0 }}
-            exitStyle={{ opacity: 0 }}
-          />
-          <Dialog.Content key="content" bordered elevate size="$4" gap="$3">
-            <Dialog.Title>{name}</Dialog.Title>
-            <Dialog.Description>
-              {times} / {period}
-            </Dialog.Description>
-
-            <YStack gap="$2">
-              <Paragraph size="$2" fontWeight="600">
-                Completion logs
-              </Paragraph>
-              {logs.length === 0 ? (
-                <Paragraph size="$2" color="$color10">
-                  No completions yet.
-                </Paragraph>
-              ) : (
-                <YStack gap="$1">
-                  {logs.map((l) => (
-                    <XStack
-                      key={l.id}
-                      style={{
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: 8,
-                        backgroundColor: "#f3f4f6",
-                        borderRadius: 10,
-                      }}
-                    >
-                      <Paragraph size="$1" color="$color10">
-                        {l.occurredAt ? new Date(l.occurredAt).toLocaleString() : ""}
-                      </Paragraph>
-                      <Paragraph size="$1" color="$color10">
-                        {l.periodKey ?? ""}
-                      </Paragraph>
-                    </XStack>
-                  ))}
-                </YStack>
-              )}
-            </YStack>
-
-            <XStack gap="$2" style={{ justifyContent: "space-between" }}>
-              <Dialog.Close asChild>
-                <Button size="$3">Close</Button>
-              </Dialog.Close>
-              <Button size="$3" theme="red" onPress={handleDelete}>
+    <Modal state={state}>
+      <Modal.Backdrop variant="blur">
+        <Modal.Container placement="center" size="sm">
+          <Modal.Dialog>
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>{name}</Modal.Heading>
+              <p className="mt-1 text-sm text-foreground/60">{times}× / {period}</p>
+            </Modal.Header>
+            <Modal.Body className="p-6">
+              <Surface variant="default">
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm font-semibold text-foreground">Completion logs</p>
+                  {logs.length === 0 ? (
+                    <p className="text-sm text-foreground/60">No completions yet.</p>
+                  ) : (
+                    <div className="flex max-h-48 flex-col gap-1 overflow-y-auto">
+                      {logs.map((l) => (
+                        <div
+                          key={l.id}
+                          className="flex items-center justify-between rounded-lg border border-foreground/10 bg-background px-3 py-2"
+                        >
+                          <span className="text-xs text-foreground/60">
+                            {l.occurredAt ? new Date(l.occurredAt).toLocaleString() : ""}
+                          </span>
+                          <span className="text-xs text-foreground/60">{l.periodKey ?? ""}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Surface>
+            </Modal.Body>
+            <Modal.Footer className="justify-between">
+              <Button variant="danger" onPress={handleDelete}>
                 Delete habit
               </Button>
-            </XStack>
-          </Dialog.Content>
-        </Dialog.Portal>
-      )}
-    </Dialog>
+              <Button variant="secondary" onPress={state.close}>
+                Close
+              </Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   );
 }

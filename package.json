@@ -3,8 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {},
-  "dependencies": {
-    "@tamagui/config": "^1.139.2",
-    "tamagui": "^1.139.2"
+  "devDependencies": {
+    "baseline-browser-mapping": "^2.10.0"
   }
 }

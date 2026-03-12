@@ -1,6 +1,6 @@
 "use client";
 
-import { XStack, Button } from "tamagui";
+import { Button } from "@heroui/react";
 import { getISOWeek } from "@weekly/domain";
 import { useCalendarStore, calendarStore } from "../../stores/calendar";
 
@@ -9,16 +9,28 @@ export function WeekPicker() {
   const { year, week } = getISOWeek(weekStart);
 
   return (
-    <XStack style={{ justifyContent: "space-between", alignItems: "center" }}>
-      <Button size="$2" onPress={() => calendarStore.prevWeek()}>
+    <h1 className="flex items-center justify-between mt-4 text-3xl font-semibold tracking-tight text-foreground">
+      <Button
+        size="sm"
+        variant="ghost"
+        isIconOnly
+        onPress={() => calendarStore.prevWeek()}
+        aria-label="Previous week"
+      >
         ◀
       </Button>
-      <p className="text-sm font-semibold text-gray-900">
+      <p className="font-semibold text-foreground">
         Week {week}, {year}
       </p>
-      <Button size="$2" onPress={() => calendarStore.nextWeek()}>
+      <Button
+        size="sm"
+        variant="ghost"
+        isIconOnly
+        onPress={() => calendarStore.nextWeek()}
+        aria-label="Next week"
+      >
         ▶
       </Button>
-    </XStack>
+    </h1>
   );
 }

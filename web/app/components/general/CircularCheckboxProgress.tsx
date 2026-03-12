@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
+import { Check } from "@gravity-ui/icons";
 
 interface CircularCheckboxProgressProps {
-  size?: number; // outer square size in px
-  stroke?: number; // ring thickness
+  size?: number;
+  stroke?: number;
   progress: number; // 0..1
   complete?: boolean;
   onClick?: () => void;
@@ -12,8 +12,8 @@ interface CircularCheckboxProgressProps {
 }
 
 export function CircularCheckboxProgress({
-  size = 28,
-  stroke = 4,
+  size = 32,
+  stroke = 3,
   progress,
   complete = false,
   onClick,
@@ -21,46 +21,61 @@ export function CircularCheckboxProgress({
 }: CircularCheckboxProgressProps) {
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
-  const clamped = Math.max(0, Math.min(1, progress));
-  const dashOffset = circumference * (1 - clamped);
+  const dashOffset = circumference * (1 - Math.max(0, Math.min(1, progress)));
+  const inner = size - stroke * 2 - 4;
 
   return (
-    <div style={{ position: "relative", width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={size / 2} cy={size / 2} r={radius} strokeWidth={stroke} stroke="#E2E2E2" fill="none" />
+    <div
+      style={{ position: "relative", width: size, height: size, flexShrink: 0 }}
+    >
+      {/* SVG ring */}
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        style={{ transform: "rotate(-90deg)" }}
+        aria-hidden
+      >
+        {/* Track */}
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           strokeWidth={stroke}
-          stroke="purple"
+          stroke="var(--color-foreground, currentColor)"
+          strokeOpacity={0.1}
+          fill="none"
+        />
+        {/* Progress arc */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          strokeWidth={stroke}
+          stroke="var(--color-primary, purple)"
           fill="none"
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
           strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 0.3s ease" }}
         />
       </svg>
+
+      {/* Center button */}
       <button
         onClick={onClick}
         disabled={complete}
-        style={{
-          position: "absolute",
-          inset: 0,
-          margin: 2,
-          borderRadius: 9999,
-          border: "1px solid #A0A0A0",
-          background: complete ? "purple" : "white",
-          color: complete ? "white" : "transparent",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 14,
-          lineHeight: 1,
-          cursor: complete ? "default" : "pointer",
-        }}
         aria-label={ariaLabel}
+        style={{ width: inner, height: inner }}
+        className={[
+          "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full",
+          "flex items-center justify-center transition-colors",
+          complete
+            ? "bg-accent cursor-default"
+            : "bg-background border border-foreground/20 hover:border-accent/60 cursor-pointer",
+        ].join(" ")}
       >
-        ✓
+        <Check width={inner * 0.7} height={inner * 0.7} />
       </button>
     </div>
   );

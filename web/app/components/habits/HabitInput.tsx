@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent } from "react";
-import { XStack, Input, Button } from "tamagui";
+import { Button, Input } from "@heroui/react";
 
 interface HabitInputProps {
   name: string;
@@ -11,22 +11,16 @@ interface HabitInputProps {
 
 export function HabitInput({ name, onChangeName, onSubmit }: HabitInputProps) {
   return (
-    <XStack asChild gap="$2">
-      <form
-        onSubmit={onSubmit}
-        style={{ width: "100%", display: "flex", gap: 8 }}
-      >
-        <Input
-          flex={1}
-          size="$3"
-          placeholder="Add a habit (e.g. Read a book)"
-          value={name}
-          onChangeText={onChangeName}
-        />
-        <Button size="$3" disabled={!name.trim()} asChild>
-          <button type="submit">Add</button>
-        </Button>
-      </form>
-    </XStack>
+    <form onSubmit={onSubmit} className="flex w-full gap-2">
+      <Input
+        fullWidth
+        placeholder="Add a habit (e.g. Read a book)"
+        value={name}
+        onChange={(e) => onChangeName(e.target.value)}
+      />
+      <Button type="submit" size="sm" isDisabled={!name.trim()}>
+        Add
+      </Button>
+    </form>
   );
 }

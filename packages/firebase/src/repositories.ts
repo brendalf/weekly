@@ -17,6 +17,7 @@ import {
   query,
   runTransaction,
   serverTimestamp,
+  setDoc,
   updateDoc,
   writeBatch,
 } from "firebase/firestore";
@@ -28,6 +29,8 @@ import {
   type HabitRepository,
   type Task,
   type TaskRepository,
+  type UserPreferencesRepository,
+  type ThemePreference,
   HabitPeriod,
   dayKeyOf,
   monthKeyOf,
@@ -68,32 +71,45 @@ function tasksCollection(db: Firestore, userId: string) {
   return collection(db, "users", userId, "tasks");
 }
 
-function habbitsCollection(db: Firestore, userId: string) {
-  return collection(db, "users", userId, "habbits");
+function habitsCollection(db: Firestore, userId: string) {
+  return collection(db, "users", userId, "habits");
 }
 
 function habitDocRef(db: Firestore, userId: string, habitId: string) {
-  return doc(db, "users", userId, "habbits", habitId);
+  return doc(db, "users", userId, "habits", habitId);
 }
 
-function progressDocRef(db: Firestore, userId: string, habitId: string, periodKey: string) {
+function progressDocRef(
+  db: Firestore,
+  userId: string,
+  habitId: string,
+  periodKey: string,
+) {
   return doc(db, "users", userId, "habitProgress", `${habitId}_${periodKey}`);
 }
 
 export function createTaskRepository(db: Firestore): TaskRepository {
   return {
     subscribeTasks(userId: string, onTasks: (tasks: Task[]) => void) {
-      const q = query(tasksCollection(db, userId), orderBy("createdAt", "desc"));
+      const q = query(
+        tasksCollection(db, userId),
+        orderBy("createdAt", "desc"),
+      );
       return onSnapshot(q, (snapshot: QuerySnapshot<DocumentData>) => {
-        const tasks = snapshot.docs.map((d: QueryDocumentSnapshot<DocumentData>) => {
-          const data = d.data() as TaskDoc;
-          return {
-            id: d.id,
-            title: typeof data.title === "string" ? data.title : "",
-            createdAt: data.createdAt?.toDate().toISOString() ?? new Date().toISOString(),
-            completed: typeof data.completed === "boolean" ? data.completed : false,
-          };
-        });
+        const tasks = snapshot.docs.map(
+          (d: QueryDocumentSnapshot<DocumentData>) => {
+            const data = d.data() as TaskDoc;
+            return {
+              id: d.id,
+              title: typeof data.title === "string" ? data.title : "",
+              createdAt:
+                data.createdAt?.toDate().toISOString() ??
+                new Date().toISOString(),
+              completed:
+                typeof data.completed === "boolean" ? data.completed : false,
+            };
+          },
+        );
         onTasks(tasks);
       });
     },
@@ -114,27 +130,37 @@ export function createTaskRepository(db: Firestore): TaskRepository {
 export function createHabitRepository(db: Firestore): HabitRepository {
   return {
     subscribeHabits(userId: string, onHabits: (habits: Habit[]) => void) {
-      const q = query(habbitsCollection(db, userId), orderBy("createdAt", "desc"));
+      const q = query(
+        habitsCollection(db, userId),
+        orderBy("createdAt", "desc"),
+      );
       return onSnapshot(q, (snapshot: QuerySnapshot<DocumentData>) => {
-        const habbits = snapshot.docs.map((d: QueryDocumentSnapshot<DocumentData>) => {
-          const data = d.data() as HabitDoc;
-          return {
-            id: d.id,
-            name: typeof data?.name === "string" ? data.name : "",
-            times: typeof data?.times === "number" ? data.times : 0,
-            period:
-              data?.period === HabitPeriod.Day
-                ? HabitPeriod.Day
-                : data?.period === HabitPeriod.Month
-                  ? HabitPeriod.Month
-                  : HabitPeriod.Week,
-          };
-        });
-        onHabits(habbits);
+        const habits = snapshot.docs.map(
+          (d: QueryDocumentSnapshot<DocumentData>) => {
+            const data = d.data() as HabitDoc;
+            return {
+              id: d.id,
+              name: typeof data?.name === "string" ? data.name : "",
+              times: typeof data?.times === "number" ? data.times : 0,
+              period:
+                data?.period === HabitPeriod.Day
+                  ? HabitPeriod.Day
+                  : data?.period === HabitPeriod.Month
+                    ? HabitPeriod.Month
+                    : HabitPeriod.Week,
+            };
+          },
+        );
+        onHabits(habits);
       });
     },
-    async addHabit(userId: string, name: string, times: number, period: HabitPeriod) {
-      await addDoc(habbitsCollection(db, userId), {
+    async addHabit(
+      userId: string,
+      name: string,
+      times: number,
+      period: HabitPeriod,
+    ) {
+      await addDoc(habitsCollection(db, userId), {
         name,
         times,
         period,
@@ -146,29 +172,50 @@ export function createHabitRepository(db: Firestore): HabitRepository {
       habitId: string,
       onLogs: (logs: HabitCompletionLog[]) => void,
     ) {
-      const logsCol = collection(db, "users", userId, "habbits", habitId, "completions");
+      const logsCol = collection(
+        db,
+        "users",
+        userId,
+        "habits",
+        habitId,
+        "completions",
+      );
       const q = query(logsCol, orderBy("occurredAt", "desc"), limit(30));
       return onSnapshot(q, (snap: QuerySnapshot<DocumentData>) => {
-        const logs: HabitCompletionLog[] = snap.docs.map((d: QueryDocumentSnapshot<DocumentData>) => {
-          const data = d.data() as HabitCompletionDoc;
-          return {
-            id: d.id,
-            occurredAt: data.occurredAt?.toDate?.().toISOString(),
-            dayKey: typeof data.dayKey === "string" ? data.dayKey : undefined,
-            weekKey: typeof data.weekKey === "string" ? data.weekKey : undefined,
-            monthKey: typeof data.monthKey === "string" ? data.monthKey : undefined,
-            periodKey: typeof data.periodKey === "string" ? data.periodKey : undefined,
-          };
-        });
+        const logs: HabitCompletionLog[] = snap.docs.map(
+          (d: QueryDocumentSnapshot<DocumentData>) => {
+            const data = d.data() as HabitCompletionDoc;
+            return {
+              id: d.id,
+              occurredAt: data.occurredAt?.toDate?.().toISOString(),
+              dayKey: typeof data.dayKey === "string" ? data.dayKey : undefined,
+              weekKey:
+                typeof data.weekKey === "string" ? data.weekKey : undefined,
+              monthKey:
+                typeof data.monthKey === "string" ? data.monthKey : undefined,
+              periodKey:
+                typeof data.periodKey === "string" ? data.periodKey : undefined,
+            };
+          },
+        );
         onLogs(logs);
       });
     },
     async deleteHabit(userId: string, habitId: string) {
       const batch = writeBatch(db);
 
-      const logsCol = collection(db, "users", userId, "habbits", habitId, "completions");
+      const logsCol = collection(
+        db,
+        "users",
+        userId,
+        "habits",
+        habitId,
+        "completions",
+      );
       const logsSnap = await getDocs(logsCol);
-      logsSnap.docs.forEach((d: QueryDocumentSnapshot<DocumentData>) => batch.delete(d.ref));
+      logsSnap.docs.forEach((d: QueryDocumentSnapshot<DocumentData>) =>
+        batch.delete(d.ref),
+      );
 
       batch.delete(habitDocRef(db, userId, habitId));
       await batch.commit();
@@ -176,20 +223,50 @@ export function createHabitRepository(db: Firestore): HabitRepository {
   };
 }
 
-export function createHabitProgressRepository(db: Firestore): HabitProgressRepository {
+export function createUserPreferencesRepository(
+  db: Firestore,
+): UserPreferencesRepository {
+  return {
+    subscribeUserPreferences(
+      userId: string,
+      onPreferences: (prefs: { theme: ThemePreference }) => void,
+    ) {
+      const ref = doc(db, "users", userId);
+      return onSnapshot(ref, (snap: DocumentSnapshot<DocumentData>) => {
+        const data = snap.data();
+        const theme: ThemePreference =
+          data?.theme === "light" ? "light" : "dark";
+        onPreferences({ theme });
+      });
+    },
+    async updateTheme(userId: string, theme: ThemePreference) {
+      await setDoc(doc(db, "users", userId), { theme }, { merge: true });
+    },
+  };
+}
+
+export function createHabitProgressRepository(
+  db: Firestore,
+): HabitProgressRepository {
   return {
     subscribeHabitProgress(
       userId: string,
       habitId: string,
       period: HabitPeriod,
       referenceDate: Date,
-      onProgress: (data: { count: number; dayCounts: Record<string, number> }) => void,
+      onProgress: (data: {
+        count: number;
+        dayCounts: Record<string, number>;
+      }) => void,
     ) {
       const periodKey = periodKeyOf(referenceDate, period);
       const ref = progressDocRef(db, userId, habitId, periodKey);
       return onSnapshot(ref, (snap: DocumentSnapshot<DocumentData>) => {
         const data = snap.data() as HabitProgressDoc | undefined;
-        onProgress({ count: data?.count ?? 0, dayCounts: data?.dayCounts ?? {} });
+        onProgress({
+          count: data?.count ?? 0,
+          dayCounts: data?.dayCounts ?? {},
+        });
       });
     },
     async incrementHabit(
@@ -211,7 +288,10 @@ export function createHabitProgressRepository(db: Firestore): HabitProgressRepos
         const prevCount = existing?.count ?? 0;
         const nextCount = Math.min(prevCount + 1, Math.max(1, target));
         const prevDayCounts = existing?.dayCounts ?? {};
-        const nextForDay = Math.min((prevDayCounts[dayKey] ?? 0) + 1, Math.max(1, target));
+        const nextForDay = Math.min(
+          (prevDayCounts[dayKey] ?? 0) + 1,
+          Math.max(1, target),
+        );
 
         const toWrite: HabitProgressDoc = {
           habitId,
@@ -228,7 +308,14 @@ export function createHabitProgressRepository(db: Firestore): HabitProgressRepos
           tx.set(ref, toWrite);
         }
 
-        const logsCol = collection(db, "users", userId, "habbits", habitId, "completions");
+        const logsCol = collection(
+          db,
+          "users",
+          userId,
+          "habits",
+          habitId,
+          "completions",
+        );
         const logRef = doc(logsCol);
         tx.set(logRef, {
           occurredAt: serverTimestamp(),

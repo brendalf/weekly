@@ -1,6 +1,5 @@
 "use client";
 
-import { XStack } from "tamagui";
 import { useEffect, useMemo, useState } from "react";
 import { HabitPeriod } from "@weekly/domain";
 import { habitProgressRepository } from "../../repositories";
@@ -34,13 +33,8 @@ export function HabitItem({ id, name, target, period, userId }: HabitItemProps) 
 
   useEffect(() => {
     const unsub = habitProgressRepository.subscribeHabitProgress(
-      userId,
-      id,
-      period,
-      referenceDate,
-      ({ count }: { count: number }) => {
-        setValue(count);
-      }
+      userId, id, period, referenceDate,
+      ({ count }: { count: number }) => setValue(count),
     );
     return () => unsub();
   }, [userId, id, period, referenceDate]);
@@ -52,15 +46,11 @@ export function HabitItem({ id, name, target, period, userId }: HabitItemProps) 
 
   return (
     <>
-      <XStack
-        gap="$2"
-        opacity={complete ? 0.5 : 1}
-        style={{
-          alignItems: "center",
-          padding: 10,
-          backgroundColor: "#f3f4f6",
-          borderRadius: 12,
-        }}
+      <div
+        className={[
+          "flex items-center gap-2 rounded-xl border border-foreground/10 bg-background p-2 transition-opacity",
+          complete ? "opacity-50" : "",
+        ].join(" ")}
       >
         <CircularCheckboxProgress
           size={size}
@@ -71,28 +61,14 @@ export function HabitItem({ id, name, target, period, userId }: HabitItemProps) 
           ariaLabel={complete ? "Completed" : "Mark one done"}
         />
 
-        <div
+        <button
           onClick={() => setDetailsOpen(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            width: "100%",
-            cursor: "pointer",
-          }}
+          className="flex flex-1 cursor-pointer items-center justify-between gap-3 overflow-hidden text-left"
         >
-          <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
-            <span className="text-sm" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {name}
-            </span>
-          </div>
-
-          <span className="text-xs text-gray-500">
-            {value}/{target}
-          </span>
-        </div>
-      </XStack>
+          <span className="flex-1 truncate text-sm text-foreground">{name}</span>
+          <span className="text-xs text-foreground/60">{value}/{target}</span>
+        </button>
+      </div>
 
       <HabitDetailsDialog
         open={detailsOpen}

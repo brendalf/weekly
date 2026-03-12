@@ -1,7 +1,14 @@
 "use client";
 
-import { ReactElement, useState, useSyncExternalStore } from "react";
-import { Button, Dialog, Fieldset, Input, Label, XStack, YStack } from "tamagui";
+import { ReactElement, useState } from "react";
+import {
+  Modal,
+  Button,
+  Input,
+  Label,
+  TextField,
+  Surface,
+} from "@heroui/react";
 
 interface TaskAddModalProps {
   onSubmit: (title: string) => void;
@@ -9,62 +16,59 @@ interface TaskAddModalProps {
 }
 
 export function TaskAddModal({ onSubmit, trigger }: TaskAddModalProps) {
-	const isClient = useSyncExternalStore(
-		() => () => {},
-		() => true,
-		() => false,
-	);
+  const [title, setTitle] = useState("");
 
-	const [open, setOpen] = useState(false);
-	const [title, setTitle] = useState("");
+  function handleSave(close: () => void) {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    onSubmit(trimmed);
+    setTitle("");
+    close();
+  }
 
-	const reset = () => {
-		setTitle("");
-	};
-
-	const handleSave = () => {
-		const trimmed = title.trim();
-		if (!trimmed) return;
-		onSubmit(trimmed);
-		setOpen(false);
-		reset();
-	};
-
-	const isValid = Boolean(title.trim());
-
-	return (
-		<Dialog open={open} onOpenChange={setOpen} modal>
-			<Dialog.Trigger asChild>
-				{trigger ?? <Button size="$3">Add task</Button>}
-			</Dialog.Trigger>
-
-			{isClient && open && (
-				<Dialog.Portal>
-					<Dialog.Overlay key="overlay" opacity={0.5} enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
-					<Dialog.Content key="content" bordered elevate size="$4" gap="$3">
-						<Dialog.Title>Add task</Dialog.Title>
-						<Dialog.Description>
-							Add a new task to your list.
-						</Dialog.Description>
-
-						<YStack gap="$3">
-							<Fieldset gap="$2">
-								<Label htmlFor="task-title">Title</Label>
-								<Input id="task-title" size="$3" value={title} onChangeText={setTitle} placeholder="e.g. Read a book" />
-							</Fieldset>
-						</YStack>
-
-						<XStack gap="$2" style={{ justifyContent: "flex-end" }}>
-							<Dialog.Close asChild>
-								<Button size="$3" onPress={reset}>Cancel</Button>
-							</Dialog.Close>
-							<Button size="$3" theme="accent" disabled={!isValid} onPress={handleSave}>
-								Save
-							</Button>
-						</XStack>
-					</Dialog.Content>
-				</Dialog.Portal>
-			)}
-		</Dialog>
-	);
+  return (
+    <Modal onOpenChange={(isOpen) => { if (!isOpen) setTitle(""); }}>
+      {trigger ?? <Button size="sm">Add task</Button>}
+      <Modal.Backdrop variant="blur">
+        <Modal.Container placement="center" size="sm">
+          <Modal.Dialog>
+            {({ close }) => (
+              <>
+                <Modal.CloseTrigger />
+                <Modal.Header>
+                  <Modal.Heading>Add task</Modal.Heading>
+                </Modal.Header>
+                <Modal.Body className="p-6">
+                  <Surface variant="default">
+                    <form
+                      className="flex flex-col gap-4"
+                      onSubmit={(e) => { e.preventDefault(); handleSave(close); }}
+                    >
+                      <TextField className="w-full" name="title">
+                        <Label>Title</Label>
+                        <Input
+                          placeholder="e.g. Read a book"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          autoFocus
+                        />
+                      </TextField>
+                    </form>
+                  </Surface>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button variant="secondary" onPress={() => { setTitle(""); close(); }}>
+                    Cancel
+                  </Button>
+                  <Button isDisabled={!title.trim()} onPress={() => handleSave(close)}>
+                    Save
+                  </Button>
+                </Modal.Footer>
+              </>
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
+  );
 }

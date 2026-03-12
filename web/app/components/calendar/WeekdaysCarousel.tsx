@@ -1,6 +1,5 @@
 "use client";
 
-import { XStack, YStack, Paragraph } from "tamagui";
 import { useCalendarStore, calendarStore } from "../../stores/calendar";
 
 export function WeekdaysCarousel() {
@@ -10,40 +9,36 @@ export function WeekdaysCarousel() {
   const weekDays: Date[] = calendarStore.getWeekDays();
 
   return (
-    <XStack
+    <div
       key={weekStart.toISOString()}
-      flex={1}
-      style={{ alignItems: "center", justifyContent: "center", overflowX: "scroll", marginTop: 8 }}
-      gap="$2"
+      className="flex items-center gap-2 overflow-x-auto"
     >
       {weekDays.map((day: Date) => {
         const isSelected = selectedDayISO === day.toISOString();
 
         return (
-          <YStack
+          <button
             key={day.toISOString()}
-            borderWidth={2}
-            borderColor={isSelected ? "purple" : "$borderColor"}
-            flex={1}
-            minW={70}
-            gap="$1"
-            onPress={() => calendarStore.selectDay(day)}
-            style={{ padding: 8, backgroundColor: "#f3f4f6", borderRadius: 10, cursor: "pointer" }}
+            onClick={() => calendarStore.selectDay(day)}
+            className={[
+              "flex min-w-[70px] flex-1 cursor-pointer flex-col gap-1 rounded-xl border-2 p-2 text-left transition-colors",
+              isSelected
+                ? "border-accent bg-accent/10"
+                : "border-foreground/10 bg-background hover:border-foreground/20",
+            ].join(" ")}
           >
-            <Paragraph size="$1" color="$color10">
-              {day.toLocaleDateString("en-US", {
-                weekday: "short",
-              })}
-            </Paragraph>
-            <Paragraph size="$2">
+            <span className="text-xs text-foreground/60">
+              {day.toLocaleDateString("en-US", { weekday: "short" })}
+            </span>
+            <span className="text-sm font-medium text-foreground">
               {day.toLocaleDateString("en-US", {
                 day: "2-digit",
                 month: "short",
               })}
-            </Paragraph>
-          </YStack>
+            </span>
+          </button>
         );
       })}
-    </XStack>
+    </div>
   );
 }

@@ -1,31 +1,37 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useContext } from "react";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { Task, Habit } from "@weekly/domain";
-import { TaskInput } from "../components/tasks/TaskInput";
+import { ArrowRightFromSquare } from "@gravity-ui/icons";
+import { Button } from "@heroui/react";
 import { TaskList } from "../components/tasks/TaskList";
 import { HabitList } from "../components/habits/HabitList";
 import { WeekPicker } from "../components/calendar/WeekPicker";
 import { WeekdaysCarousel } from "../components/calendar/WeekdaysCarousel";
-import { habitRepository, taskRepository } from "../repositories";
+import {
+  habitRepository,
+  taskRepository,
+  userPreferencesRepository,
+} from "../repositories";
 import { auth } from "../config/firebase";
+import { ThemeContext } from "../providers";
+import { ThemeToggleButton } from "../components/general/ThemeToggleButton";
 
 export default function AppPage() {
-  const [title, setTitle] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
-
   const [userId, setUserId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+
+  const { setTheme } = useContext(ThemeContext);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setUserId(user?.uid ?? null);
       setAuthReady(true);
-
       if (!user) {
         document.cookie = "weekly_auth=; Path=/; Max-Age=0; SameSite=Lax";
         window.location.assign("/");
@@ -34,35 +40,30 @@ export default function AppPage() {
     return () => unsub();
   }, []);
 
+  useEffect(() => {
+    if (!userId) return;
+    return userPreferencesRepository.subscribeUserPreferences(
+      userId,
+      ({ theme }) => {
+        setTheme(theme);
+      },
+    );
+  }, [userId, setTheme]);
+
+  useEffect(() => {
+    if (!userId) return;
+    return taskRepository.subscribeTasks(userId, setTasks);
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    return habitRepository.subscribeHabits(userId, setHabits);
+  }, [userId]);
+
   async function handleLogout() {
     await signOut(auth);
     document.cookie = "weekly_auth=; Path=/; Max-Age=0; SameSite=Lax";
     window.location.assign("/");
-  }
-
-  useEffect(() => {
-    if (!userId) return;
-    const unsub = taskRepository.subscribeTasks(userId, (nextTasks) =>
-      setTasks(nextTasks),
-    );
-    return () => unsub();
-  }, [userId]);
-
-  useEffect(() => {
-    if (!userId) return;
-    const unsub = habitRepository.subscribeHabits(userId, (nextHabits) =>
-      setHabits(nextHabits),
-    );
-    return () => unsub();
-  }, [userId]);
-
-  function handleAddTask(e: FormEvent) {
-    e.preventDefault();
-    if (!userId) return;
-    const trimmed = title.trim();
-    if (!trimmed) return;
-    taskRepository.addTask(userId, trimmed);
-    setTitle("");
   }
 
   function handleToggleTaskCompleted(taskId: string) {
@@ -74,74 +75,61 @@ export default function AppPage() {
 
   if (!authReady) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-white via-white to-purple-50">
-        <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-12">
-          <p className="text-sm text-gray-600">Loading…</p>
-        </div>
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-sm text-foreground/60">Loading…</p>
       </main>
     );
   }
 
-  if (!userId) {
-    return null;
-  }
+  if (!userId) return null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-white via-white to-purple-50">
+    <main className="min-h-screen bg-background">
       <div className="mx-auto min-h-screen max-w-6xl px-6 py-10">
         <header className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white px-3 py-1 text-xs font-medium text-purple-700">
-              <span className="h-2 w-2 rounded-full bg-purple-600" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-1 text-xs font-medium text-primary">
+              <span className="h-2 w-2 rounded-full bg-primary" />
               Dashboard
             </div>
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-gray-900">
-              Weekly
-              <span className="ml-2 text-purple-700">workspace</span>
-            </h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Plan your week. Execute daily. Track habits automatically.
-            </p>
+            <div className="mt-4">
+              <WeekPicker />
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex flex-col items-end">
-              <p className="text-sm font-medium text-gray-900">
+            <div className="hidden flex-col items-end sm:flex">
+              <p className="text-sm font-medium text-foreground">
                 {user?.displayName ?? "Signed in"}
               </p>
-              <p className="text-xs text-gray-500">{user?.email ?? ""}</p>
+              <p className="text-xs text-foreground/60">{user?.email ?? ""}</p>
             </div>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
+            <ThemeToggleButton userId={userId} />
+            <Button
+              variant="danger"
+              size="sm"
+              isIconOnly
+              aria-label="Log out"
+              onPress={handleLogout}
             >
-              Log out
-            </button>
+              <ArrowRightFromSquare />
+            </Button>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-4">
-              <p className="text-sm font-semibold text-gray-900">This week</p>
-              <p className="mt-1 text-sm text-gray-600">
-                Pick a week and a day — progress updates instantly.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <WeekPicker />
-              <WeekdaysCarousel />
-            </div>
-          </section>
+        <div className="py-5">
+          <WeekdaysCarousel />
+        </div>
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <section className="rounded-2xl border border-foreground/10 bg-surface p-5">
             <HabitList habits={habits} userId={userId} />
           </section>
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm lg:col-span-2">
+          <section className="rounded-2xl border border-foreground/10 bg-surface p-5">
             <TaskList
               tasks={tasks}
+              userId={userId}
               onToggleCompleted={handleToggleTaskCompleted}
             />
           </section>
@@ -149,4 +137,4 @@ export default function AppPage() {
       </div>
     </main>
   );
-
+}
