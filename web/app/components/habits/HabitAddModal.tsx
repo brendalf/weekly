@@ -4,10 +4,12 @@ import { ReactElement, useState } from "react";
 import {
   Modal,
   Button,
+  Select,
   Input,
   Label,
   TextField,
   Surface,
+  ListBox,
 } from "@heroui/react";
 import { HabitPeriod } from "@weekly/domain";
 
@@ -39,7 +41,11 @@ export function HabitAddModal({ onSubmit, trigger }: HabitAddModalProps) {
   const isValid = Boolean(name.trim()) && Number(times) > 0;
 
   return (
-    <Modal onOpenChange={(isOpen) => { if (!isOpen) reset(); }}>
+    <Modal
+      onOpenChange={(isOpen) => {
+        if (!isOpen) reset();
+      }}
+    >
       {trigger ?? <Button size="sm">Add habit</Button>}
       <Modal.Backdrop variant="blur">
         <Modal.Container placement="center" size="sm">
@@ -50,51 +56,80 @@ export function HabitAddModal({ onSubmit, trigger }: HabitAddModalProps) {
                 <Modal.Header>
                   <Modal.Heading>Add habit</Modal.Heading>
                 </Modal.Header>
-                <Modal.Body className="p-6">
+                <Modal.Body className="p-1">
                   <Surface variant="default">
                     <form
-                      className="flex flex-col gap-4"
-                      onSubmit={(e) => { e.preventDefault(); handleSave(close); }}
+                      className="flex flex-col"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSave(close);
+                      }}
                     >
-                      <TextField className="w-full" name="name">
+                      <TextField name="name">
                         <Label>Name</Label>
                         <Input
                           placeholder="e.g. Read a book"
                           value={name}
+                          variant="secondary"
                           onChange={(e) => setName(e.target.value)}
                           autoFocus
                         />
                       </TextField>
-                      <div className="flex items-end gap-2">
-                        <TextField name="times" className="w-24">
-                          <Label>Times</Label>
-                          <Input
-                            type="number"
-                            value={times}
-                            onChange={(e) => setTimes(e.target.value)}
-                          />
-                        </TextField>
-                        <div className="flex flex-1 flex-col gap-1.5">
-                          <label className="text-sm font-medium text-foreground">Period</label>
-                          <select
-                            value={period}
-                            onChange={(e) => setPeriod(e.target.value as HabitPeriod)}
-                            className="h-10 rounded-lg border border-foreground/10 bg-field px-3 text-sm text-foreground"
-                          >
-                            <option value={HabitPeriod.Day}>per day</option>
-                            <option value={HabitPeriod.Week}>per week</option>
-                            <option value={HabitPeriod.Month}>per month</option>
-                          </select>
-                        </div>
+                      <div className="mt-4">Frequency</div>
+                      <div className="mt-1 flex items-end gap-2">
+                        <Input
+                          type="number"
+                          value={times}
+                          className="max-w-20"
+                          variant="secondary"
+                          placeholder="Times"
+                          onChange={(e) => setTimes(e.target.value)}
+                        />
+                        <Select
+                          fullWidth
+                          placeholder="Period"
+                          variant="secondary"
+                          onChange={(e) => setPeriod(e as HabitPeriod)}
+                        >
+                          <Select.Trigger>
+                            <Select.Value />
+                            <Select.Indicator />
+                          </Select.Trigger>
+                          <Select.Popover>
+                            <ListBox>
+                              <ListBox.Item
+                                id={HabitPeriod.Day}
+                                textValue={HabitPeriod.Day}
+                              >
+                                per day
+                                <ListBox.ItemIndicator />
+                              </ListBox.Item>
+                              <ListBox.Item
+                                id={HabitPeriod.Week}
+                                textValue={HabitPeriod.Week}
+                              >
+                                per week
+                                <ListBox.ItemIndicator />
+                              </ListBox.Item>
+                              <ListBox.Item
+                                id={HabitPeriod.Month}
+                                textValue={HabitPeriod.Month}
+                              >
+                                per month
+                                <ListBox.ItemIndicator />
+                              </ListBox.Item>
+                            </ListBox>
+                          </Select.Popover>
+                        </Select>
                       </div>
                     </form>
                   </Surface>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button variant="secondary" onPress={() => { reset(); close(); }}>
-                    Cancel
-                  </Button>
-                  <Button isDisabled={!isValid} onPress={() => handleSave(close)}>
+                  <Button
+                    isDisabled={!isValid}
+                    onPress={() => handleSave(close)}
+                  >
                     Save
                   </Button>
                 </Modal.Footer>

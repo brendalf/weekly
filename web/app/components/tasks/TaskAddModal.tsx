@@ -38,17 +38,18 @@ export function TaskAddModal({ onSubmit, trigger }: TaskAddModalProps) {
                 <Modal.Header>
                   <Modal.Heading>Add task</Modal.Heading>
                 </Modal.Header>
-                <Modal.Body className="p-6">
+                <Modal.Body className="p-1">
                   <Surface variant="default">
                     <form
-                      className="flex flex-col gap-4"
+                      className="flex flex-col"
                       onSubmit={(e) => { e.preventDefault(); handleSave(close); }}
                     >
-                      <TextField className="w-full" name="title">
+                      <TextField name="title">
                         <Label>Title</Label>
                         <Input
                           placeholder="e.g. Read a book"
                           value={title}
+                          variant="secondary"
                           onChange={(e) => setTitle(e.target.value)}
                           autoFocus
                         />
@@ -57,9 +58,6 @@ export function TaskAddModal({ onSubmit, trigger }: TaskAddModalProps) {
                   </Surface>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button variant="secondary" onPress={() => { setTitle(""); close(); }}>
-                    Cancel
-                  </Button>
                   <Button isDisabled={!title.trim()} onPress={() => handleSave(close)}>
                     Save
                   </Button>
