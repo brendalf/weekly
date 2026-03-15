@@ -12,6 +12,7 @@
     "@gravity-ui/icons": "^2.18.0",
     "@heroui/react": "beta",
     "@heroui/styles": "beta",
+    "@vercel/analytics": "^2.0.1",
     "@weekly/domain": "workspace:*",
     "@weekly/firebase": "workspace:*",
     "firebase": "^12.6.0",
