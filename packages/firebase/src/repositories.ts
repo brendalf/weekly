@@ -129,6 +129,15 @@ export function createTaskRepository(db: Firestore): TaskRepository {
       const ref = doc(db, "users", userId, "tasks", task.id);
       await updateDoc(ref, { completed: !task.completed });
     },
+    async deleteTask(userId: string, taskId: string) {
+      const ref = doc(db, "users", userId, "tasks", taskId);
+      const batch = writeBatch(db);
+      batch.delete(ref);
+      await batch.commit();
+    },
+    async updateTaskTitle(userId: string, taskId: string, title: string) {
+      await updateDoc(doc(db, "users", userId, "tasks", taskId), { title });
+    },
   };
 }
 

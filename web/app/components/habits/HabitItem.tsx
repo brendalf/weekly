@@ -15,8 +15,8 @@ export interface HabitItemProps {
   period: HabitPeriod;
   userId: string;
   createdAt: string;
+  onCompleteChange?: (id: string, complete: boolean) => void;
 }
-
 
 export function HabitItem({
   id,
@@ -25,6 +25,7 @@ export function HabitItem({
   period,
   userId,
   createdAt,
+  onCompleteChange,
 }: HabitItemProps) {
   const [value, setValue] = useState(0);
   const [streak, setStreak] = useState<{
@@ -63,9 +64,14 @@ export function HabitItem({
     return () => unsub();
   }, [userId, id, period, createdAt, referenceDate]);
 
+  const { progress, complete } = habitProgress(value, target);
+
+  useEffect(() => {
+    onCompleteChange?.(id, complete);
+  }, [id, complete, onCompleteChange]);
+
   const size = 28;
   const stroke = 4;
-  const { progress, complete } = habitProgress(value, target);
 
   return (
     <>

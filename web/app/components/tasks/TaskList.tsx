@@ -39,9 +39,18 @@ export function TaskList({ tasks, userId, onToggleCompleted }: TaskListProps) {
         <p className="text-xs text-foreground/60">No tasks yet.</p>
       )}
 
-      {tasks.map((task) => (
-        <TaskItem key={task.id} task={task} onToggleCompleted={onToggleCompleted} />
-      ))}
+      <div className="flex flex-col gap-0.5">
+        {[...tasks]
+          .sort((a, b) => Number(a.completed) - Number(b.completed))
+          .map((task) => (
+            <TaskItem
+              key={task.id}
+              task={task}
+              userId={userId}
+              onToggleCompleted={onToggleCompleted}
+            />
+          ))}
+      </div>
     </div>
   );
 }

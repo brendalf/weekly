@@ -128,11 +128,11 @@ export default function AppPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <section className="rounded-2xl border bg-surface p-5">
+          <section className="rounded-2xl border bg-surface p-4">
             <HabitList habits={habits} userId={userId} />
           </section>
 
-          <section className="rounded-2xl border bg-surface p-5">
+          <section className="rounded-2xl border bg-surface p-4">
             <TaskList
               tasks={tasks}
               userId={userId}
