@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { HabitPeriod } from "@weekly/domain";
+import { HabitPeriod, formatPeriodKey, habitProgress } from "@weekly/domain";
 import { Flame } from "@gravity-ui/icons";
 import { habitProgressRepository } from "../../repositories";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
 import { useCalendarStore } from "../../stores/calendar";
-import { HabitDetailsDialog } from "./HabitDetailsDialog";
+import { HabitDetailsModal } from "./HabitDetailsModal";
 
 export interface HabitItemProps {
   id: string;
@@ -17,24 +17,6 @@ export interface HabitItemProps {
   createdAt: string;
 }
 
-function formatOpenSince(periodKey: string, period: HabitPeriod): string {
-  if (period === HabitPeriod.Week) {
-    const [, w] = periodKey.split("-W");
-    return `Week ${parseInt(w, 10)}`;
-  }
-  if (period === HabitPeriod.Month) {
-    const [y, m] = periodKey.split("-");
-    return new Date(+y, +m - 1).toLocaleDateString("en-US", {
-      month: "short",
-      year: "numeric",
-    });
-  }
-  const [y, m, d] = periodKey.split("-");
-  return new Date(+y, +m - 1, +d).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-}
 
 export function HabitItem({
   id,
@@ -83,8 +65,7 @@ export function HabitItem({
 
   const size = 28;
   const stroke = 4;
-  const progress = Math.max(0, Math.min(1, target > 0 ? value / target : 0));
-  const complete = value >= target && target > 0;
+  const { progress, complete } = habitProgress(value, target);
 
   return (
     <>
@@ -129,13 +110,13 @@ export function HabitItem({
           )}
           {streak?.openSincePeriodKey && (
             <span className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-xs text-foreground/50">
-              {formatOpenSince(streak.openSincePeriodKey, period)}
+              {formatPeriodKey(streak.openSincePeriodKey, period)}
             </span>
           )}
         </button>
       </div>
 
-      <HabitDetailsDialog
+      <HabitDetailsModal
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         userId={userId}
@@ -143,6 +124,9 @@ export function HabitItem({
         name={name}
         times={target}
         period={period}
+        value={value}
+        referenceDate={referenceDate}
+        streak={streak}
       />
     </>
   );

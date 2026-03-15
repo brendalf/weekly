@@ -19,4 +19,6 @@ export interface HabitRepository {
     onLogs: (logs: HabitCompletionLog[]) => void,
   ): Unsubscribe;
   deleteHabit(userId: string, habitId: string): Promise<void>;
+  updateHabit(userId: string, habitId: string, name: string, times: number, period: HabitPeriod): Promise<void>;
+  deleteHabitLog(userId: string, habitId: string, log: HabitCompletionLog, target: number): Promise<void>;
 }

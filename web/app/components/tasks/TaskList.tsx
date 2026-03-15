@@ -2,9 +2,10 @@
 
 import { Task } from "@weekly/domain";
 import { Plus } from "@gravity-ui/icons";
-import { Button, Checkbox } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { taskRepository } from "../../repositories";
 import { TaskAddModal } from "./TaskAddModal";
+import { TaskItem } from "./TaskItem";
 
 interface TaskListProps {
   tasks: Task[];
@@ -39,37 +40,7 @@ export function TaskList({ tasks, userId, onToggleCompleted }: TaskListProps) {
       )}
 
       {tasks.map((task) => (
-        <div
-          key={task.id}
-          className="flex items-center gap-3 rounded-xl border border-foreground/10 bg-background hover:border-foreground/20 px-3 py-2"
-        >
-          <Checkbox
-            isSelected={task.completed}
-            onChange={() => onToggleCompleted(task.id)}
-          >
-            <Checkbox.Control>
-              <Checkbox.Indicator />
-            </Checkbox.Control>
-            <Checkbox.Content>
-              <div className="flex flex-1 flex-col min-w-0">
-                <span
-                  className={[
-                    "text-sm text-foreground truncate",
-                    task.completed ? "line-through opacity-50" : "",
-                  ].join(" ")}
-                >
-                  {task.title}
-                </span>
-                <span className="text-xs text-foreground/40">
-                  {new Date(task.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </div>
-            </Checkbox.Content>
-          </Checkbox>
-        </div>
+        <TaskItem key={task.id} task={task} onToggleCompleted={onToggleCompleted} />
       ))}
     </div>
   );

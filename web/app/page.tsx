@@ -50,7 +50,7 @@ export default function Home() {
           </div>
 
           <p className="mt-8 text-xs text-foreground/40">
-            Tip: after logging in, you'll land in the app at <code>/app</code>.
+            Tip: after logging in, you&apos;ll land in the app at <code>/app</code>.
           </p>
         </section>
 

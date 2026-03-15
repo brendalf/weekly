@@ -55,6 +55,11 @@ export const calendarStore = {
   clearSelectedDay() {
     setState({ selectedDayISO: null });
   },
+  goToToday() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    setState({ weekStart: getStartOfWeek(today), selectedDayISO: today.toISOString() });
+  },
   getWeekDays() {
     return getWeekDays(state.weekStart);
   },

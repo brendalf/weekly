@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useContext } from "react";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
-import { Task, Habit } from "@weekly/domain";
+import { Task, Habit, formatDayLabel } from "@weekly/domain";
 import { ArrowRightFromSquare, House } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { TaskList } from "../components/tasks/TaskList";
@@ -29,13 +29,9 @@ export default function AppPage() {
   const { setTheme } = useContext(ThemeContext);
 
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
-  const selectedDayLabel = (() => {
-    const date = selectedDayISO ? new Date(selectedDayISO) : new Date();
-    const weekday = date.toLocaleDateString("en-US", { weekday: "long" });
-    const day = date.getDate();
-    const month = date.toLocaleDateString("en-US", { month: "long" });
-    return `${weekday}, ${day} of ${month}`;
-  })();
+  const selectedDayLabel = formatDayLabel(
+    selectedDayISO ? new Date(selectedDayISO) : new Date(),
+  );
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -90,7 +86,6 @@ export default function AppPage() {
       </main>
     );
   }
-
   if (!userId) return null;
 
   return (

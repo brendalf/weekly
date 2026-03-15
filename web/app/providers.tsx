@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 import { userPreferencesRepository } from "./repositories";
 
-export type ThemePreference = 'dark' | 'light';
+export type ThemePreference = "dark" | "light";
 
 interface ThemeContextValue {
   theme: ThemePreference;
@@ -12,7 +12,7 @@ interface ThemeContextValue {
 }
 
 export const ThemeContext = createContext<ThemeContextValue>({
-  theme: 'dark',
+  theme: "dark",
   setTheme: () => {},
   toggleTheme: () => {},
 });
@@ -22,13 +22,13 @@ export function useTheme() {
 }
 
 function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemePreference>('dark');
+  const [theme, setThemeState] = useState<ThemePreference>("dark");
 
   function applyTheme(t: ThemePreference) {
     setThemeState(t);
     const html = document.documentElement;
     html.className = t;
-    html.setAttribute('data-theme', t);
+    html.setAttribute("data-theme", t);
   }
 
   function setTheme(t: ThemePreference) {
@@ -36,7 +36,7 @@ function ThemeProvider({ children }: { children: ReactNode }) {
   }
 
   function toggleTheme(userId: string) {
-    const next: ThemePreference = theme === 'dark' ? 'light' : 'dark';
+    const next: ThemePreference = theme === "dark" ? "light" : "dark";
     applyTheme(next);
     userPreferencesRepository.updateTheme(userId, next);
   }

@@ -218,6 +218,57 @@ export function createHabitRepository(db: Firestore): HabitRepository {
         onLogs(logs);
       });
     },
+    async deleteHabitLog(
+      userId: string,
+      habitId: string,
+      log: { id: string; periodKey?: string; dayKey?: string },
+      target: number,
+    ) {
+      if (!log.periodKey) return;
+      const logRef = doc(
+        db,
+        "users",
+        userId,
+        "habits",
+        habitId,
+        "completions",
+        log.id,
+      );
+      const progressRef = doc(
+        db,
+        "users",
+        userId,
+        "habitProgress",
+        `${habitId}_${log.periodKey}`,
+      );
+      await runTransaction(db, async (tx: Transaction) => {
+        const progressSnap = await tx.get(progressRef);
+        const data = progressSnap.data() as HabitPeriodDoc | undefined;
+        const newCount = Math.max(0, (data?.count ?? 0) - 1);
+        const prevDayCounts = data?.dayCounts ?? {};
+        const updates: Record<string, unknown> = {
+          count: newCount,
+          succeeded: newCount >= target,
+        };
+        if (log.dayKey) {
+          updates[`dayCounts.${log.dayKey}`] = Math.max(
+            0,
+            (prevDayCounts[log.dayKey] ?? 0) - 1,
+          );
+        }
+        tx.delete(logRef);
+        tx.update(progressRef, updates);
+      });
+    },
+    async updateHabit(
+      userId: string,
+      habitId: string,
+      name: string,
+      times: number,
+      period: HabitPeriod,
+    ) {
+      await updateDoc(habitDocRef(db, userId, habitId), { name, times, period });
+    },
     async deleteHabit(userId: string, habitId: string) {
       const batch = writeBatch(db);
 
