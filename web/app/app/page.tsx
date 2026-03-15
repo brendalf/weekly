@@ -9,6 +9,7 @@ import { TaskList } from "../components/tasks/TaskList";
 import { HabitList } from "../components/habits/HabitList";
 import { WeekPicker } from "../components/calendar/WeekPicker";
 import { WeekdaysCarousel } from "../components/calendar/WeekdaysCarousel";
+import { useCalendarStore } from "../stores/calendar";
 import {
   habitRepository,
   taskRepository,
@@ -26,6 +27,15 @@ export default function AppPage() {
   const [user, setUser] = useState<User | null>(null);
 
   const { setTheme } = useContext(ThemeContext);
+
+  const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
+  const selectedDayLabel = (() => {
+    const date = selectedDayISO ? new Date(selectedDayISO) : new Date();
+    const weekday = date.toLocaleDateString("en-US", { weekday: "long" });
+    const day = date.getDate();
+    const month = date.toLocaleDateString("en-US", { month: "long" });
+    return `${weekday}, ${day} of ${month}`;
+  })();
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -86,15 +96,15 @@ export default function AppPage() {
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto min-h-screen max-w-6xl px-6 py-10">
-        <header className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-1 text-xs font-medium text-primary">
               <span className="h-2 w-2 rounded-full bg-primary" />
               Dashboard
             </div>
-            <div className="mt-4">
-              <WeekPicker />
-            </div>
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
+              {selectedDayLabel}
+            </h1>
           </div>
 
           <div className="flex items-center gap-3">
@@ -117,7 +127,8 @@ export default function AppPage() {
           </div>
         </header>
 
-        <div className="py-5">
+        <div className="py-5 flex flex-col gap-2">
+          <WeekPicker />
           <WeekdaysCarousel />
         </div>
 

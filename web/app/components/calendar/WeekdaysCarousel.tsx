@@ -23,7 +23,7 @@ export function WeekdaysCarousel() {
             className={[
               "flex min-w-[70px] flex-1 cursor-pointer flex-col gap-1 rounded-xl border-2 p-2 text-left transition-colors",
               isSelected
-                ? "border-accent bg-accent/10"
+                ? "border-purple-500 bg-purple-300/10"
                 : "border-foreground/10 bg-background hover:border-foreground/20",
             ].join(" ")}
           >

@@ -1,14 +1,7 @@
 "use client";
 
 import { ReactElement, useState } from "react";
-import {
-  Modal,
-  Button,
-  Input,
-  Label,
-  TextField,
-  Surface,
-} from "@heroui/react";
+import { Modal, Button, Input, Label, TextField, Surface } from "@heroui/react";
 
 interface TaskAddModalProps {
   onSubmit: (title: string) => void;
@@ -27,7 +20,11 @@ export function TaskAddModal({ onSubmit, trigger }: TaskAddModalProps) {
   }
 
   return (
-    <Modal onOpenChange={(isOpen) => { if (!isOpen) setTitle(""); }}>
+    <Modal
+      onOpenChange={(isOpen) => {
+        if (!isOpen) setTitle("");
+      }}
+    >
       {trigger ?? <Button size="sm">Add task</Button>}
       <Modal.Backdrop variant="blur">
         <Modal.Container placement="center" size="sm">
@@ -42,7 +39,10 @@ export function TaskAddModal({ onSubmit, trigger }: TaskAddModalProps) {
                   <Surface variant="default">
                     <form
                       className="flex flex-col"
-                      onSubmit={(e) => { e.preventDefault(); handleSave(close); }}
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSave(close);
+                      }}
                     >
                       <TextField name="title">
                         <Label>Title</Label>
@@ -58,7 +58,10 @@ export function TaskAddModal({ onSubmit, trigger }: TaskAddModalProps) {
                   </Surface>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button isDisabled={!title.trim()} onPress={() => handleSave(close)}>
+                  <Button
+                    isDisabled={!title.trim()}
+                    onPress={() => handleSave(close)}
+                  >
                     Save
                   </Button>
                 </Modal.Footer>
