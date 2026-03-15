@@ -52,7 +52,7 @@ export function CircularCheckboxProgress({
           cy={size / 2}
           r={radius}
           strokeWidth={stroke}
-          stroke="var(--color-primary, purple)"
+          stroke="var(--color-purple-500)"
           fill="none"
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
@@ -66,16 +66,16 @@ export function CircularCheckboxProgress({
         onClick={onClick}
         disabled={complete}
         aria-label={ariaLabel}
-        style={{ width: inner, height: inner }}
+        style={{ width: inner * 1.25, height: inner * 1.25 }}
         className={[
           "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full",
           "flex items-center justify-center transition-colors",
           complete
-            ? "bg-accent cursor-default"
-            : "bg-background border border-foreground/20 hover:border-accent/60 cursor-pointer",
+            ? "bg-purple-500 cursor-default"
+            : "bg-background hover:bg-purple-500/20 cursor-pointer",
         ].join(" ")}
       >
-        <Check width={inner * 0.7} height={inner * 0.7} />
+        <Check width={inner * 0.8} height={inner * 0.8} />
       </button>
     </div>
   );

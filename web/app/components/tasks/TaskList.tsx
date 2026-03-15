@@ -27,12 +27,7 @@ export function TaskList({ tasks, userId, onToggleCompleted }: TaskListProps) {
         <TaskAddModal
           onSubmit={handleAddTask}
           trigger={
-            <Button
-              size="sm"
-              isIconOnly
-              aria-label="Add task"
-              variant="outline"
-            >
+            <Button size="sm" isIconOnly aria-label="Add task" variant="ghost">
               <Plus />
             </Button>
           }
@@ -46,7 +41,7 @@ export function TaskList({ tasks, userId, onToggleCompleted }: TaskListProps) {
       {tasks.map((task) => (
         <div
           key={task.id}
-          className="flex items-center gap-3 rounded-xl border border-foreground/10 bg-background px-3 py-2"
+          className="flex items-center gap-3 rounded-xl border border-foreground/10 bg-background hover:border-foreground/20 px-3 py-2"
         >
           <Checkbox
             isSelected={task.completed}

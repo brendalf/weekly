@@ -14,6 +14,7 @@ export interface Habit {
   name: string;
   times: number;
   period: HabitPeriod;
+  createdAt: string;
 }
 
 export interface WeekId {

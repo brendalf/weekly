@@ -1,10 +1,44 @@
-import {
-  Habit,
-  HabitDayLog,
-  WeeklyHabitProgress,
-  WeekId,
-  Year,
-} from "../models/habit";
+import { HabitPeriod, WeekId, Year } from "../models/habit";
+import { periodKeyOf } from "./period";
+
+export function prevPeriodDate(date: Date, period: HabitPeriod): Date {
+  const d = new Date(date);
+  if (period === HabitPeriod.Day) d.setDate(d.getDate() - 1);
+  else if (period === HabitPeriod.Week) d.setDate(d.getDate() - 7);
+  else d.setMonth(d.getMonth() - 1);
+  return d;
+}
+
+export function computeStreak(
+  summaryMap: Map<string, boolean>,
+  referenceDate: Date,
+  createdAt: Date,
+  period: HabitPeriod,
+): { currentStrikeLength: number; openSincePeriodKey: string | null } {
+  const createdPeriodKey = periodKeyOf(createdAt, period);
+  let streakCount = 0;
+  let openSincePeriodKey: string | null = null;
+  let current = prevPeriodDate(referenceDate, period);
+
+  while (true) {
+    const key = periodKeyOf(current, period);
+    if (key < createdPeriodKey) break;
+
+    const succeeded = summaryMap.get(key) ?? false;
+
+    if (succeeded) {
+      if (openSincePeriodKey !== null) break;
+      streakCount++;
+    } else {
+      if (streakCount > 0) break;
+      openSincePeriodKey = key;
+    }
+
+    current = prevPeriodDate(current, period);
+  }
+
+  return { currentStrikeLength: streakCount, openSincePeriodKey };
+}
 
 export function isHabitSucceeded(count: number, target: number): boolean {
   if (target <= 0) return false;
@@ -29,7 +63,9 @@ export function isDateInWeek(dateISO: string, week: WeekId): boolean {
  * the week with the year's first Thursday.
  */
 export function getISOWeek(date: Date): WeekId {
-  const tmp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const tmp = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
 
   // Thursday in current week decides the year.
   const dayNum = tmp.getUTCDay() || 7; // 1 (Mon) - 7 (Sun)

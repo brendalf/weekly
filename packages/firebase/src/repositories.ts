@@ -15,6 +15,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  where,
   runTransaction,
   serverTimestamp,
   setDoc,
@@ -32,6 +33,8 @@ import {
   type UserPreferencesRepository,
   type ThemePreference,
   HabitPeriod,
+  computeStreak,
+  prevPeriodDate,
   dayKeyOf,
   monthKeyOf,
   periodKeyOf,
@@ -48,6 +51,7 @@ type HabitDoc = {
   name?: unknown;
   times?: unknown;
   period?: unknown;
+  createdAt?: Timestamp;
 };
 
 type HabitCompletionDoc = {
@@ -58,11 +62,12 @@ type HabitCompletionDoc = {
   periodKey?: unknown;
 };
 
-type HabitProgressDoc = {
+type HabitPeriodDoc = {
   habitId: string;
   period: HabitPeriod;
   periodKey: string;
   count: number;
+  succeeded: boolean;
   dayCounts?: Record<string, number>;
   updatedAt?: Timestamp | FieldValue;
 };
@@ -79,7 +84,7 @@ function habitDocRef(db: Firestore, userId: string, habitId: string) {
   return doc(db, "users", userId, "habits", habitId);
 }
 
-function progressDocRef(
+function periodDocRef(
   db: Firestore,
   userId: string,
   habitId: string,
@@ -148,6 +153,9 @@ export function createHabitRepository(db: Firestore): HabitRepository {
                   : data?.period === HabitPeriod.Month
                     ? HabitPeriod.Month
                     : HabitPeriod.Week,
+              createdAt:
+                data?.createdAt?.toDate().toISOString() ??
+                new Date().toISOString(),
             };
           },
         );
@@ -160,12 +168,21 @@ export function createHabitRepository(db: Firestore): HabitRepository {
       times: number,
       period: HabitPeriod,
     ) {
-      await addDoc(habitsCollection(db, userId), {
-        name,
-        times,
-        period,
-        createdAt: new Date(),
-      });
+      const habitRef = doc(habitsCollection(db, userId));
+      const batch = writeBatch(db);
+      batch.set(habitRef, { name, times, period, createdAt: new Date() });
+      const pk = periodKeyOf(new Date(), period);
+      batch.set(
+        doc(db, "users", userId, "habitProgress", `${habitRef.id}_${pk}`),
+        {
+          habitId: habitRef.id,
+          period,
+          periodKey: pk,
+          count: 0,
+          succeeded: false,
+        },
+      );
+      await batch.commit();
     },
     subscribeHabitCompletions(
       userId: string,
@@ -245,6 +262,73 @@ export function createUserPreferencesRepository(
   };
 }
 
+function buildSummaryMap(
+  docs: QueryDocumentSnapshot<DocumentData>[],
+): Map<string, boolean> {
+  const map = new Map<string, boolean>();
+  for (const d of docs) {
+    const data = d.data() as HabitPeriodDoc;
+    map.set(data.periodKey, data.succeeded);
+  }
+  return map;
+}
+
+async function fillSummaryGaps(
+  db: Firestore,
+  userId: string,
+  habitId: string,
+  period: HabitPeriod,
+  referenceDate: Date,
+): Promise<void> {
+  const currentPeriodKey = periodKeyOf(referenceDate, period);
+  const latestQ = query(
+    collection(db, "users", userId, "habitProgress"),
+    where("habitId", "==", habitId),
+    where("period", "==", period),
+    orderBy("periodKey", "desc"),
+    limit(1),
+  );
+  const latestSnap = await getDocs(latestQ);
+  if (latestSnap.empty) return;
+
+  const lastKey = (latestSnap.docs[0].data() as HabitPeriodDoc).periodKey;
+  if (lastKey >= currentPeriodKey) return;
+
+  // Collect the gap period keys
+  const gapKeys: string[] = [];
+  let d = prevPeriodDate(referenceDate, period);
+  while (periodKeyOf(d, period) > lastKey) {
+    gapKeys.push(periodKeyOf(d, period));
+    d = prevPeriodDate(d, period);
+  }
+  if (gapKeys.length === 0) return;
+
+  // Fetch already-existing docs in the gap range to avoid overwriting them
+  const existingQ = query(
+    collection(db, "users", userId, "habitProgress"),
+    where("habitId", "==", habitId),
+    where("period", "==", period),
+    where("periodKey", "in", gapKeys),
+  );
+  const existingSnap = await getDocs(existingQ);
+  const existingKeys = new Set(
+    existingSnap.docs.map((d) => (d.data() as HabitPeriodDoc).periodKey),
+  );
+
+  const batch = writeBatch(db);
+  let wrote = false;
+  for (const gapKey of gapKeys) {
+    if (!existingKeys.has(gapKey)) {
+      batch.set(
+        doc(db, "users", userId, "habitProgress", `${habitId}_${gapKey}`),
+        { habitId, period, periodKey: gapKey, count: 0, succeeded: false },
+      );
+      wrote = true;
+    }
+  }
+  if (wrote) await batch.commit();
+}
+
 export function createHabitProgressRepository(
   db: Firestore,
 ): HabitProgressRepository {
@@ -260,13 +344,43 @@ export function createHabitProgressRepository(
       }) => void,
     ) {
       const periodKey = periodKeyOf(referenceDate, period);
-      const ref = progressDocRef(db, userId, habitId, periodKey);
+      const ref = periodDocRef(db, userId, habitId, periodKey);
       return onSnapshot(ref, (snap: DocumentSnapshot<DocumentData>) => {
-        const data = snap.data() as HabitProgressDoc | undefined;
+        const data = snap.data() as HabitPeriodDoc | undefined;
         onProgress({
           count: data?.count ?? 0,
           dayCounts: data?.dayCounts ?? {},
         });
+      });
+    },
+    subscribeHabitStreak(
+      userId: string,
+      habitId: string,
+      period: HabitPeriod,
+      createdAt: Date,
+      referenceDate: Date,
+      onStreak: (streak: {
+        currentStrikeLength: number;
+        openSincePeriodKey: string | null;
+      }) => void,
+    ) {
+      const createdPeriodKey = periodKeyOf(createdAt, period);
+      const q = query(
+        collection(db, "users", userId, "habitProgress"),
+        where("habitId", "==", habitId),
+        where("period", "==", period),
+        where("periodKey", ">=", createdPeriodKey),
+        orderBy("periodKey", "desc"),
+      );
+      return onSnapshot(q, (snap) => {
+        onStreak(
+          computeStreak(
+            buildSummaryMap(snap.docs),
+            referenceDate,
+            createdAt,
+            period,
+          ),
+        );
       });
     },
     async incrementHabit(
@@ -281,10 +395,12 @@ export function createHabitProgressRepository(
       const monthKey = monthKeyOf(referenceDate);
       const periodKey = periodKeyOf(referenceDate, period);
 
-      const ref = progressDocRef(db, userId, habitId, periodKey);
+      await fillSummaryGaps(db, userId, habitId, period, referenceDate);
+
+      const ref = periodDocRef(db, userId, habitId, periodKey);
       await runTransaction(db, async (tx: Transaction) => {
         const snap = await tx.get(ref);
-        const existing = snap.data() as HabitProgressDoc | undefined;
+        const existing = snap.data() as HabitPeriodDoc | undefined;
         const prevCount = existing?.count ?? 0;
         const nextCount = Math.min(prevCount + 1, Math.max(1, target));
         const prevDayCounts = existing?.dayCounts ?? {};
@@ -293,20 +409,19 @@ export function createHabitProgressRepository(
           Math.max(1, target),
         );
 
-        const toWrite: HabitProgressDoc = {
-          habitId,
-          period,
-          periodKey,
-          count: nextCount,
-          dayCounts: { ...prevDayCounts, [dayKey]: nextForDay },
-          updatedAt: serverTimestamp(),
-        };
-
-        if (snap.exists()) {
-          tx.set(ref, toWrite, { merge: true });
-        } else {
-          tx.set(ref, toWrite);
-        }
+        tx.set(
+          ref,
+          {
+            habitId,
+            period,
+            periodKey,
+            count: nextCount,
+            succeeded: nextCount >= target,
+            dayCounts: { ...prevDayCounts, [dayKey]: nextForDay },
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true },
+        );
 
         const logsCol = collection(
           db,

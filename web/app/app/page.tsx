@@ -3,7 +3,7 @@
 import { useState, useEffect, useContext } from "react";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { Task, Habit } from "@weekly/domain";
-import { ArrowRightFromSquare } from "@gravity-ui/icons";
+import { ArrowRightFromSquare, House } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { TaskList } from "../components/tasks/TaskList";
 import { HabitList } from "../components/habits/HabitList";
@@ -98,8 +98,8 @@ export default function AppPage() {
       <div className="mx-auto min-h-screen max-w-6xl px-6 py-10">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-1 text-xs font-medium text-primary">
-              <span className="h-2 w-2 rounded-full bg-primary" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-purple-500  bg-surface px-3 py-1 text-xs font-medium text-primary">
+              <House width={12} height={12} />
               Dashboard
             </div>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
@@ -133,11 +133,11 @@ export default function AppPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <section className="rounded-2xl border border-foreground/10 bg-surface p-5">
+          <section className="rounded-2xl border bg-surface p-5">
             <HabitList habits={habits} userId={userId} />
           </section>
 
-          <section className="rounded-2xl border border-foreground/10 bg-surface p-5">
+          <section className="rounded-2xl border bg-surface p-5">
             <TaskList
               tasks={tasks}
               userId={userId}

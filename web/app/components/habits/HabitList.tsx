@@ -45,6 +45,7 @@ export function HabitList({ habits, userId }: HabitListProps) {
           target={habit.times}
           period={habit.period}
           userId={userId}
+          createdAt={habit.createdAt}
         />
       ))}
     </div>
