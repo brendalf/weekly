@@ -3,7 +3,6 @@ import type { Unsubscribe } from "./types";
 
 export interface HabitProgressRepository {
   subscribeHabitProgress(
-    userId: string,
     habitId: string,
     period: HabitPeriod,
     referenceDate: Date,
@@ -11,16 +10,17 @@ export interface HabitProgressRepository {
   ): Unsubscribe;
 
   subscribeHabitStreak(
-    userId: string,
     habitId: string,
     period: HabitPeriod,
     createdAt: Date,
     referenceDate: Date,
-    onStreak: (streak: { currentStrikeLength: number; openSincePeriodKey: string | null }) => void,
+    onStreak: (streak: {
+      currentStrikeLength: number;
+      openSincePeriodKey: string | null;
+    }) => void,
   ): Unsubscribe;
 
   incrementHabit(
-    userId: string,
     habitId: string,
     period: HabitPeriod,
     target: number,

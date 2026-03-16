@@ -14,31 +14,35 @@ import {
 import { HabitPeriod } from "@weekly/domain";
 
 interface HabitAddModalProps {
-  onSubmit: (name: string, times: number, period: HabitPeriod) => void;
+  onSubmit: (name: string, times: number, period: HabitPeriod, projectId?: string) => void;
   trigger?: ReactElement;
+  projects?: { id: string; name: string }[];
 }
 
-export function HabitAddModal({ onSubmit, trigger }: HabitAddModalProps) {
+export function HabitAddModal({ onSubmit, trigger, projects }: HabitAddModalProps) {
   const [name, setName] = useState("");
   const [times, setTimes] = useState("1");
   const [period, setPeriod] = useState<HabitPeriod>(HabitPeriod.Week);
+  const [projectId, setProjectId] = useState<string>(projects?.[0]?.id ?? "");
 
   function reset() {
     setName("");
     setTimes("1");
     setPeriod(HabitPeriod.Week);
+    setProjectId(projects?.[0]?.id ?? "");
   }
 
   function handleSave(close: () => void) {
     const trimmed = name.trim();
     const n = Number(times);
     if (!trimmed || !Number.isFinite(n) || n <= 0) return;
-    onSubmit(trimmed, n, period);
+    if (projects && !projectId) return;
+    onSubmit(trimmed, n, period, projects ? projectId : undefined);
     reset();
     close();
   }
 
-  const isValid = Boolean(name.trim()) && Number(times) > 0;
+  const isValid = Boolean(name.trim()) && Number(times) > 0 && (!projects || Boolean(projectId));
 
   return (
     <Modal
@@ -75,6 +79,33 @@ export function HabitAddModal({ onSubmit, trigger }: HabitAddModalProps) {
                           autoFocus
                         />
                       </TextField>
+                      {projects && projects.length > 0 && (
+                        <div className="mt-4">
+                          <Label>Project</Label>
+                          <Select
+                            fullWidth
+                            placeholder="Select project"
+                            variant="secondary"
+                            value={projectId}
+                            onChange={(e) => setProjectId(e as string)}
+                          >
+                            <Select.Trigger>
+                              <Select.Value />
+                              <Select.Indicator />
+                            </Select.Trigger>
+                            <Select.Popover>
+                              <ListBox>
+                                {projects.map((p) => (
+                                  <ListBox.Item key={p.id} id={p.id} textValue={p.name}>
+                                    {p.name}
+                                    <ListBox.ItemIndicator />
+                                  </ListBox.Item>
+                                ))}
+                              </ListBox>
+                            </Select.Popover>
+                          </Select>
+                        </div>
+                      )}
                       <div className="mt-4">Frequency</div>
                       <div className="mt-1 flex items-end gap-2">
                         <Input

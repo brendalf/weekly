@@ -20,13 +20,12 @@ import {
   formatPeriodKeyFull,
   habitProgress,
 } from "@weekly/domain";
-import { habitRepository, habitProgressRepository } from "../../repositories";
+import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
 
 interface HabitDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  userId: string;
   habitId: string;
   name: string;
   times: number;
@@ -42,7 +41,6 @@ interface HabitDetailsModalProps {
 export function HabitDetailsModal({
   open,
   onOpenChange,
-  userId,
   habitId,
   name,
   times,
@@ -51,6 +49,9 @@ export function HabitDetailsModal({
   referenceDate,
   streak,
 }: HabitDetailsModalProps) {
+  const { getHabitRepos } = useRepositoryContext();
+  const repos = getHabitRepos(habitId);
+
   const [logs, setLogs] = useState<HabitCompletionLog[]>([]);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(name);
@@ -76,29 +77,28 @@ export function HabitDetailsModal({
     : formatPeriodKeyFull(currentPeriodKey, period);
 
   useEffect(() => {
-    if (!open) return;
-    const unsub = habitRepository.subscribeHabitCompletions(
-      userId,
-      habitId,
-      setLogs,
-    );
+    if (!open || !repos) return;
+    const unsub = repos.habit.subscribeHabitCompletions(habitId, setLogs);
     return () => unsub();
-  }, [open, userId, habitId]);
+  }, [open, repos, habitId]);
 
   async function handleDeleteHabit() {
-    await habitRepository.deleteHabit(userId, habitId);
+    if (!repos) return;
+    await repos.habit.deleteHabit(habitId);
     state.close();
   }
 
   async function handleDeleteLog(log: HabitCompletionLog) {
-    await habitRepository.deleteHabitLog(userId, habitId, log, times);
+    if (!repos) return;
+    await repos.habit.deleteHabitLog(habitId, log, times);
   }
 
   async function handleSave() {
+    if (!repos) return;
     const trimmed = editName.trim();
     const n = Number(editTimes);
     if (!trimmed || !Number.isFinite(n) || n <= 0) return;
-    await habitRepository.updateHabit(userId, habitId, trimmed, n, editPeriod);
+    await repos.habit.updateHabit(habitId, trimmed, n, editPeriod);
     setEditing(false);
   }
 
@@ -194,8 +194,7 @@ export function HabitDetailsModal({
                   progress={progress}
                   complete={complete}
                   onClick={() =>
-                    habitProgressRepository.incrementHabit(
-                      userId,
+                    repos?.habitProgress.incrementHabit(
                       habitId,
                       period,
                       times,
@@ -222,7 +221,8 @@ export function HabitDetailsModal({
                     )}
                     {streak.openSincePeriodKey && (
                       <span className="rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs text-foreground/50">
-                        since {formatPeriodKey(streak.openSincePeriodKey, period)}
+                        since{" "}
+                        {formatPeriodKey(streak.openSincePeriodKey, period)}
                       </span>
                     )}
                   </div>

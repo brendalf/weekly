@@ -1,28 +1,35 @@
 "use client";
 
 import { ReactElement, useState } from "react";
-import { Modal, Button, Input, Label, TextField, Surface } from "@heroui/react";
+import { Modal, Button, Input, Label, TextField, Surface, Select, ListBox } from "@heroui/react";
 
 interface TaskAddModalProps {
-  onSubmit: (title: string) => void;
+  onSubmit: (title: string, projectId?: string) => void;
   trigger?: ReactElement;
+  projects?: { id: string; name: string }[];
 }
 
-export function TaskAddModal({ onSubmit, trigger }: TaskAddModalProps) {
+export function TaskAddModal({ onSubmit, trigger, projects }: TaskAddModalProps) {
   const [title, setTitle] = useState("");
+  const [projectId, setProjectId] = useState<string>(projects?.[0]?.id ?? "");
 
   function handleSave(close: () => void) {
     const trimmed = title.trim();
     if (!trimmed) return;
-    onSubmit(trimmed);
+    if (projects && !projectId) return;
+    onSubmit(trimmed, projects ? projectId : undefined);
     setTitle("");
+    setProjectId(projects?.[0]?.id ?? "");
     close();
   }
 
   return (
     <Modal
       onOpenChange={(isOpen) => {
-        if (!isOpen) setTitle("");
+        if (!isOpen) {
+          setTitle("");
+          setProjectId(projects?.[0]?.id ?? "");
+        }
       }}
     >
       {trigger ?? <Button size="sm">Add task</Button>}
@@ -54,12 +61,39 @@ export function TaskAddModal({ onSubmit, trigger }: TaskAddModalProps) {
                           autoFocus
                         />
                       </TextField>
+                      {projects && projects.length > 0 && (
+                        <div className="mt-4">
+                          <Label>Project</Label>
+                          <Select
+                            fullWidth
+                            placeholder="Select project"
+                            variant="secondary"
+                            value={projectId}
+                            onChange={(e) => setProjectId(e as string)}
+                          >
+                            <Select.Trigger>
+                              <Select.Value />
+                              <Select.Indicator />
+                            </Select.Trigger>
+                            <Select.Popover>
+                              <ListBox>
+                                {projects.map((p) => (
+                                  <ListBox.Item key={p.id} id={p.id} textValue={p.name}>
+                                    {p.name}
+                                    <ListBox.ItemIndicator />
+                                  </ListBox.Item>
+                                ))}
+                              </ListBox>
+                            </Select.Popover>
+                          </Select>
+                        </div>
+                      )}
                     </form>
                   </Surface>
                 </Modal.Body>
                 <Modal.Footer>
                   <Button
-                    isDisabled={!title.trim()}
+                    isDisabled={!title.trim() || (Boolean(projects?.length) && !projectId)}
                     onPress={() => handleSave(close)}
                   >
                     Save

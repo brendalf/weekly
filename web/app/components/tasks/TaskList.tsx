@@ -1,21 +1,24 @@
 "use client";
 
-import { Task } from "@weekly/domain";
+import { Task, Project } from "@weekly/domain";
 import { Plus } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
-import { taskRepository } from "../../repositories";
 import { TaskAddModal } from "./TaskAddModal";
 import { TaskItem } from "./TaskItem";
+import { useRepositoryContext } from "../../contexts/RepositoryContext";
 
 interface TaskListProps {
   tasks: Task[];
-  userId: string;
   onToggleCompleted: (taskId: string) => void;
+  projects?: Project[];
 }
 
-export function TaskList({ tasks, userId, onToggleCompleted }: TaskListProps) {
-  const handleAddTask = (title: string) => {
-    taskRepository.addTask(userId, title);
+export function TaskList({ tasks, onToggleCompleted, projects }: TaskListProps) {
+  const { activeRepos, getProjectRepos } = useRepositoryContext();
+
+  const handleAddTask = (title: string, projectId?: string) => {
+    const repos = projectId ? getProjectRepos(projectId) : activeRepos;
+    repos?.task.addTask(title);
   };
 
   return (
@@ -25,14 +28,17 @@ export function TaskList({ tasks, userId, onToggleCompleted }: TaskListProps) {
           <p className="text-sm font-bold text-foreground">Tasks</p>
           <p className="text-xs text-foreground/60">Stay on top of your day.</p>
         </div>
-        <TaskAddModal
-          onSubmit={handleAddTask}
-          trigger={
-            <Button size="sm" isIconOnly aria-label="Add task" variant="ghost">
-              <Plus />
-            </Button>
-          }
-        />
+        {(activeRepos || projects) && (
+          <TaskAddModal
+            onSubmit={handleAddTask}
+            projects={projects}
+            trigger={
+              <Button size="sm" isIconOnly aria-label="Add task" variant="ghost">
+                <Plus />
+              </Button>
+            }
+          />
+        )}
       </div>
 
       {tasks.length === 0 && (
@@ -46,7 +52,6 @@ export function TaskList({ tasks, userId, onToggleCompleted }: TaskListProps) {
             <TaskItem
               key={task.id}
               task={task}
-              userId={userId}
               onToggleCompleted={onToggleCompleted}
             />
           ))}

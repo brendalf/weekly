@@ -1,31 +1,37 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import {
+  useState,
+  useEffect,
+  useContext,
+  useRef,
+  useMemo,
+} from "react";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
-import { Task, Habit, formatDayLabel } from "@weekly/domain";
-import { ArrowRightFromSquare, House } from "@gravity-ui/icons";
+import { formatDayLabel } from "@weekly/domain";
+import { ArrowRightFromSquare } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { TaskList } from "../components/tasks/TaskList";
 import { HabitList } from "../components/habits/HabitList";
 import { WeekPicker } from "../components/calendar/WeekPicker";
 import { WeekdaysCarousel } from "../components/calendar/WeekdaysCarousel";
 import { useCalendarStore } from "../stores/calendar";
-import {
-  habitRepository,
-  taskRepository,
-  userPreferencesRepository,
-} from "../repositories";
+import { useProjectStore, projectStore } from "../stores/project";
+import { RepositoryContext } from "../contexts/RepositoryContext";
+import { projectRepository, userPreferencesRepository, db } from "../repositories";
 import { auth } from "../config/firebase";
 import { ThemeContext } from "../providers";
 import { ThemeToggleButton } from "../components/general/ThemeToggleButton";
+import { ProjectSwitcher } from "../components/projects/ProjectSwitcher";
+import { InviteNotification } from "../components/projects/InviteNotification";
+import { useProjectData } from "../hooks/useProjectData";
 
 export default function AppPage() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [habits, setHabits] = useState<Habit[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
+  const personalProjectCreatedRef = useRef(false);
   const { setTheme } = useContext(ThemeContext);
 
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
@@ -33,12 +39,24 @@ export default function AppPage() {
     selectedDayISO ? new Date(selectedDayISO) : new Date(),
   );
 
+  const projects = useProjectStore((s) => s.projects);
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+
+  const { tasks, habits, activeRepos, getHabitRepos, getTaskRepos, getProjectRepos } =
+    useProjectData(db);
+
+  const contextValue = useMemo(
+    () => ({ activeRepos, getHabitRepos, getTaskRepos, getProjectRepos }),
+    [activeRepos, getHabitRepos, getTaskRepos, getProjectRepos],
+  );
+
+  // Auth
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setUserId(user?.uid ?? null);
+    const unsub = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setUserId(firebaseUser?.uid ?? null);
       setAuthReady(true);
-      if (!user) {
+      if (!firebaseUser) {
         document.cookie = "weekly_auth=; Path=/; Max-Age=0; SameSite=Lax";
         window.location.assign("/");
       }
@@ -46,37 +64,49 @@ export default function AppPage() {
     return () => unsub();
   }, []);
 
+  // User preferences
   useEffect(() => {
     if (!userId) return;
     return userPreferencesRepository.subscribeUserPreferences(
       userId,
-      ({ theme }) => {
-        setTheme(theme);
-      },
+      ({ theme }) => setTheme(theme),
     );
   }, [userId, setTheme]);
 
+  // Subscribe to projects; create Personal project on first login
   useEffect(() => {
-    if (!userId) return;
-    return taskRepository.subscribeTasks(userId, setTasks);
-  }, [userId]);
+    if (!userId || !user) return;
+    return projectRepository.subscribeUserProjects(userId, (userProjects) => {
+      projectStore.setProjects(userProjects);
+      if (userProjects.length === 0 && !personalProjectCreatedRef.current) {
+        personalProjectCreatedRef.current = true;
+        projectRepository.createPersonalProject(userId);
+      } else if (userProjects.length === 1) {
+        projectStore.setActiveProject(userProjects[0].id);
+      }
+    });
+  }, [userId, user]);
 
+  // Subscribe to pending invites
   useEffect(() => {
-    if (!userId) return;
-    return habitRepository.subscribeHabits(userId, setHabits);
-  }, [userId]);
+    if (!user?.email) return;
+    return projectRepository.subscribeInvites(user.email, (invites) => {
+      projectStore.setPendingInvites(invites);
+    });
+  }, [user?.email]);
+
+  function handleToggleTaskCompleted(taskId: string) {
+    const repos = getTaskRepos(taskId);
+    if (!repos) return;
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+    repos.task.toggleTask(task);
+  }
 
   async function handleLogout() {
     await signOut(auth);
     document.cookie = "weekly_auth=; Path=/; Max-Age=0; SameSite=Lax";
     window.location.assign("/");
-  }
-
-  function handleToggleTaskCompleted(taskId: string) {
-    if (!userId) return;
-    const task = tasks.find((t) => t.id === taskId);
-    if (!task) return;
-    taskRepository.toggleTask(userId, task);
   }
 
   if (!authReady) {
@@ -89,58 +119,65 @@ export default function AppPage() {
   if (!userId) return null;
 
   return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto min-h-screen max-w-6xl px-6 py-10">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-purple-500  bg-surface px-3 py-1 text-xs font-medium text-primary">
-              <House width={12} height={12} />
-              Dashboard
+    <RepositoryContext.Provider value={contextValue}>
+      <main className="min-h-screen bg-background">
+        <div className="mx-auto min-h-screen max-w-6xl px-6 py-10">
+          <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <ProjectSwitcher />
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
+                {selectedDayLabel}
+              </h1>
             </div>
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
-              {selectedDayLabel}
-            </h1>
+
+            <div className="flex items-center gap-3">
+              {user?.email && (
+                <InviteNotification userEmail={user.email} />
+              )}
+              <div className="hidden flex-col items-end sm:flex">
+                <p className="text-sm font-medium text-foreground">
+                  {user?.displayName ?? "Signed in"}
+                </p>
+                <p className="text-xs text-foreground/60">
+                  {user?.email ?? ""}
+                </p>
+              </div>
+              <ThemeToggleButton userId={userId} />
+              <Button
+                variant="danger"
+                size="sm"
+                isIconOnly
+                aria-label="Log out"
+                onPress={handleLogout}
+              >
+                <ArrowRightFromSquare />
+              </Button>
+            </div>
+          </header>
+
+          <div className="py-5 flex flex-col gap-2">
+            <WeekPicker />
+            <WeekdaysCarousel />
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden flex-col items-end sm:flex">
-              <p className="text-sm font-medium text-foreground">
-                {user?.displayName ?? "Signed in"}
-              </p>
-              <p className="text-xs text-foreground/60">{user?.email ?? ""}</p>
-            </div>
-            <ThemeToggleButton userId={userId} />
-            <Button
-              variant="danger"
-              size="sm"
-              isIconOnly
-              aria-label="Log out"
-              onPress={handleLogout}
-            >
-              <ArrowRightFromSquare />
-            </Button>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <section className="rounded-2xl border bg-surface p-4">
+              <HabitList
+                habits={habits}
+                projects={activeProjectId === null ? projects : undefined}
+              />
+            </section>
+
+            <section className="rounded-2xl border bg-surface p-4">
+              <TaskList
+                tasks={tasks}
+                onToggleCompleted={handleToggleTaskCompleted}
+                projects={activeProjectId === null ? projects : undefined}
+              />
+            </section>
           </div>
-        </header>
-
-        <div className="py-5 flex flex-col gap-2">
-          <WeekPicker />
-          <WeekdaysCarousel />
         </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <section className="rounded-2xl border bg-surface p-4">
-            <HabitList habits={habits} userId={userId} />
-          </section>
-
-          <section className="rounded-2xl border bg-surface p-4">
-            <TaskList
-              tasks={tasks}
-              userId={userId}
-              onToggleCompleted={handleToggleTaskCompleted}
-            />
-          </section>
-        </div>
-      </div>
-    </main>
+      </main>
+    </RepositoryContext.Provider>
   );
 }

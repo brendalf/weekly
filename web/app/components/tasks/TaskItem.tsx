@@ -7,11 +7,10 @@ import { TaskDetailsModal } from "./TaskDetailsModal";
 
 interface TaskItemProps {
   task: Task;
-  userId: string;
   onToggleCompleted: (taskId: string) => void;
 }
 
-export function TaskItem({ task, userId, onToggleCompleted }: TaskItemProps) {
+export function TaskItem({ task, onToggleCompleted }: TaskItemProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   return (
@@ -40,7 +39,6 @@ export function TaskItem({ task, userId, onToggleCompleted }: TaskItemProps) {
       <TaskDetailsModal
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
-        userId={userId}
         task={task}
       />
     </>

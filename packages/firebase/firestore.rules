@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User preferences
+    match /preferences/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Invites
+    match /invitesByEmail/{email}/invites/{inviteId} {
+      allow read: if request.auth != null && request.auth.token.email == email;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && request.auth.token.email == email;
+    }
+
+    // isMember: only used for subcollections (reads parent doc — no recursion)
+    function isMember(projectId) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/projects/$(projectId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.members;
+    }
+
+    match /projects/{projectId} {
+      // resource.data used directly — avoids recursive get() on this same document.
+      // members array includes the owner, so one check covers both.
+      allow read:   if request.auth != null && request.auth.uid in resource.data.members;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
+      allow update: if request.auth != null && request.auth.uid in resource.data.members;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+
+      match /tasks/{taskId} {
+        allow read, write: if isMember(projectId);
+      }
+      match /habits/{habitId} {
+        allow read, write: if isMember(projectId);
+        match /completions/{logId} {
+          allow read, write: if isMember(projectId);
+        }
+      }
+      match /habitProgress/{progressId} {
+        allow read, write: if isMember(projectId);
+      }
+    }
+  }
+}

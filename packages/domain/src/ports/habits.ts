@@ -11,14 +11,22 @@ export interface HabitCompletionLog {
 }
 
 export interface HabitRepository {
-  subscribeHabits(userId: string, onHabits: (habits: Habit[]) => void): Unsubscribe;
-  addHabit(userId: string, name: string, times: number, period: HabitPeriod): Promise<void>;
+  subscribeHabits(onHabits: (habits: Habit[]) => void): Unsubscribe;
+  addHabit(name: string, times: number, period: HabitPeriod): Promise<void>;
   subscribeHabitCompletions(
-    userId: string,
     habitId: string,
     onLogs: (logs: HabitCompletionLog[]) => void,
   ): Unsubscribe;
-  deleteHabit(userId: string, habitId: string): Promise<void>;
-  updateHabit(userId: string, habitId: string, name: string, times: number, period: HabitPeriod): Promise<void>;
-  deleteHabitLog(userId: string, habitId: string, log: HabitCompletionLog, target: number): Promise<void>;
+  deleteHabit(habitId: string): Promise<void>;
+  updateHabit(
+    habitId: string,
+    name: string,
+    times: number,
+    period: HabitPeriod,
+  ): Promise<void>;
+  deleteHabitLog(
+    habitId: string,
+    log: HabitCompletionLog,
+    target: number,
+  ): Promise<void>;
 }

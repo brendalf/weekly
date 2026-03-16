@@ -1,19 +1,20 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Habit, HabitPeriod } from "@weekly/domain";
+import { Habit, HabitPeriod, Project } from "@weekly/domain";
 import { Plus } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { HabitItem } from "./HabitItem";
 import { HabitAddModal } from "./HabitAddModal";
-import { habitRepository } from "../../repositories";
+import { useRepositoryContext } from "../../contexts/RepositoryContext";
 
 interface HabitListProps {
   habits: Habit[];
-  userId: string;
+  projects?: Project[];
 }
 
-export function HabitList({ habits, userId }: HabitListProps) {
+export function HabitList({ habits, projects }: HabitListProps) {
+  const { activeRepos, getProjectRepos } = useRepositoryContext();
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
 
   const handleCompleteChange = useCallback((id: string, complete: boolean) => {
@@ -25,8 +26,9 @@ export function HabitList({ habits, userId }: HabitListProps) {
     });
   }, []);
 
-  const handleAddHabit = (name: string, times: number, period: HabitPeriod) => {
-    habitRepository.addHabit(userId, name, times, period);
+  const handleAddHabit = (name: string, times: number, period: HabitPeriod, projectId?: string) => {
+    const repos = projectId ? getProjectRepos(projectId) : activeRepos;
+    repos?.habit.addHabit(name, times, period);
   };
 
   const sorted = [...habits].sort(
@@ -40,14 +42,17 @@ export function HabitList({ habits, userId }: HabitListProps) {
           <p className="text-sm font-bold text-foreground">Habits</p>
           <p className="text-xs text-foreground/60">Build streaks</p>
         </div>
-        <HabitAddModal
-          onSubmit={handleAddHabit}
-          trigger={
-            <Button size="sm" isIconOnly aria-label="Add habit" variant="ghost">
-              <Plus />
-            </Button>
-          }
-        />
+        {(activeRepos || projects) && (
+          <HabitAddModal
+            onSubmit={handleAddHabit}
+            projects={projects}
+            trigger={
+              <Button size="sm" isIconOnly aria-label="Add habit" variant="ghost">
+                <Plus />
+              </Button>
+            }
+          />
+        )}
       </div>
 
       {habits.length === 0 && (
@@ -62,7 +67,6 @@ export function HabitList({ habits, userId }: HabitListProps) {
             name={habit.name}
             target={habit.times}
             period={habit.period}
-            userId={userId}
             createdAt={habit.createdAt}
             onCompleteChange={handleCompleteChange}
           />

@@ -11,21 +11,22 @@ import {
 } from "@heroui/react";
 import { TrashBin, Pencil, Xmark, Check } from "@gravity-ui/icons";
 import { Task } from "@weekly/domain";
-import { taskRepository } from "../../repositories";
+import { useRepositoryContext } from "../../contexts/RepositoryContext";
 
 interface TaskDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  userId: string;
   task: Task;
 }
 
 export function TaskDetailsModal({
   open,
   onOpenChange,
-  userId,
   task,
 }: TaskDetailsModalProps) {
+  const { getTaskRepos } = useRepositoryContext();
+  const repos = getTaskRepos(task.id);
+
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
 
@@ -38,14 +39,16 @@ export function TaskDetailsModal({
   });
 
   async function handleDelete() {
-    await taskRepository.deleteTask(userId, task.id);
+    if (!repos) return;
+    await repos.task.deleteTask(task.id);
     state.close();
   }
 
   async function handleSave() {
+    if (!repos) return;
     const trimmed = editTitle.trim();
     if (!trimmed) return;
-    await taskRepository.updateTaskTitle(userId, task.id, trimmed);
+    await repos.task.updateTaskTitle(task.id, trimmed);
     setEditing(false);
   }
 

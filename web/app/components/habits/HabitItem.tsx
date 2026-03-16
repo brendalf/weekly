@@ -3,17 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { HabitPeriod, formatPeriodKey, habitProgress } from "@weekly/domain";
 import { Flame } from "@gravity-ui/icons";
-import { habitProgressRepository } from "../../repositories";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
 import { useCalendarStore } from "../../stores/calendar";
 import { HabitDetailsModal } from "./HabitDetailsModal";
+import { useRepositoryContext } from "../../contexts/RepositoryContext";
 
 export interface HabitItemProps {
   id: string;
   name: string;
   target: number;
   period: HabitPeriod;
-  userId: string;
   createdAt: string;
   onCompleteChange?: (id: string, complete: boolean) => void;
 }
@@ -23,10 +22,12 @@ export function HabitItem({
   name,
   target,
   period,
-  userId,
   createdAt,
   onCompleteChange,
 }: HabitItemProps) {
+  const { getHabitRepos } = useRepositoryContext();
+  const repos = getHabitRepos(id);
+
   const [value, setValue] = useState(0);
   const [streak, setStreak] = useState<{
     currentStrikeLength: number;
@@ -42,19 +43,19 @@ export function HabitItem({
   }, [selectedDayISO, today]);
 
   useEffect(() => {
-    const unsub = habitProgressRepository.subscribeHabitProgress(
-      userId,
+    if (!repos) return;
+    const unsub = repos.habitProgress.subscribeHabitProgress(
       id,
       period,
       referenceDate,
       ({ count }: { count: number }) => setValue(count),
     );
     return () => unsub();
-  }, [userId, id, period, referenceDate]);
+  }, [repos, id, period, referenceDate]);
 
   useEffect(() => {
-    const unsub = habitProgressRepository.subscribeHabitStreak(
-      userId,
+    if (!repos) return;
+    const unsub = repos.habitProgress.subscribeHabitStreak(
       id,
       period,
       new Date(createdAt),
@@ -62,7 +63,7 @@ export function HabitItem({
       (s) => setStreak(s),
     );
     return () => unsub();
-  }, [userId, id, period, createdAt, referenceDate]);
+  }, [repos, id, period, createdAt, referenceDate]);
 
   const { progress, complete } = habitProgress(value, target);
 
@@ -87,13 +88,7 @@ export function HabitItem({
           progress={progress}
           complete={complete}
           onClick={() =>
-            habitProgressRepository.incrementHabit(
-              userId,
-              id,
-              period,
-              target,
-              referenceDate,
-            )
+            repos?.habitProgress.incrementHabit(id, period, target, referenceDate)
           }
           ariaLabel={complete ? "Completed" : "Mark one done"}
         />
@@ -125,7 +120,6 @@ export function HabitItem({
       <HabitDetailsModal
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
-        userId={userId}
         habitId={id}
         name={name}
         times={target}

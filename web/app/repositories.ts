@@ -1,12 +1,9 @@
 import { db } from "./config/firebase";
 import {
-  createHabitProgressRepository,
-  createHabitRepository,
-  createTaskRepository,
+  createProjectRepository,
   createUserPreferencesRepository,
 } from "@weekly/firebase";
 
-export const taskRepository = createTaskRepository(db);
-export const habitRepository = createHabitRepository(db);
-export const habitProgressRepository = createHabitProgressRepository(db);
 export const userPreferencesRepository = createUserPreferencesRepository(db);
+export const projectRepository = createProjectRepository(db);
+export { db };
