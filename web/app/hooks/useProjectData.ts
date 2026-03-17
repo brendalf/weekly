@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { Firestore } from "firebase/firestore";
 import type { Task, Habit } from "@weekly/domain";
 import {
@@ -19,36 +19,35 @@ export function useProjectData(db: Firestore) {
   const habitProjectMapRef = useRef<Map<string, string>>(new Map());
   const taskProjectMapRef = useRef<Map<string, string>>(new Map());
 
-  const [activeRepos, setActiveRepos] = useState<RepoSet | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
 
-  function getOrCreateRepos(projectId: string): RepoSet {
-    if (!projectReposRef.current.has(projectId)) {
-      projectReposRef.current.set(projectId, {
-        task: createTaskRepository(db, projectId),
-        habit: createHabitRepository(db, projectId),
-        habitProgress: createHabitProgressRepository(db, projectId),
-      });
-    }
-    return projectReposRef.current.get(projectId)!;
-  }
+  const getOrCreateRepos = useCallback(
+    (projectId: string): RepoSet => {
+      if (!projectReposRef.current.has(projectId)) {
+        projectReposRef.current.set(projectId, {
+          task: createTaskRepository(db, projectId),
+          habit: createHabitRepository(db, projectId),
+          habitProgress: createHabitProgressRepository(db, projectId),
+        });
+      }
+      return projectReposRef.current.get(projectId)!;
+    },
+    [db],
+  );
 
   // Ensure repos exist for all known projects
   useEffect(() => {
     for (const project of projects) {
       getOrCreateRepos(project.id);
     }
-  }, [projects]);
+  }, [projects, getOrCreateRepos]);
 
-  // Sync activeRepos when active project changes
-  useEffect(() => {
-    if (activeProjectId) {
-      setActiveRepos(getOrCreateRepos(activeProjectId));
-    } else {
-      setActiveRepos(null);
-    }
-  }, [activeProjectId]);
+  // Derive activeRepos synchronously — no setState in effect
+  const activeRepos = useMemo(() => {
+    if (!activeProjectId) return null;
+    return getOrCreateRepos(activeProjectId);
+  }, [activeProjectId, getOrCreateRepos]);
 
   // Subscribe to tasks/habits for single project view
   useEffect(() => {
@@ -94,7 +93,7 @@ export function useProjectData(db: Firestore) {
     }
 
     return () => unsubs.forEach((u) => u());
-  }, [activeProjectId, projects]);
+  }, [activeProjectId, projects, getOrCreateRepos]);
 
   const getHabitRepos = useCallback(
     (habitId: string): RepoSet | null => {
@@ -123,6 +122,18 @@ export function useProjectData(db: Firestore) {
     [],
   );
 
+  const getHabitProjectId = useCallback(
+    (habitId: string): string | null =>
+      habitProjectMapRef.current.get(habitId) ?? null,
+    [],
+  );
+
+  const getTaskProjectId = useCallback(
+    (taskId: string): string | null =>
+      taskProjectMapRef.current.get(taskId) ?? null,
+    [],
+  );
+
   return {
     tasks,
     habits,
@@ -130,5 +141,7 @@ export function useProjectData(db: Firestore) {
     getHabitRepos,
     getTaskRepos,
     getProjectRepos,
+    getHabitProjectId,
+    getTaskProjectId,
   };
 }

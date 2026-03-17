@@ -42,12 +42,12 @@ export default function AppPage() {
   const projects = useProjectStore((s) => s.projects);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
 
-  const { tasks, habits, activeRepos, getHabitRepos, getTaskRepos, getProjectRepos } =
+  const { tasks, habits, activeRepos, getHabitRepos, getTaskRepos, getProjectRepos, getHabitProjectId, getTaskProjectId } =
     useProjectData(db);
 
   const contextValue = useMemo(
-    () => ({ activeRepos, getHabitRepos, getTaskRepos, getProjectRepos }),
-    [activeRepos, getHabitRepos, getTaskRepos, getProjectRepos],
+    () => ({ activeRepos, getHabitRepos, getTaskRepos, getProjectRepos, getHabitProjectId, getTaskProjectId }),
+    [activeRepos, getHabitRepos, getTaskRepos, getProjectRepos, getHabitProjectId, getTaskProjectId],
   );
 
   // Auth

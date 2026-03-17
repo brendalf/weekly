@@ -14,7 +14,7 @@ interface TaskListProps {
 }
 
 export function TaskList({ tasks, onToggleCompleted, projects }: TaskListProps) {
-  const { activeRepos, getProjectRepos } = useRepositoryContext();
+  const { activeRepos, getProjectRepos, getTaskProjectId } = useRepositoryContext();
 
   const handleAddTask = (title: string, projectId?: string) => {
     const repos = projectId ? getProjectRepos(projectId) : activeRepos;
@@ -48,13 +48,19 @@ export function TaskList({ tasks, onToggleCompleted, projects }: TaskListProps) 
       <div className="flex flex-col gap-0.5">
         {[...tasks]
           .sort((a, b) => Number(a.completed) - Number(b.completed))
-          .map((task) => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              onToggleCompleted={onToggleCompleted}
-            />
-          ))}
+          .map((task) => {
+            const projectName = projects
+              ? projects.find((p) => p.id === getTaskProjectId(task.id))?.name
+              : undefined;
+            return (
+              <TaskItem
+                key={task.id}
+                task={task}
+                onToggleCompleted={onToggleCompleted}
+                projectName={projectName}
+              />
+            );
+          })}
       </div>
     </div>
   );

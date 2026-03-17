@@ -1,7 +1,17 @@
 "use client";
 
 import { ReactElement, useState } from "react";
-import { Modal, Button, Input, Label, TextField, Surface, Select, ListBox } from "@heroui/react";
+import {
+  Modal,
+  Button,
+  Input,
+  Label,
+  TextField,
+  Surface,
+  Select,
+  ListBox,
+} from "@heroui/react";
+import { Check } from "@gravity-ui/icons";
 
 interface TaskAddModalProps {
   onSubmit: (title: string, projectId?: string) => void;
@@ -9,7 +19,11 @@ interface TaskAddModalProps {
   projects?: { id: string; name: string }[];
 }
 
-export function TaskAddModal({ onSubmit, trigger, projects }: TaskAddModalProps) {
+export function TaskAddModal({
+  onSubmit,
+  trigger,
+  projects,
+}: TaskAddModalProps) {
   const [title, setTitle] = useState("");
   const [projectId, setProjectId] = useState<string>(projects?.[0]?.id ?? "");
 
@@ -78,7 +92,11 @@ export function TaskAddModal({ onSubmit, trigger, projects }: TaskAddModalProps)
                             <Select.Popover>
                               <ListBox>
                                 {projects.map((p) => (
-                                  <ListBox.Item key={p.id} id={p.id} textValue={p.name}>
+                                  <ListBox.Item
+                                    key={p.id}
+                                    id={p.id}
+                                    textValue={p.name}
+                                  >
                                     {p.name}
                                     <ListBox.ItemIndicator />
                                   </ListBox.Item>
@@ -93,10 +111,12 @@ export function TaskAddModal({ onSubmit, trigger, projects }: TaskAddModalProps)
                 </Modal.Body>
                 <Modal.Footer>
                   <Button
-                    isDisabled={!title.trim() || (Boolean(projects?.length) && !projectId)}
+                    isDisabled={
+                      !title.trim() || (Boolean(projects?.length) && !projectId)
+                    }
                     onPress={() => handleSave(close)}
                   >
-                    Save
+                    <Check />
                   </Button>
                 </Modal.Footer>
               </>

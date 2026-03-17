@@ -14,7 +14,7 @@ interface HabitListProps {
 }
 
 export function HabitList({ habits, projects }: HabitListProps) {
-  const { activeRepos, getProjectRepos } = useRepositoryContext();
+  const { activeRepos, getProjectRepos, getHabitProjectId } = useRepositoryContext();
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
 
   const handleCompleteChange = useCallback((id: string, complete: boolean) => {
@@ -60,17 +60,23 @@ export function HabitList({ habits, projects }: HabitListProps) {
       )}
 
       <div className="flex flex-col gap-0.5">
-        {sorted.map((habit) => (
-          <HabitItem
-            key={habit.id}
-            id={habit.id}
-            name={habit.name}
-            target={habit.times}
-            period={habit.period}
-            createdAt={habit.createdAt}
-            onCompleteChange={handleCompleteChange}
-          />
-        ))}
+        {sorted.map((habit) => {
+          const projectName = projects
+            ? projects.find((p) => p.id === getHabitProjectId(habit.id))?.name
+            : undefined;
+          return (
+            <HabitItem
+              key={habit.id}
+              id={habit.id}
+              name={habit.name}
+              target={habit.times}
+              period={habit.period}
+              createdAt={habit.createdAt}
+              onCompleteChange={handleCompleteChange}
+              projectName={projectName}
+            />
+          );
+        })}
       </div>
     </div>
   );

@@ -18,6 +18,8 @@ interface RepositoryContextValue {
   getHabitRepos(habitId: string): RepoSet | null;
   getTaskRepos(taskId: string): RepoSet | null;
   getProjectRepos(projectId: string): RepoSet | null;
+  getHabitProjectId(habitId: string): string | null;
+  getTaskProjectId(taskId: string): string | null;
 }
 
 export const RepositoryContext = createContext<RepositoryContextValue>({
@@ -25,6 +27,8 @@ export const RepositoryContext = createContext<RepositoryContextValue>({
   getHabitRepos: () => null,
   getTaskRepos: () => null,
   getProjectRepos: () => null,
+  getHabitProjectId: () => null,
+  getTaskProjectId: () => null,
 });
 
 export function useRepositoryContext() {

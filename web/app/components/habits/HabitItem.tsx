@@ -15,6 +15,7 @@ export interface HabitItemProps {
   period: HabitPeriod;
   createdAt: string;
   onCompleteChange?: (id: string, complete: boolean) => void;
+  projectName?: string;
 }
 
 export function HabitItem({
@@ -24,6 +25,7 @@ export function HabitItem({
   period,
   createdAt,
   onCompleteChange,
+  projectName,
 }: HabitItemProps) {
   const { getHabitRepos } = useRepositoryContext();
   const repos = getHabitRepos(id);
@@ -100,6 +102,11 @@ export function HabitItem({
           <span className="flex-1 truncate text-sm text-foreground">
             {name}
           </span>
+          {projectName && (
+            <span className="shrink-0 rounded-full bg-foreground/10 px-1.5 py-0.5 text-xs text-foreground/50">
+              {projectName}
+            </span>
+          )}
           <span className="text-xs text-foreground/60">
             {value}/{target}
           </span>

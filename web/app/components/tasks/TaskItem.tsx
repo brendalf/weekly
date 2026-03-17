@@ -8,9 +8,10 @@ import { TaskDetailsModal } from "./TaskDetailsModal";
 interface TaskItemProps {
   task: Task;
   onToggleCompleted: (taskId: string) => void;
+  projectName?: string;
 }
 
-export function TaskItem({ task, onToggleCompleted }: TaskItemProps) {
+export function TaskItem({ task, onToggleCompleted, projectName }: TaskItemProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   return (
@@ -34,6 +35,11 @@ export function TaskItem({ task, onToggleCompleted }: TaskItemProps) {
             <Label htmlFor={task.id}>{task.title}</Label>
           </Checkbox.Content>
         </Checkbox>
+        {projectName && (
+          <span className="ml-auto shrink-0 rounded-full bg-foreground/10 px-1.5 py-0.5 text-xs text-foreground/50">
+            {projectName}
+          </span>
+        )}
       </div>
 
       <TaskDetailsModal

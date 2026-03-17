@@ -12,14 +12,24 @@ import {
   ListBox,
 } from "@heroui/react";
 import { HabitPeriod } from "@weekly/domain";
+import { Check } from "@gravity-ui/icons";
 
 interface HabitAddModalProps {
-  onSubmit: (name: string, times: number, period: HabitPeriod, projectId?: string) => void;
+  onSubmit: (
+    name: string,
+    times: number,
+    period: HabitPeriod,
+    projectId?: string,
+  ) => void;
   trigger?: ReactElement;
   projects?: { id: string; name: string }[];
 }
 
-export function HabitAddModal({ onSubmit, trigger, projects }: HabitAddModalProps) {
+export function HabitAddModal({
+  onSubmit,
+  trigger,
+  projects,
+}: HabitAddModalProps) {
   const [name, setName] = useState("");
   const [times, setTimes] = useState("1");
   const [period, setPeriod] = useState<HabitPeriod>(HabitPeriod.Week);
@@ -42,7 +52,10 @@ export function HabitAddModal({ onSubmit, trigger, projects }: HabitAddModalProp
     close();
   }
 
-  const isValid = Boolean(name.trim()) && Number(times) > 0 && (!projects || Boolean(projectId));
+  const isValid =
+    Boolean(name.trim()) &&
+    Number(times) > 0 &&
+    (!projects || Boolean(projectId));
 
   return (
     <Modal
@@ -96,7 +109,11 @@ export function HabitAddModal({ onSubmit, trigger, projects }: HabitAddModalProp
                             <Select.Popover>
                               <ListBox>
                                 {projects.map((p) => (
-                                  <ListBox.Item key={p.id} id={p.id} textValue={p.name}>
+                                  <ListBox.Item
+                                    key={p.id}
+                                    id={p.id}
+                                    textValue={p.name}
+                                  >
                                     {p.name}
                                     <ListBox.ItemIndicator />
                                   </ListBox.Item>
@@ -161,7 +178,7 @@ export function HabitAddModal({ onSubmit, trigger, projects }: HabitAddModalProp
                     isDisabled={!isValid}
                     onPress={() => handleSave(close)}
                   >
-                    Save
+                    <Check />
                   </Button>
                 </Modal.Footer>
               </>

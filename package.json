@@ -2,8 +2,11 @@
   "name": "weekly",
   "private": true,
   "version": "0.0.0",
-  "scripts": {},
+  "scripts": {
+    "emulators": "firebase emulators:start --project weekly-dev-e04e8"
+  },
   "devDependencies": {
-    "baseline-browser-mapping": "^2.10.0"
+    "baseline-browser-mapping": "^2.10.0",
+    "firebase-tools": "^14"
   }
 }
