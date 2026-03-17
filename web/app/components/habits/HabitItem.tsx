@@ -80,7 +80,7 @@ export function HabitItem({
     <>
       <div
         className={[
-          "flex items-center gap-2 rounded-xl border border-foreground/10 bg-background hover:border-foreground/20 p-2 transition-opacity",
+          "flex items-center gap-2 rounded-lg border border-foreground/10 bg-background hover:border-foreground/20 p-2 transition-opacity",
           complete ? "opacity-50" : "",
         ].join(" ")}
       >
@@ -90,7 +90,12 @@ export function HabitItem({
           progress={progress}
           complete={complete}
           onClick={() =>
-            repos?.habitProgress.incrementHabit(id, period, target, referenceDate)
+            repos?.habitProgress.incrementHabit(
+              id,
+              period,
+              target,
+              referenceDate,
+            )
           }
           ariaLabel={complete ? "Completed" : "Mark one done"}
         />

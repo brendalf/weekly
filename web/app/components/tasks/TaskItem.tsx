@@ -11,7 +11,11 @@ interface TaskItemProps {
   projectName?: string;
 }
 
-export function TaskItem({ task, onToggleCompleted, projectName }: TaskItemProps) {
+export function TaskItem({
+  task,
+  onToggleCompleted,
+  projectName,
+}: TaskItemProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   return (
@@ -19,7 +23,7 @@ export function TaskItem({ task, onToggleCompleted, projectName }: TaskItemProps
       <div
         onClick={() => setDetailsOpen(true)}
         className={[
-          "flex items-center gap-2 rounded-xl border border-foreground/10 bg-background hover:border-foreground/20 p-2 cursor-pointer transition-opacity",
+          "flex items-center gap-2 rounded-lg border border-foreground/10 bg-background hover:border-foreground/20 p-2 cursor-pointer transition-opacity",
           task.completed ? "opacity-50" : "",
         ].join(" ")}
       >

@@ -11,10 +11,12 @@ import { useRepositoryContext } from "../../contexts/RepositoryContext";
 interface HabitListProps {
   habits: Habit[];
   projects?: Project[];
+  hideHeader?: boolean;
 }
 
-export function HabitList({ habits, projects }: HabitListProps) {
-  const { activeRepos, getProjectRepos, getHabitProjectId } = useRepositoryContext();
+export function HabitList({ habits, projects, hideHeader }: HabitListProps) {
+  const { activeRepos, getProjectRepos, getHabitProjectId } =
+    useRepositoryContext();
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
 
   const handleCompleteChange = useCallback((id: string, complete: boolean) => {
@@ -26,7 +28,12 @@ export function HabitList({ habits, projects }: HabitListProps) {
     });
   }, []);
 
-  const handleAddHabit = (name: string, times: number, period: HabitPeriod, projectId?: string) => {
+  const handleAddHabit = (
+    name: string,
+    times: number,
+    period: HabitPeriod,
+    projectId?: string,
+  ) => {
     const repos = projectId ? getProjectRepos(projectId) : activeRepos;
     repos?.habit.addHabit(name, times, period);
   };
@@ -37,23 +44,27 @@ export function HabitList({ habits, projects }: HabitListProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div>
+      {!hideHeader && (
+        <div className="flex items-center justify-between rounded-lg border bg-surface py-1 px-4">
           <p className="text-sm font-bold text-foreground">Habits</p>
-          <p className="text-xs text-foreground/60">Build streaks</p>
+          {(activeRepos || projects) && (
+            <HabitAddModal
+              onSubmit={handleAddHabit}
+              projects={projects}
+              trigger={
+                <Button
+                  size="sm"
+                  isIconOnly
+                  aria-label="Add habit"
+                  variant="ghost"
+                >
+                  <Plus />
+                </Button>
+              }
+            />
+          )}
         </div>
-        {(activeRepos || projects) && (
-          <HabitAddModal
-            onSubmit={handleAddHabit}
-            projects={projects}
-            trigger={
-              <Button size="sm" isIconOnly aria-label="Add habit" variant="ghost">
-                <Plus />
-              </Button>
-            }
-          />
-        )}
-      </div>
+      )}
 
       {habits.length === 0 && (
         <p className="text-xs text-foreground/60">No habits yet.</p>

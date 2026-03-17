@@ -32,6 +32,7 @@ import {
   type TaskRepository,
   type UserPreferencesRepository,
   type ThemePreference,
+  type LayoutPreference,
   HabitPeriod,
   computeStreak,
   prevPeriodDate,
@@ -311,18 +312,23 @@ export function createUserPreferencesRepository(
   return {
     subscribeUserPreferences(
       userId: string,
-      onPreferences: (prefs: { theme: ThemePreference }) => void,
+      onPreferences: (prefs: { theme: ThemePreference; layout: LayoutPreference }) => void,
     ) {
       const ref = doc(db, "preferences", userId);
       return onSnapshot(ref, (snap: DocumentSnapshot<DocumentData>) => {
         const data = snap.data();
         const theme: ThemePreference =
           data?.theme === "light" ? "light" : "dark";
-        onPreferences({ theme });
+        const layout: LayoutPreference =
+          data?.layout === "side-by-side" ? "side-by-side" : "tabs";
+        onPreferences({ theme, layout });
       });
     },
     async updateTheme(userId: string, theme: ThemePreference) {
       await setDoc(doc(db, "preferences", userId), { theme }, { merge: true });
+    },
+    async updateLayout(userId: string, layout: LayoutPreference) {
+      await setDoc(doc(db, "preferences", userId), { layout }, { merge: true });
     },
   };
 }

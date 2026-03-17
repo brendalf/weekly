@@ -6,13 +6,14 @@ import {
   useContext,
   useRef,
   useMemo,
+  useCallback,
 } from "react";
+import type { LayoutPreference } from "@weekly/domain";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { formatDayLabel } from "@weekly/domain";
 import { ArrowRightFromSquare } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
-import { TaskList } from "../components/tasks/TaskList";
-import { HabitList } from "../components/habits/HabitList";
+import { HabitsTasksView } from "../components/HabitsTasksView";
 import { WeekPicker } from "../components/calendar/WeekPicker";
 import { WeekdaysCarousel } from "../components/calendar/WeekdaysCarousel";
 import { useCalendarStore } from "../stores/calendar";
@@ -33,6 +34,7 @@ export default function AppPage() {
 
   const personalProjectCreatedRef = useRef(false);
   const { setTheme } = useContext(ThemeContext);
+  const [layout, setLayout] = useState<LayoutPreference>("tabs");
 
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const selectedDayLabel = formatDayLabel(
@@ -69,7 +71,7 @@ export default function AppPage() {
     if (!userId) return;
     return userPreferencesRepository.subscribeUserPreferences(
       userId,
-      ({ theme }) => setTheme(theme),
+      ({ theme, layout }) => { setTheme(theme); setLayout(layout); },
     );
   }, [userId, setTheme]);
 
@@ -94,6 +96,12 @@ export default function AppPage() {
       projectStore.setPendingInvites(invites);
     });
   }, [user?.email]);
+
+  const handleLayoutChange = useCallback(async (newLayout: LayoutPreference) => {
+    if (!userId) return;
+    setLayout(newLayout);
+    await userPreferencesRepository.updateLayout(userId, newLayout);
+  }, [userId]);
 
   function handleToggleTaskCompleted(taskId: string) {
     const repos = getTaskRepos(taskId);
@@ -160,22 +168,15 @@ export default function AppPage() {
             <WeekdaysCarousel />
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <section className="rounded-2xl border bg-surface p-4">
-              <HabitList
-                habits={habits}
-                projects={activeProjectId === null ? projects : undefined}
-              />
-            </section>
-
-            <section className="rounded-2xl border bg-surface p-4">
-              <TaskList
-                tasks={tasks}
-                onToggleCompleted={handleToggleTaskCompleted}
-                projects={activeProjectId === null ? projects : undefined}
-              />
-            </section>
-          </div>
+          <HabitsTasksView
+            habits={habits}
+            tasks={tasks}
+            projects={activeProjectId === null ? projects : undefined}
+            layout={layout}
+            userId={userId}
+            onToggleTaskCompleted={handleToggleTaskCompleted}
+            onLayoutChange={handleLayoutChange}
+          />
         </div>
       </main>
     </RepositoryContext.Provider>

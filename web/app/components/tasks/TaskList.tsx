@@ -11,10 +11,17 @@ interface TaskListProps {
   tasks: Task[];
   onToggleCompleted: (taskId: string) => void;
   projects?: Project[];
+  hideHeader?: boolean;
 }
 
-export function TaskList({ tasks, onToggleCompleted, projects }: TaskListProps) {
-  const { activeRepos, getProjectRepos, getTaskProjectId } = useRepositoryContext();
+export function TaskList({
+  tasks,
+  onToggleCompleted,
+  projects,
+  hideHeader,
+}: TaskListProps) {
+  const { activeRepos, getProjectRepos, getTaskProjectId } =
+    useRepositoryContext();
 
   const handleAddTask = (title: string, projectId?: string) => {
     const repos = projectId ? getProjectRepos(projectId) : activeRepos;
@@ -23,23 +30,27 @@ export function TaskList({ tasks, onToggleCompleted, projects }: TaskListProps) 
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div>
+      {!hideHeader && (
+        <div className="flex items-center justify-between rounded-lg border bg-surface py-1 px-4">
           <p className="text-sm font-bold text-foreground">Tasks</p>
-          <p className="text-xs text-foreground/60">Stay on top of your day.</p>
+          {(activeRepos || projects) && (
+            <TaskAddModal
+              onSubmit={handleAddTask}
+              projects={projects}
+              trigger={
+                <Button
+                  size="sm"
+                  isIconOnly
+                  aria-label="Add task"
+                  variant="ghost"
+                >
+                  <Plus />
+                </Button>
+              }
+            />
+          )}
         </div>
-        {(activeRepos || projects) && (
-          <TaskAddModal
-            onSubmit={handleAddTask}
-            projects={projects}
-            trigger={
-              <Button size="sm" isIconOnly aria-label="Add task" variant="ghost">
-                <Plus />
-              </Button>
-            }
-          />
-        )}
-      </div>
+      )}
 
       {tasks.length === 0 && (
         <p className="text-xs text-foreground/60">No tasks yet.</p>
