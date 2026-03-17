@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Habit, Task, Project, HabitPeriod } from "@weekly/domain";
-import { Plus, LayoutCells, LayoutColumns } from "@gravity-ui/icons";
+import { Plus, LayoutCells, LayoutColumns, BarsAscendingAlignLeftArrowDown } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import type { LayoutPreference } from "@weekly/domain";
 import { HabitList } from "./habits/HabitList";
@@ -45,27 +45,22 @@ function LayoutSettingsButton({
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-20 mt-1 min-w-36 rounded-xl border border-foreground/10 bg-surface p-1 shadow-lg">
-            {(["tabs", "side-by-side"] as LayoutPreference[]).map((opt) => (
+          <div className="absolute right-0 top-full z-20 mt-1 min-w-40 rounded-xl border border-foreground/10 bg-surface p-1 shadow-lg">
+            {([
+              { key: "tabs", label: "Tabs", Icon: LayoutCells },
+              { key: "side-by-side", label: "Side by side", Icon: LayoutColumns },
+              { key: "sequential", label: "Sequential", Icon: BarsAscendingAlignLeftArrowDown },
+            ] as { key: LayoutPreference; label: string; Icon: React.ComponentType<{ width?: number; height?: number }> }[]).map(({ key, label, Icon }) => (
               <button
-                key={opt}
-                onClick={() => {
-                  onLayoutChange(opt);
-                  setOpen(false);
-                }}
+                key={key}
+                onClick={() => { onLayoutChange(key); setOpen(false); }}
                 className={[
                   "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-foreground/5 transition-colors cursor-pointer",
-                  layout === opt
-                    ? "text-primary font-medium"
-                    : "text-foreground",
+                  layout === key ? "text-primary font-medium" : "text-foreground",
                 ].join(" ")}
               >
-                {opt === "tabs" ? (
-                  <LayoutCells width={12} height={12} />
-                ) : (
-                  <LayoutColumns width={12} height={12} />
-                )}
-                {opt === "tabs" ? "Tabs" : "Side by side"}
+                <Icon width={12} height={12} />
+                {label}
               </button>
             ))}
           </div>
@@ -85,7 +80,11 @@ export function HabitsTasksView({
   onLayoutChange,
 }: HabitsTasksViewProps) {
   const [activeTab, setActiveTab] = useState<"habits" | "tasks">("habits");
+  const [collapsed, setCollapsed] = useState(false);
+  const [habitsCompleted, setHabitsCompleted] = useState(0);
   const { activeRepos, getProjectRepos } = useRepositoryContext();
+
+  const tasksCompleted = tasks.filter((t) => t.completed).length;
 
   const handleAddHabit = (
     name: string,
@@ -105,12 +104,15 @@ export function HabitsTasksView({
   if (layout === "tabs") {
     return (
       <div className="">
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1">
+        <div
+          className="flex items-center gap-2 cursor-pointer select-none"
+          onClick={() => setCollapsed((v) => !v)}
+        >
+          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
             {(["habits", "tasks"] as const).map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => { setActiveTab(tab); setCollapsed(false); }}
                 className={[
                   "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
                   activeTab === tab
@@ -123,59 +125,75 @@ export function HabitsTasksView({
             ))}
           </div>
 
+          {collapsed && (
+            <p className="text-xs text-foreground/50">
+              {activeTab === "habits"
+                ? `${habitsCompleted}/${habits.length}`
+                : `${tasksCompleted}/${tasks.length}`}
+            </p>
+          )}
+
           <div className="flex-1" />
 
-          {(activeRepos || projects) &&
-            (activeTab === "habits" ? (
-              <HabitAddModal
-                onSubmit={handleAddHabit}
-                projects={projects}
-                trigger={
-                  <Button
-                    size="sm"
-                    isIconOnly
-                    aria-label="Add habit"
-                    variant="ghost"
-                  >
-                    <Plus />
-                  </Button>
-                }
-              />
-            ) : (
-              <TaskAddModal
-                onSubmit={handleAddTask}
-                projects={projects}
-                trigger={
-                  <Button
-                    size="sm"
-                    isIconOnly
-                    aria-label="Add task"
-                    variant="ghost"
-                  >
-                    <Plus />
-                  </Button>
-                }
-              />
-            ))}
-
-          <LayoutSettingsButton
-            layout={layout}
-            onLayoutChange={onLayoutChange}
-          />
-        </div>
-
-        <div className="mt-2">
-          {activeTab === "habits" ? (
-            <HabitList hideHeader habits={habits} projects={projects} />
-          ) : (
-            <TaskList
-              hideHeader
-              tasks={tasks}
-              onToggleCompleted={onToggleTaskCompleted}
-              projects={projects}
-            />
+          {(activeRepos || projects) && (
+            <div onClick={(e) => e.stopPropagation()}>
+              {activeTab === "habits" ? (
+                <HabitAddModal
+                  onSubmit={handleAddHabit}
+                  projects={projects}
+                  trigger={
+                    <Button size="sm" isIconOnly aria-label="Add habit" variant="ghost">
+                      <Plus />
+                    </Button>
+                  }
+                />
+              ) : (
+                <TaskAddModal
+                  onSubmit={handleAddTask}
+                  projects={projects}
+                  trigger={
+                    <Button size="sm" isIconOnly aria-label="Add task" variant="ghost">
+                      <Plus />
+                    </Button>
+                  }
+                />
+              )}
+            </div>
           )}
+
+          <div onClick={(e) => e.stopPropagation()}>
+            <LayoutSettingsButton layout={layout} onLayoutChange={onLayoutChange} />
+          </div>
         </div>
+
+        <div className={`collapsible${collapsed ? " collapsed" : ""}`}>
+          <div>
+            <div className="mt-2">
+              {activeTab === "habits" ? (
+                <HabitList hideHeader habits={habits} projects={projects} onCompletedCountChange={setHabitsCompleted} />
+              ) : (
+                <TaskList
+                  hideHeader
+                  tasks={tasks}
+                  onToggleCompleted={onToggleTaskCompleted}
+                  projects={projects}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (layout === "sequential") {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-end">
+          <LayoutSettingsButton layout={layout} onLayoutChange={onLayoutChange} />
+        </div>
+        <HabitList habits={habits} projects={projects} />
+        <TaskList tasks={tasks} onToggleCompleted={onToggleTaskCompleted} projects={projects} />
       </div>
     );
   }

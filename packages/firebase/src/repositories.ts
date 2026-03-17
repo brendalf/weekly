@@ -320,7 +320,11 @@ export function createUserPreferencesRepository(
         const theme: ThemePreference =
           data?.theme === "light" ? "light" : "dark";
         const layout: LayoutPreference =
-          data?.layout === "side-by-side" ? "side-by-side" : "tabs";
+          data?.layout === "side-by-side"
+            ? "side-by-side"
+            : data?.layout === "sequential"
+              ? "sequential"
+              : "tabs";
         onPreferences({ theme, layout });
       });
     },

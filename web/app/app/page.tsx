@@ -132,17 +132,24 @@ export default function AppPage() {
         <div className="mx-auto min-h-screen max-w-6xl px-6 py-10">
           <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <ProjectSwitcher />
+              <div className="flex items-center justify-between">
+                <ProjectSwitcher />
+                <div className="flex items-center gap-3 sm:hidden">
+                  {user?.email && <InviteNotification userEmail={user.email} />}
+                  <ThemeToggleButton userId={userId} />
+                  <Button variant="danger" size="sm" isIconOnly aria-label="Log out" onPress={handleLogout}>
+                    <ArrowRightFromSquare />
+                  </Button>
+                </div>
+              </div>
               <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
                 {selectedDayLabel}
               </h1>
             </div>
 
-            <div className="flex items-center gap-3">
-              {user?.email && (
-                <InviteNotification userEmail={user.email} />
-              )}
-              <div className="hidden flex-col items-end sm:flex">
+            <div className="hidden sm:flex items-center gap-3">
+              {user?.email && <InviteNotification userEmail={user.email} />}
+              <div className="flex flex-col items-end">
                 <p className="text-sm font-medium text-foreground">
                   {user?.displayName ?? "Signed in"}
                 </p>
@@ -151,13 +158,7 @@ export default function AppPage() {
                 </p>
               </div>
               <ThemeToggleButton userId={userId} />
-              <Button
-                variant="danger"
-                size="sm"
-                isIconOnly
-                aria-label="Log out"
-                onPress={handleLogout}
-              >
+              <Button variant="danger" size="sm" isIconOnly aria-label="Log out" onPress={handleLogout}>
                 <ArrowRightFromSquare />
               </Button>
             </div>

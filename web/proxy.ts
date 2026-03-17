@@ -9,7 +9,8 @@ export function proxy(req: NextRequest) {
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
-    pathname.startsWith("/assets")
+    pathname.startsWith("/assets") ||
+    /\.(?:png|jpe?g|gif|svg|ico|webp|woff2?|ttf|otf)$/i.test(pathname)
   ) {
     return NextResponse.next();
   }
