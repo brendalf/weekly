@@ -69,8 +69,7 @@ export function HabitDetailsModal({
   const currentPeriodKey = periodKeyOf(referenceDate, period);
   const periodLogs = logs.filter((l) => l.periodKey === currentPeriodKey);
 
-  const isCurrentPeriod =
-    periodKeyOf(new Date(), period) === currentPeriodKey;
+  const isCurrentPeriod = periodKeyOf(new Date(), period) === currentPeriodKey;
 
   const periodLabel = isCurrentPeriod
     ? `this ${period}`
@@ -187,48 +186,51 @@ export function HabitDetailsModal({
 
             <Modal.Body className="p-1">
               {/* Progress + streak row */}
-              <div className="mb-4 flex items-center gap-4">
-                <CircularCheckboxProgress
-                  size={36}
-                  stroke={5}
-                  progress={progress}
-                  complete={complete}
-                  onClick={() =>
-                    repos?.habitProgress.incrementHabit(
-                      habitId,
-                      period,
-                      times,
-                      referenceDate,
-                    )
-                  }
-                  ariaLabel={complete ? "Completed" : "Mark one done"}
-                />
-                <div className="flex flex-col">
-                  <span className="font-semibold text-foreground">
-                    {value} / {times}
-                  </span>
-                  <span className="text-xs text-foreground/50">
-                    {periodLabel}
-                  </span>
-                </div>
-                {streak && (
-                  <div className="ml-auto flex flex-col items-end gap-1">
-                    {streak.currentStrikeLength > 0 && (
-                      <span className="flex items-center gap-1 rounded-full bg-orange-500/10 px-2.5 py-0.5 text-xs font-medium text-orange-500">
-                        <Flame className="h-3 w-3" />
-                        {streak.currentStrikeLength} streak
-                      </span>
-                    )}
-                    {streak.openSincePeriodKey && (
-                      <span className="rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs text-foreground/50">
-                        since{" "}
-                        {formatPeriodKey(streak.openSincePeriodKey, period)}
-                      </span>
-                    )}
+              {!editing ? (
+                <div className="mb-4 flex items-center gap-4">
+                  <CircularCheckboxProgress
+                    size={36}
+                    stroke={5}
+                    progress={progress}
+                    complete={complete}
+                    onClick={() =>
+                      repos?.habitProgress.incrementHabit(
+                        habitId,
+                        period,
+                        times,
+                        referenceDate,
+                      )
+                    }
+                    ariaLabel={complete ? "Completed" : "Mark one done"}
+                  />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-foreground">
+                      {value} / {times}
+                    </span>
+                    <span className="text-xs text-foreground/50">
+                      {periodLabel}
+                    </span>
                   </div>
-                )}
-              </div>
-
+                  {streak && (
+                    <div className="ml-auto flex flex-col items-end gap-1">
+                      {streak.currentStrikeLength > 0 && (
+                        <span className="flex items-center gap-1 rounded-full bg-orange-500/10 px-2.5 py-0.5 text-xs font-medium text-orange-500">
+                          <Flame className="h-3 w-3" />
+                          {streak.currentStrikeLength} streak
+                        </span>
+                      )}
+                      {streak.openSincePeriodKey && (
+                        <span className="rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs text-foreground/50">
+                          since{" "}
+                          {formatPeriodKey(streak.openSincePeriodKey, period)}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <></>
+              )}
               {/* Completion logs for current period */}
               <Surface variant="default">
                 <div className="flex flex-col gap-2">

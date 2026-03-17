@@ -109,7 +109,12 @@ export function ProjectSettingsModal({
                         }}
                       />
                     </TextField>
-                    <Button variant="ghost" size="sm" isIconOnly onPress={() => setEditing(false)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      isIconOnly
+                      onPress={() => setEditing(false)}
+                    >
                       <Xmark />
                     </Button>
                     <Button
@@ -125,7 +130,13 @@ export function ProjectSettingsModal({
                   <div className="flex items-center gap-2 pr-8">
                     <Modal.Heading>{project.name}</Modal.Heading>
                     {isOwner && (
-                      <Button variant="ghost" size="sm" isIconOnly onPress={startEditing} aria-label="Edit name">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        isIconOnly
+                        onPress={startEditing}
+                        aria-label="Edit name"
+                      >
                         <Pencil />
                       </Button>
                     )}
@@ -138,7 +149,9 @@ export function ProjectSettingsModal({
                 <Surface variant="default">
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium text-foreground/60">Members</p>
+                      <p className="text-xs font-medium text-foreground/60">
+                        Members
+                      </p>
                       {isOwner && (
                         <Button
                           size="sm"
@@ -160,7 +173,9 @@ export function ProjectSettingsModal({
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-foreground truncate max-w-40">
-                              {memberId === currentUser?.uid ? "You" : memberId.slice(0, 8) + "…"}
+                              {memberId === currentUser?.uid
+                                ? "You"
+                                : memberId.slice(0, 8) + "…"}
                             </span>
                             {memberId === project.ownerId && (
                               <span className="rounded-full bg-purple-500/10 px-1.5 py-0.5 text-[10px] font-medium text-purple-500">
@@ -187,14 +202,18 @@ export function ProjectSettingsModal({
                     {/* Pending invites */}
                     {project.pendingInviteEmails.length > 0 && (
                       <>
-                        <p className="mt-2 text-xs font-medium text-foreground/60">Pending invites</p>
+                        <p className="mt-2 text-xs font-medium text-foreground/60">
+                          Pending invites
+                        </p>
                         <div className="flex flex-col gap-1">
                           {project.pendingInviteEmails.map((email) => (
                             <div
                               key={email}
                               className="flex items-center justify-between rounded-lg border border-foreground/10 bg-background px-3 py-2"
                             >
-                              <span className="text-xs text-foreground">{email}</span>
+                              <span className="text-xs text-foreground">
+                                {email}
+                              </span>
                               <span className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[10px] text-foreground/50">
                                 pending
                               </span>
@@ -209,7 +228,12 @@ export function ProjectSettingsModal({
 
               <Modal.Footer>
                 {isOwner ? (
-                  <Button variant="danger" isIconOnly aria-label="Delete project" onPress={handleDelete}>
+                  <Button
+                    variant="danger"
+                    isIconOnly
+                    aria-label="Delete project"
+                    onPress={handleDelete}
+                  >
                     <TrashBin />
                   </Button>
                 ) : (
@@ -255,11 +279,8 @@ export function ProjectSettingsModal({
                 </Surface>
               </Modal.Body>
               <Modal.Footer>
-                <Button
-                  isDisabled={!inviteEmail.trim()}
-                  onPress={handleInvite}
-                >
-                  Send invite
+                <Button isDisabled={!inviteEmail.trim()} onPress={handleInvite}>
+                  <Check />
                 </Button>
               </Modal.Footer>
             </Modal.Dialog>
