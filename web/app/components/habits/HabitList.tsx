@@ -7,6 +7,7 @@ import { Button } from "@heroui/react";
 import { HabitItem } from "./HabitItem";
 import { HabitAddModal } from "./HabitAddModal";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
+import { useCalendarStore } from "../../stores/calendar";
 
 interface HabitListProps {
   habits: Habit[];
@@ -18,6 +19,7 @@ interface HabitListProps {
 export function HabitList({ habits, projects, hideHeader, onCompletedCountChange }: HabitListProps) {
   const { activeRepos, getProjectRepos, getHabitProjectId } =
     useRepositoryContext();
+  const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [collapsed, setCollapsed] = useState(false);
 
@@ -44,7 +46,16 @@ export function HabitList({ habits, projects, hideHeader, onCompletedCountChange
     repos?.habit.addHabit(name, times, period);
   };
 
-  const sorted = [...habits].sort(
+  const visibleHabits = habits.filter((habit) => {
+    const selectedDay = selectedDayISO ? new Date(selectedDayISO) : new Date();
+    const createdDay = new Date(habit.createdAt);
+    return (
+      new Date(createdDay.getFullYear(), createdDay.getMonth(), createdDay.getDate()) <=
+      new Date(selectedDay.getFullYear(), selectedDay.getMonth(), selectedDay.getDate())
+    );
+  });
+
+  const sorted = [...visibleHabits].sort(
     (a, b) => Number(completedIds.has(a.id)) - Number(completedIds.has(b.id)),
   );
 
@@ -59,7 +70,7 @@ export function HabitList({ habits, projects, hideHeader, onCompletedCountChange
             <p className="text-sm font-bold text-foreground">Habits</p>
             {collapsed && (
               <p className="text-xs text-foreground/50">
-                {completedIds.size}/{habits.length}
+                {completedIds.size}/{visibleHabits.length}
               </p>
             )}
           </div>
@@ -81,7 +92,7 @@ export function HabitList({ habits, projects, hideHeader, onCompletedCountChange
 
       <div className={`collapsible${collapsed ? " collapsed" : ""}`}>
         <div>
-          {habits.length === 0 && (
+          {visibleHabits.length === 0 && (
             <p className="text-xs text-foreground/60 pt-2">No habits yet.</p>
           )}
           <div className="flex flex-col gap-0.5 pt-1">
