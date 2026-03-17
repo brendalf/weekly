@@ -5,11 +5,7 @@ import { useProjectStore } from "../../stores/project";
 import { projectRepository } from "../../repositories";
 import { auth } from "../../config/firebase";
 
-interface InviteNotificationProps {
-  userEmail: string;
-}
-
-export function InviteNotification({ userEmail }: InviteNotificationProps) {
+export function InviteNotification() {
   const [open, setOpen] = useState(false);
   const pendingInvites = useProjectStore((s) => s.pendingInvites);
 

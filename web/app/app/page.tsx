@@ -135,7 +135,7 @@ export default function AppPage() {
               <div className="flex items-center justify-between">
                 <ProjectSwitcher />
                 <div className="flex items-center gap-3 sm:hidden">
-                  {user?.email && <InviteNotification userEmail={user.email} />}
+                  {user?.email && <InviteNotification />}
                   <ThemeToggleButton userId={userId} />
                   <Button variant="danger" size="sm" isIconOnly aria-label="Log out" onPress={handleLogout}>
                     <ArrowRightFromSquare />
@@ -148,7 +148,7 @@ export default function AppPage() {
             </div>
 
             <div className="hidden sm:flex items-center gap-3">
-              {user?.email && <InviteNotification userEmail={user.email} />}
+              {user?.email && <InviteNotification />}
               <div className="flex flex-col items-end">
                 <p className="text-sm font-medium text-foreground">
                   {user?.displayName ?? "Signed in"}
@@ -174,7 +174,6 @@ export default function AppPage() {
             tasks={tasks}
             projects={activeProjectId === null ? projects : undefined}
             layout={layout}
-            userId={userId}
             onToggleTaskCompleted={handleToggleTaskCompleted}
             onLayoutChange={handleLayoutChange}
           />

@@ -10,7 +10,11 @@ function setAuthCookie() {
   document.cookie = `weekly_auth=1; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Lax`;
 }
 
-export function GoogleLoginCard() {
+interface GoogleLoginCardProps {
+  compact?: boolean;
+}
+
+export function GoogleLoginCard({ compact }: GoogleLoginCardProps = {}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,6 +31,18 @@ export function GoogleLoginCard() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (compact) {
+    return (
+      <button
+        onClick={handleGoogleLogin}
+        disabled={loading}
+        className="rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors cursor-pointer disabled:opacity-50"
+      >
+        {loading ? "Signing in…" : "Log in"}
+      </button>
+    );
   }
 
   return (

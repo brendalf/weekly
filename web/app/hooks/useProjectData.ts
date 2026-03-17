@@ -43,9 +43,10 @@ export function useProjectData(db: Firestore) {
     }
   }, [projects, getOrCreateRepos]);
 
-  // Derive activeRepos synchronously — no setState in effect
+  // projectReposRef is a mutable cache (not render state) — ref access here is intentional
   const activeRepos = useMemo(() => {
     if (!activeProjectId) return null;
+    // eslint-disable-next-line react-hooks/refs
     return getOrCreateRepos(activeProjectId);
   }, [activeProjectId, getOrCreateRepos]);
 

@@ -16,7 +16,6 @@ interface HabitsTasksViewProps {
   tasks: Task[];
   projects?: Project[];
   layout: LayoutPreference;
-  userId: string;
   onToggleTaskCompleted: (taskId: string) => void;
   onLayoutChange: (layout: LayoutPreference) => void;
 }
@@ -75,7 +74,6 @@ export function HabitsTasksView({
   tasks,
   projects,
   layout,
-  userId: _userId,
   onToggleTaskCompleted,
   onLayoutChange,
 }: HabitsTasksViewProps) {
