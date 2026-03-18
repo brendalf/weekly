@@ -137,6 +137,7 @@ export function HabitAddModal({
                           fullWidth
                           placeholder="Period"
                           variant="secondary"
+                          value={HabitPeriod.Day}
                           onChange={(e) => setPeriod(e as HabitPeriod)}
                         >
                           <Select.Trigger>

@@ -1,5 +1,14 @@
-import { HabitPeriod, WeekId, Year } from "../models/habit";
+import { Habit, HabitPeriod, WeekId, Year } from "../models/habit";
 import { periodKeyOf } from "./period";
+
+export function filterHabitsByDay(habits: Habit[], day: Date): Habit[] {
+  const selected = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+  return habits.filter((habit) => {
+    const created = new Date(habit.createdAt);
+    const createdDay = new Date(created.getFullYear(), created.getMonth(), created.getDate());
+    return createdDay <= selected;
+  });
+}
 
 export function prevPeriodDate(date: Date, period: HabitPeriod): Date {
   const d = new Date(date);

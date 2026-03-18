@@ -10,6 +10,7 @@ import { TaskList } from "./tasks/TaskList";
 import { HabitAddModal } from "./habits/HabitAddModal";
 import { TaskAddModal } from "./tasks/TaskAddModal";
 import { useRepositoryContext } from "../contexts/RepositoryContext";
+import { useCalendarStore } from "../stores/calendar";
 
 interface HabitsTasksViewProps {
   habits: Habit[];
@@ -81,6 +82,7 @@ export function HabitsTasksView({
   const [collapsed, setCollapsed] = useState(false);
   const [habitsCompleted, setHabitsCompleted] = useState(0);
   const { activeRepos, getProjectRepos } = useRepositoryContext();
+  const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
 
   const tasksCompleted = tasks.filter((t) => t.completed).length;
 
@@ -91,7 +93,8 @@ export function HabitsTasksView({
     projectId?: string,
   ) => {
     const repos = projectId ? getProjectRepos(projectId) : activeRepos;
-    repos?.habit.addHabit(name, times, period);
+    const date = selectedDayISO ? new Date(selectedDayISO) : new Date();
+    repos?.habit.addHabit(name, times, period, date);
   };
 
   const handleAddTask = (title: string, projectId?: string) => {

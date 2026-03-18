@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { Habit, HabitPeriod, Project } from "@weekly/domain";
+import { Habit, HabitPeriod, Project, filterHabitsByDay } from "@weekly/domain";
 import { Plus } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { HabitItem } from "./HabitItem";
@@ -43,17 +43,11 @@ export function HabitList({ habits, projects, hideHeader, onCompletedCountChange
     projectId?: string,
   ) => {
     const repos = projectId ? getProjectRepos(projectId) : activeRepos;
-    repos?.habit.addHabit(name, times, period);
+    const date = selectedDayISO ? new Date(selectedDayISO) : new Date();
+    repos?.habit.addHabit(name, times, period, date);
   };
 
-  const visibleHabits = habits.filter((habit) => {
-    const selectedDay = selectedDayISO ? new Date(selectedDayISO) : new Date();
-    const createdDay = new Date(habit.createdAt);
-    return (
-      new Date(createdDay.getFullYear(), createdDay.getMonth(), createdDay.getDate()) <=
-      new Date(selectedDay.getFullYear(), selectedDay.getMonth(), selectedDay.getDate())
-    );
-  });
+  const visibleHabits = filterHabitsByDay(habits, selectedDayISO ? new Date(selectedDayISO) : new Date());
 
   const sorted = [...visibleHabits].sort(
     (a, b) => Number(completedIds.has(a.id)) - Number(completedIds.has(b.id)),

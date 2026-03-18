@@ -195,11 +195,12 @@ export function createHabitRepository(
         onHabits(habits);
       });
     },
-    async addHabit(name: string, times: number, period: HabitPeriod) {
+    async addHabit(name: string, times: number, period: HabitPeriod, createdAt?: Date) {
+      const date = createdAt ?? new Date();
       const habitRef = doc(habitsCol(db, projectId));
       const batch = writeBatch(db);
-      batch.set(habitRef, { name, times, period, createdAt: new Date() });
-      const pk = periodKeyOf(new Date(), period);
+      batch.set(habitRef, { name, times, period, createdAt: date });
+      const pk = periodKeyOf(date, period);
       batch.set(
         doc(db, "projects", projectId, "habitProgress", `${habitRef.id}_${pk}`),
         {
@@ -496,7 +497,7 @@ export function createHabitProgressRepository(
 
         const logRef = doc(completionsCol(db, projectId, habitId));
         tx.set(logRef, {
-          occurredAt: serverTimestamp(),
+          occurredAt: referenceDate,
           dayKey,
           weekKey,
           monthKey,
