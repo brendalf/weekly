@@ -15,6 +15,10 @@ export interface Habit {
   times: number;
   period: HabitPeriod;
   createdAt: string;
+  /** 0=Sun … 6=Sat. Absent/empty → all days active (only relevant for Day period). */
+  activeDays?: number[];
+  /** Period keys (from periodKeyOf) for which the habit is skipped. */
+  skippedPeriods?: string[];
 }
 
 export interface WeekId {

@@ -12,12 +12,19 @@ import {
   ListBox,
 } from "@heroui/react";
 import { Check } from "@gravity-ui/icons";
+import { TaskScope } from "@weekly/domain";
 
 interface TaskAddModalProps {
-  onSubmit: (title: string, projectId?: string) => void;
+  onSubmit: (title: string, projectId?: string, scope?: TaskScope) => void;
   trigger?: ReactElement;
   projects?: { id: string; name: string }[];
 }
+
+const SCOPE_OPTIONS: { value: TaskScope; label: string }[] = [
+  { value: "day", label: "This day" },
+  { value: "week", label: "This week" },
+  { value: "month", label: "This month" },
+];
 
 export function TaskAddModal({
   onSubmit,
@@ -26,14 +33,16 @@ export function TaskAddModal({
 }: TaskAddModalProps) {
   const [title, setTitle] = useState("");
   const [projectId, setProjectId] = useState<string>(projects?.[0]?.id ?? "");
+  const [scope, setScope] = useState<TaskScope>("week");
 
   function handleSave(close: () => void) {
     const trimmed = title.trim();
     if (!trimmed) return;
     if (projects && !projectId) return;
-    onSubmit(trimmed, projects ? projectId : undefined);
+    onSubmit(trimmed, projects ? projectId : undefined, scope);
     setTitle("");
     setProjectId(projects?.[0]?.id ?? "");
+    setScope("week");
     close();
   }
 
@@ -43,6 +52,7 @@ export function TaskAddModal({
         if (!isOpen) {
           setTitle("");
           setProjectId(projects?.[0]?.id ?? "");
+          setScope("week");
         }
       }}
     >
@@ -106,6 +116,26 @@ export function TaskAddModal({
                           </Select>
                         </div>
                       )}
+                      <div className="mt-4">
+                        <Label>Scope</Label>
+                        <div className="mt-1 flex gap-1">
+                          {SCOPE_OPTIONS.map(({ value, label }) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => setScope(value)}
+                              className={[
+                                "flex-1 cursor-pointer rounded-lg px-2 py-1.5 text-xs font-medium transition-colors",
+                                scope === value
+                                  ? "bg-purple-500 text-white"
+                                  : "bg-foreground/10 text-foreground hover:bg-foreground/20",
+                              ].join(" ")}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </form>
                   </Surface>
                 </Modal.Body>

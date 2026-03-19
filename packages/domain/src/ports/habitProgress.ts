@@ -18,6 +18,7 @@ export interface HabitProgressRepository {
       currentStrikeLength: number;
       openSincePeriodKey: string | null;
     }) => void,
+    skippedPeriods?: string[],
   ): Unsubscribe;
 
   incrementHabit(

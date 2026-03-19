@@ -1,18 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Task, Project } from "@weekly/domain";
+import { Task, TaskScope, Project, getTaskVisibility, taskPeriodKey, HabitPeriod, formatPeriodKey } from "@weekly/domain";
 import { Plus } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { TaskAddModal } from "./TaskAddModal";
 import { TaskItem } from "./TaskItem";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
+import { useCalendarStore } from "../../stores/calendar";
 
 interface TaskListProps {
   tasks: Task[];
   onToggleCompleted: (taskId: string) => void;
   projects?: Project[];
   hideHeader?: boolean;
+}
+
+function scopeToPeriod(scope: TaskScope): HabitPeriod {
+  if (scope === "day") return HabitPeriod.Day;
+  if (scope === "month") return HabitPeriod.Month;
+  return HabitPeriod.Week;
 }
 
 export function TaskList({
@@ -24,12 +31,23 @@ export function TaskList({
   const [collapsed, setCollapsed] = useState(false);
   const { activeRepos, getProjectRepos, getTaskProjectId } =
     useRepositoryContext();
-  const completedCount = tasks.filter((t) => t.completed).length;
+  const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
+  const selectedDay = selectedDayISO ? new Date(selectedDayISO) : new Date();
 
-  const handleAddTask = (title: string, projectId?: string) => {
+  const handleAddTask = (title: string, projectId?: string, scope?: TaskScope) => {
     const repos = projectId ? getProjectRepos(projectId) : activeRepos;
-    repos?.task.addTask(title);
+    repos?.task.addTask(title, scope, selectedDay);
   };
+
+  // Classify tasks by visibility
+  const visibleTasks = tasks
+    .map((task) => ({
+      task,
+      visibility: getTaskVisibility(task, selectedDay),
+    }))
+    .filter(({ visibility }) => visibility !== "hidden");
+
+  const completedCount = visibleTasks.filter(({ task }) => task.completed).length;
 
   return (
     <div className="flex flex-col gap-2">
@@ -42,7 +60,7 @@ export function TaskList({
             <p className="text-sm font-bold text-foreground">Tasks</p>
             {collapsed && (
               <p className="text-xs text-foreground/50">
-                {completedCount}/{tasks.length}
+                {completedCount}/{visibleTasks.length}
               </p>
             )}
           </div>
@@ -64,15 +82,18 @@ export function TaskList({
 
       <div className={`collapsible${collapsed ? " collapsed" : ""}`}>
         <div>
-          {tasks.length === 0 && (
+          {visibleTasks.length === 0 && (
             <p className="text-xs text-foreground/60 pt-2">No tasks yet.</p>
           )}
           <div className="flex flex-col gap-0.5 pt-1">
-            {[...tasks]
-              .sort((a, b) => Number(a.completed) - Number(b.completed))
-              .map((task) => {
+            {[...visibleTasks]
+              .sort((a, b) => Number(a.task.completed) - Number(b.task.completed))
+              .map(({ task, visibility }) => {
                 const projectName = projects
                   ? projects.find((p) => p.id === getTaskProjectId(task.id))?.name
+                  : undefined;
+                const openSinceLabel = visibility === "past_open"
+                  ? `since ${formatPeriodKey(taskPeriodKey(task), scopeToPeriod(task.scope ?? "week"))}`
                   : undefined;
                 return (
                   <TaskItem
@@ -80,6 +101,7 @@ export function TaskList({
                     task={task}
                     onToggleCompleted={onToggleCompleted}
                     projectName={projectName}
+                    openSinceLabel={openSinceLabel}
                   />
                 );
               })}

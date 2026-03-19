@@ -8,6 +8,8 @@ import {
   Timestamp,
   FieldValue,
   addDoc,
+  arrayRemove,
+  arrayUnion,
   collection,
   doc,
   getDocs,
@@ -30,6 +32,7 @@ import {
   type HabitRepository,
   type Task,
   type TaskRepository,
+  type TaskScope,
   type UserPreferencesRepository,
   type ThemePreference,
   type LayoutPreference,
@@ -46,6 +49,7 @@ type TaskDoc = {
   title?: unknown;
   createdAt?: Timestamp;
   completed?: unknown;
+  scope?: unknown;
 };
 
 type HabitDoc = {
@@ -53,6 +57,8 @@ type HabitDoc = {
   times?: unknown;
   period?: unknown;
   createdAt?: Timestamp;
+  activeDays?: unknown;
+  skippedPeriods?: unknown;
 };
 
 type HabitCompletionDoc = {
@@ -134,17 +140,21 @@ export function createTaskRepository(
                 new Date().toISOString(),
               completed:
                 typeof data.completed === "boolean" ? data.completed : false,
+              scope: (data.scope === "day" || data.scope === "month")
+                ? data.scope as TaskScope
+                : "week",
             };
           },
         );
         onTasks(tasks);
       });
     },
-    async addTask(title: string) {
+    async addTask(title: string, scope?: TaskScope, createdAt?: Date) {
       await addDoc(tasksCol(db, projectId), {
         title,
         completed: false,
-        createdAt: new Date(),
+        createdAt: createdAt ?? new Date(),
+        scope: scope ?? "week",
       });
     },
     async toggleTask(task: Task) {
@@ -161,6 +171,9 @@ export function createTaskRepository(
       await updateDoc(doc(db, "projects", projectId, "tasks", taskId), {
         title,
       });
+    },
+    async updateTask(taskId: string, updates: { title?: string; scope?: TaskScope }) {
+      await updateDoc(doc(db, "projects", projectId, "tasks", taskId), updates);
     },
   };
 }
@@ -189,17 +202,25 @@ export function createHabitRepository(
               createdAt:
                 data?.createdAt?.toDate().toISOString() ??
                 new Date().toISOString(),
+              activeDays: Array.isArray(data?.activeDays)
+                ? (data.activeDays as number[]).filter((n) => typeof n === "number")
+                : undefined,
+              skippedPeriods: Array.isArray(data?.skippedPeriods)
+                ? (data.skippedPeriods as string[]).filter((s) => typeof s === "string")
+                : undefined,
             };
           },
         );
         onHabits(habits);
       });
     },
-    async addHabit(name: string, times: number, period: HabitPeriod, createdAt?: Date) {
+    async addHabit(name: string, times: number, period: HabitPeriod, createdAt?: Date, activeDays?: number[]) {
       const date = createdAt ?? new Date();
       const habitRef = doc(habitsCol(db, projectId));
       const batch = writeBatch(db);
-      batch.set(habitRef, { name, times, period, createdAt: date });
+      const habitData: Record<string, unknown> = { name, times, period, createdAt: date };
+      if (activeDays && activeDays.length > 0) habitData.activeDays = activeDays;
+      batch.set(habitRef, habitData);
       const pk = periodKeyOf(date, period);
       batch.set(
         doc(db, "projects", projectId, "habitProgress", `${habitRef.id}_${pk}`),
@@ -288,12 +309,13 @@ export function createHabitRepository(
       name: string,
       times: number,
       period: HabitPeriod,
+      activeDays?: number[],
     ) {
-      await updateDoc(habitDocRef(db, projectId, habitId), {
-        name,
-        times,
-        period,
-      });
+      const updates: Record<string, unknown> = { name, times, period };
+      if (activeDays !== undefined) {
+        updates.activeDays = activeDays.length > 0 ? activeDays : null;
+      }
+      await updateDoc(habitDocRef(db, projectId, habitId), updates);
     },
     async deleteHabit(habitId: string) {
       const batch = writeBatch(db);
@@ -303,6 +325,16 @@ export function createHabitRepository(
       );
       batch.delete(habitDocRef(db, projectId, habitId));
       await batch.commit();
+    },
+    async skipHabit(habitId: string, periodKeys: string[]) {
+      await updateDoc(habitDocRef(db, projectId, habitId), {
+        skippedPeriods: arrayUnion(...periodKeys),
+      });
+    },
+    async unskipHabit(habitId: string, periodKey: string) {
+      await updateDoc(habitDocRef(db, projectId, habitId), {
+        skippedPeriods: arrayRemove(periodKey),
+      });
     },
   };
 }
@@ -436,6 +468,7 @@ export function createHabitProgressRepository(
         currentStrikeLength: number;
         openSincePeriodKey: string | null;
       }) => void,
+      skippedPeriods?: string[],
     ) {
       const createdPeriodKey = periodKeyOf(createdAt, period);
       const q = query(
@@ -452,6 +485,7 @@ export function createHabitProgressRepository(
             referenceDate,
             createdAt,
             period,
+            skippedPeriods,
           ),
         );
       });

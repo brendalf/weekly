@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Habit, Task, Project, HabitPeriod } from "@weekly/domain";
+import { Habit, Task, Project, HabitPeriod, TaskScope } from "@weekly/domain";
 import { Plus, LayoutCells, LayoutColumns, BarsAscendingAlignLeftArrowDown } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import type { LayoutPreference } from "@weekly/domain";
@@ -9,6 +9,7 @@ import { HabitList } from "./habits/HabitList";
 import { TaskList } from "./tasks/TaskList";
 import { HabitAddModal } from "./habits/HabitAddModal";
 import { TaskAddModal } from "./tasks/TaskAddModal";
+import { ProgressSummary } from "./ProgressSummary";
 import { useRepositoryContext } from "../contexts/RepositoryContext";
 import { useCalendarStore } from "../stores/calendar";
 
@@ -55,7 +56,7 @@ function LayoutSettingsButton({
                 key={key}
                 onClick={() => { onLayoutChange(key); setOpen(false); }}
                 className={[
-                  "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-foreground/5 transition-colors cursor-pointer",
+                  "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-foreground/5 transition-colors",
                   layout === key ? "text-primary font-medium" : "text-foreground",
                 ].join(" ")}
               >
@@ -80,31 +81,46 @@ export function HabitsTasksView({
 }: HabitsTasksViewProps) {
   const [activeTab, setActiveTab] = useState<"habits" | "tasks">("habits");
   const [collapsed, setCollapsed] = useState(false);
-  const [habitsCompleted, setHabitsCompleted] = useState(0);
+  const [habitCompletions, setHabitCompletions] = useState<Record<string, boolean>>({});
   const { activeRepos, getProjectRepos } = useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
+  const selectedDay = selectedDayISO ? new Date(selectedDayISO) : new Date();
 
-  const tasksCompleted = tasks.filter((t) => t.completed).length;
+  const habitsCompletedCount = Object.values(habitCompletions).filter(Boolean).length;
+  const habitsVisibleCount = Object.keys(habitCompletions).length;
 
   const handleAddHabit = (
     name: string,
     times: number,
     period: HabitPeriod,
     projectId?: string,
+    activeDays?: number[],
   ) => {
     const repos = projectId ? getProjectRepos(projectId) : activeRepos;
     const date = selectedDayISO ? new Date(selectedDayISO) : new Date();
-    repos?.habit.addHabit(name, times, period, date);
+    repos?.habit.addHabit(name, times, period, date, activeDays);
   };
 
-  const handleAddTask = (title: string, projectId?: string) => {
+  const handleAddTask = (title: string, projectId?: string, scope?: TaskScope) => {
     const repos = projectId ? getProjectRepos(projectId) : activeRepos;
-    repos?.task.addTask(title);
+    repos?.task.addTask(title, scope, selectedDay);
   };
+
+  const progressBar = (
+    <ProgressSummary
+      habits={habits}
+      tasks={tasks}
+      selectedDay={selectedDay}
+      habitCompletions={habitCompletions}
+    />
+  );
 
   if (layout === "tabs") {
     return (
-      <div className="">
+      <div className="flex flex-col gap-2">
+        {/* Progress bar — always visible, above everything */}
+        {progressBar}
+
         <div
           className="flex items-center gap-2 cursor-pointer select-none"
           onClick={() => setCollapsed((v) => !v)}
@@ -115,7 +131,7 @@ export function HabitsTasksView({
                 key={tab}
                 onClick={() => { setActiveTab(tab); setCollapsed(false); }}
                 className={[
-                  "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
+                  "cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
                   activeTab === tab
                     ? "bg-foreground/8 text-foreground"
                     : "text-foreground/50 hover:text-foreground/80",
@@ -129,8 +145,8 @@ export function HabitsTasksView({
           {collapsed && (
             <p className="text-xs text-foreground/50">
               {activeTab === "habits"
-                ? `${habitsCompleted}/${habits.length}`
-                : `${tasksCompleted}/${tasks.length}`}
+                ? `${habitsCompletedCount}/${habitsVisibleCount}`
+                : `${tasks.filter((t) => t.completed).length}/${tasks.length}`}
             </p>
           )}
 
@@ -169,17 +185,21 @@ export function HabitsTasksView({
 
         <div className={`collapsible${collapsed ? " collapsed" : ""}`}>
           <div>
-            <div className="mt-2">
-              {activeTab === "habits" ? (
-                <HabitList hideHeader habits={habits} projects={projects} onCompletedCountChange={setHabitsCompleted} />
-              ) : (
-                <TaskList
-                  hideHeader
-                  tasks={tasks}
-                  onToggleCompleted={onToggleTaskCompleted}
-                  projects={projects}
-                />
-              )}
+            {/*
+              Both lists are always rendered so HabitList subscriptions stay active
+              and habitCompletions stays up-to-date for the progress bar.
+              CSS hides the inactive tab.
+            */}
+            <div className={activeTab !== "habits" ? "hidden" : ""}>
+              <HabitList hideHeader habits={habits} projects={projects} onHabitsCompleted={setHabitCompletions} />
+            </div>
+            <div className={activeTab !== "tasks" ? "hidden" : ""}>
+              <TaskList
+                hideHeader
+                tasks={tasks}
+                onToggleCompleted={onToggleTaskCompleted}
+                projects={projects}
+              />
             </div>
           </div>
         </div>
@@ -193,20 +213,23 @@ export function HabitsTasksView({
         <div className="flex justify-end">
           <LayoutSettingsButton layout={layout} onLayoutChange={onLayoutChange} />
         </div>
-        <HabitList habits={habits} projects={projects} />
+        {progressBar}
+        <HabitList habits={habits} projects={projects} onHabitsCompleted={setHabitCompletions} />
         <TaskList tasks={tasks} onToggleCompleted={onToggleTaskCompleted} projects={projects} />
       </div>
     );
   }
 
+  // side-by-side
   return (
-    <div>
-      <div className="flex justify-end mb-2">
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-end">
         <LayoutSettingsButton layout={layout} onLayoutChange={onLayoutChange} />
       </div>
+      {progressBar}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <section>
-          <HabitList habits={habits} projects={projects} />
+          <HabitList habits={habits} projects={projects} onHabitsCompleted={setHabitCompletions} />
         </section>
         <section>
           <TaskList

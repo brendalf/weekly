@@ -14,12 +14,16 @@ import {
 import { HabitPeriod } from "@weekly/domain";
 import { Check } from "@gravity-ui/icons";
 
+const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+
 interface HabitAddModalProps {
   onSubmit: (
     name: string,
     times: number,
     period: HabitPeriod,
     projectId?: string,
+    activeDays?: number[],
   ) => void;
   trigger?: ReactElement;
   projects?: { id: string; name: string }[];
@@ -34,12 +38,24 @@ export function HabitAddModal({
   const [times, setTimes] = useState("1");
   const [period, setPeriod] = useState<HabitPeriod>(HabitPeriod.Week);
   const [projectId, setProjectId] = useState<string>(projects?.[0]?.id ?? "");
+  const [activeDays, setActiveDays] = useState<number[]>(ALL_DAYS);
 
   function reset() {
     setName("");
     setTimes("1");
     setPeriod(HabitPeriod.Week);
     setProjectId(projects?.[0]?.id ?? "");
+    setActiveDays(ALL_DAYS);
+  }
+
+  function toggleDay(day: number) {
+    setActiveDays((prev) => {
+      if (prev.includes(day)) {
+        if (prev.length <= 1) return prev; // at least one must remain
+        return prev.filter((d) => d !== day);
+      }
+      return [...prev, day].sort((a, b) => a - b);
+    });
   }
 
   function handleSave(close: () => void) {
@@ -47,7 +63,8 @@ export function HabitAddModal({
     const n = Number(times);
     if (!trimmed || !Number.isFinite(n) || n <= 0) return;
     if (projects && !projectId) return;
-    onSubmit(trimmed, n, period, projects ? projectId : undefined);
+    const days = period === HabitPeriod.Day && activeDays.length < 7 ? activeDays : undefined;
+    onSubmit(trimmed, n, period, projects ? projectId : undefined, days);
     reset();
     close();
   }
@@ -137,7 +154,7 @@ export function HabitAddModal({
                           fullWidth
                           placeholder="Period"
                           variant="secondary"
-                          value={HabitPeriod.Day}
+                          value={period}
                           onChange={(e) => setPeriod(e as HabitPeriod)}
                         >
                           <Select.Trigger>
@@ -171,6 +188,28 @@ export function HabitAddModal({
                           </Select.Popover>
                         </Select>
                       </div>
+                      {period === HabitPeriod.Day && (
+                        <div className="mt-4">
+                          <Label>Active days</Label>
+                          <div className="mt-1 flex gap-1">
+                            {WEEKDAY_LABELS.map((label, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => toggleDay(i)}
+                                className={[
+                                  "flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-xs font-medium transition-colors",
+                                  activeDays.includes(i)
+                                    ? "bg-purple-500 text-white"
+                                    : "bg-foreground/10 text-foreground/50 hover:bg-foreground/20",
+                                ].join(" ")}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </form>
                   </Surface>
                 </Modal.Body>
