@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { DateValue } from "@internationalized/date";
-import { getLocalTimeZone } from "@internationalized/date";
 import {
   Modal,
   Button,
@@ -10,9 +8,6 @@ import {
   useOverlayState,
   Input,
   TextField,
-  Select,
-  ListBox,
-  Calendar,
 } from "@heroui/react";
 import {
   Flame,
@@ -20,11 +15,6 @@ import {
   Pencil,
   Xmark,
   Check,
-  Clock,
-  Calendar as CalendarIcon,
-  ArrowRight,
-  ArrowChevronLeft,
-  CirclePlay,
 } from "@gravity-ui/icons";
 import {
   HabitPeriod,
@@ -34,12 +24,13 @@ import {
   formatPeriodKey,
   formatPeriodKeyFull,
   habitProgress,
-  getSkipPeriodKeys,
 } from "@weekly/domain";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
-
-const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+import { ActiveDaysSelector } from "./ActiveDaysSelector";
+import { TimeOfDaySelector } from "./TimeOfDaySelector";
+import { HabitPeriodSelect } from "./HabitPeriodSelect";
+import { SkipMenu } from "./SkipMenu";
 
 interface HabitDetailsModalProps {
   open: boolean;
@@ -58,8 +49,6 @@ interface HabitDetailsModalProps {
     openSincePeriodKey: string | null;
   } | null;
 }
-
-type SkipView = "buttons" | "calendar";
 
 export function HabitDetailsModal({
   open,
@@ -87,16 +76,12 @@ export function HabitDetailsModal({
     activeDays ?? [0, 1, 2, 3, 4, 5, 6],
   );
   const [editTimeOfDay, setEditTimeOfDay] = useState<HabitTimeOfDay | undefined>(timeOfDay);
-  const [skipView, setSkipView] = useState<SkipView>("buttons");
-  const [skipUntilDate, setSkipUntilDate] = useState<DateValue | null>(null);
 
   const state = useOverlayState({
     isOpen: open,
     onOpenChange: (isOpen) => {
       if (!isOpen) {
         setEditing(false);
-        setSkipView("buttons");
-        setSkipUntilDate(null);
       }
       onOpenChange(isOpen);
     },
@@ -151,40 +136,6 @@ export function HabitDetailsModal({
     setEditing(true);
   }
 
-  function toggleEditDay(day: number) {
-    setEditActiveDays((prev) => {
-      if (prev.includes(day)) {
-        if (prev.length <= 1) return prev;
-        return prev.filter((d) => d !== day);
-      }
-      return [...prev, day].sort((a, b) => a - b);
-    });
-  }
-
-  async function handleSkip(type: "today" | "week" | "month") {
-    if (!repos) return;
-    await repos.habit.skipHabit(
-      habitId,
-      getSkipPeriodKeys(referenceDate, period, type),
-    );
-  }
-
-  async function handleSkipUntil() {
-    if (!repos || !skipUntilDate) return;
-    const until = skipUntilDate.toDate(getLocalTimeZone());
-    await repos.habit.skipHabit(
-      habitId,
-      getSkipPeriodKeys(referenceDate, period, "until", until),
-    );
-    setSkipView("buttons");
-    setSkipUntilDate(null);
-  }
-
-  async function handleUnskip() {
-    if (!repos) return;
-    await repos.habit.unskipHabit(habitId, currentPeriodKey);
-  }
-
   const { progress, complete } = habitProgress(value, times);
   const isEditValid = Boolean(editName.trim()) && Number(editTimes) > 0;
 
@@ -216,87 +167,22 @@ export function HabitDetailsModal({
                       variant="secondary"
                       onChange={(e) => setEditTimes(e.target.value)}
                     />
-                    <Select
-                      fullWidth
-                      placeholder="Period"
-                      variant="secondary"
-                      value={editPeriod}
-                      onChange={(e) => setEditPeriod(e as HabitPeriod)}
-                    >
-                      <Select.Trigger>
-                        <Select.Value />
-                        <Select.Indicator />
-                      </Select.Trigger>
-                      <Select.Popover>
-                        <ListBox>
-                          <ListBox.Item
-                            id={HabitPeriod.Day}
-                            textValue={HabitPeriod.Day}
-                          >
-                            per day
-                            <ListBox.ItemIndicator />
-                          </ListBox.Item>
-                          <ListBox.Item
-                            id={HabitPeriod.Week}
-                            textValue={HabitPeriod.Week}
-                          >
-                            per week
-                            <ListBox.ItemIndicator />
-                          </ListBox.Item>
-                          <ListBox.Item
-                            id={HabitPeriod.Month}
-                            textValue={HabitPeriod.Month}
-                          >
-                            per month
-                            <ListBox.ItemIndicator />
-                          </ListBox.Item>
-                        </ListBox>
-                      </Select.Popover>
-                    </Select>
+                    <HabitPeriodSelect value={editPeriod} onChange={setEditPeriod} />
                   </div>
                   {editPeriod === HabitPeriod.Day && (
                     <div className="mt-2">
                       <p className="text-xs text-foreground/50 mb-1">
                         Active days
                       </p>
-                      <div className="flex gap-1">
-                        {WEEKDAY_LABELS.map((label, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => toggleEditDay(i)}
-                            className={[
-                              "flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-xs font-medium transition-colors",
-                              editActiveDays.includes(i)
-                                ? "bg-purple-500 text-white"
-                                : "bg-foreground/10 text-foreground/50 hover:bg-foreground/20",
-                            ].join(" ")}
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
+                      <ActiveDaysSelector
+                        activeDays={editActiveDays}
+                        onChange={setEditActiveDays}
+                      />
                     </div>
                   )}
                   <div className="mt-2">
                     <p className="text-xs text-foreground/50 mb-1">Time of day</p>
-                    <div className="flex gap-1 flex-wrap">
-                      {(["morning", "afternoon", "evening"] as HabitTimeOfDay[]).map((tod) => (
-                        <button
-                          key={tod}
-                          type="button"
-                          onClick={() => setEditTimeOfDay((prev) => prev === tod ? undefined : tod)}
-                          className={[
-                            "cursor-pointer rounded-lg px-3 py-1 text-xs font-medium transition-colors",
-                            editTimeOfDay === tod
-                              ? "bg-purple-500 text-white"
-                              : "bg-foreground/10 text-foreground/50 hover:bg-foreground/20",
-                          ].join(" ")}
-                        >
-                          {tod.charAt(0).toUpperCase() + tod.slice(1)}
-                        </button>
-                      ))}
-                    </div>
+                    <TimeOfDaySelector value={editTimeOfDay} onChange={setEditTimeOfDay} />
                   </div>
                 </div>
               ) : (
@@ -357,109 +243,14 @@ export function HabitDetailsModal({
                     <p className="text-sm font-semibold text-foreground mb-1">
                       Skip
                     </p>
-
-                    {isCurrentPeriodSkipped ? (
-                      /* Unskip */
-                      <button onClick={handleUnskip} className={skipBtnClass}>
-                        <CirclePlay
-                          width={14}
-                          height={14}
-                          className="text-foreground/60"
-                        />
-                        Unskip this period
-                      </button>
-                    ) : skipView === "buttons" ? (
-                      /* Skip options */
-                      <>
-                        <button
-                          onClick={() => handleSkip("today")}
-                          className={skipBtnClass}
-                        >
-                          <Clock
-                            width={14}
-                            height={14}
-                            className="text-foreground/60"
-                          />
-                          Skip today
-                        </button>
-                        <button
-                          onClick={() => handleSkip("week")}
-                          className={skipBtnClass}
-                        >
-                          <CalendarIcon
-                            width={14}
-                            height={14}
-                            className="text-foreground/60"
-                          />
-                          Skip this week
-                        </button>
-                        <button
-                          onClick={() => handleSkip("month")}
-                          className={skipBtnClass}
-                        >
-                          <CalendarIcon
-                            width={14}
-                            height={14}
-                            className="text-foreground/60"
-                          />
-                          Skip this month
-                        </button>
-                        <button
-                          onClick={() => setSkipView("calendar")}
-                          className={skipBtnClass}
-                        >
-                          <ArrowRight
-                            width={14}
-                            height={14}
-                            className="text-foreground/60"
-                          />
-                          Skip until…
-                        </button>
-                      </>
-                    ) : (
-                      /* Calendar picker */
-                      <div className="flex flex-col gap-2">
-                        <button
-                          onClick={() => {
-                            setSkipView("buttons");
-                            setSkipUntilDate(null);
-                          }}
-                          className="flex cursor-pointer items-center gap-1.5 self-start text-xs text-foreground/50 hover:text-foreground transition-colors"
-                        >
-                          <ArrowChevronLeft width={12} height={12} />
-                          Skip until
-                        </button>
-                        <Calendar
-                          value={skipUntilDate}
-                          onChange={setSkipUntilDate}
-                          aria-label="Pick skip-until date"
-                        >
-                          <Calendar.Header>
-                            <Calendar.NavButton slot="previous" />
-                            <Calendar.Heading />
-                            <Calendar.NavButton slot="next" />
-                          </Calendar.Header>
-                          <Calendar.Grid>
-                            <Calendar.GridHeader>
-                              {(day) => (
-                                <Calendar.HeaderCell>{day}</Calendar.HeaderCell>
-                              )}
-                            </Calendar.GridHeader>
-                            <Calendar.GridBody>
-                              {(date) => <Calendar.Cell date={date} />}
-                            </Calendar.GridBody>
-                          </Calendar.Grid>
-                        </Calendar>
-                        <Button
-                          size="sm"
-                          isDisabled={!skipUntilDate}
-                          onPress={handleSkipUntil}
-                        >
-                          <Check />
-                          Confirm
-                        </Button>
-                      </div>
-                    )}
+                    <SkipMenu
+                      habitId={habitId}
+                      referenceDate={referenceDate}
+                      period={period}
+                      currentPeriodKey={currentPeriodKey}
+                      isSkipped={isCurrentPeriodSkipped}
+                      buttonClassName={skipBtnClass}
+                    />
                   </div>
                 </Surface>
               )}

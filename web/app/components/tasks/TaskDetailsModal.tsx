@@ -12,12 +12,7 @@ import {
 import { TrashBin, Pencil, Xmark, Check } from "@gravity-ui/icons";
 import { Task, TaskScope } from "@weekly/domain";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
-
-const SCOPE_OPTIONS: { value: TaskScope; label: string }[] = [
-  { value: "day", label: "Today" },
-  { value: "week", label: "This week" },
-  { value: "month", label: "This month" },
-];
+import { ScopeSelector, SCOPE_OPTIONS } from "./ScopeSelector";
 
 const SCOPE_COLORS: Record<TaskScope, string> = {
   day: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
@@ -107,23 +102,7 @@ export function TaskDetailsModal({
                   <div className="flex flex-col gap-1.5">
                     <p className="text-xs text-foreground/50">Scope</p>
                     {editing ? (
-                      <div className="flex gap-1.5">
-                        {SCOPE_OPTIONS.map(({ value, label }) => (
-                          <button
-                            key={value}
-                            type="button"
-                            onClick={() => setEditScope(value)}
-                            className={[
-                              "cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-                              editScope === value
-                                ? "bg-purple-500 text-white"
-                                : "bg-foreground/10 text-foreground hover:bg-foreground/15",
-                            ].join(" ")}
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
+                      <ScopeSelector value={editScope} onChange={setEditScope} />
                     ) : (
                       <span
                         className={[

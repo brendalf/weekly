@@ -81,6 +81,46 @@ type HabitPeriodDoc = {
   updatedAt?: Timestamp | FieldValue;
 };
 
+function mapHabitDoc(id: string, data: HabitDoc): Habit {
+  return {
+    id,
+    name: typeof data?.name === "string" ? data.name : "",
+    times: typeof data?.times === "number" ? data.times : 0,
+    period:
+      data?.period === HabitPeriod.Day
+        ? HabitPeriod.Day
+        : data?.period === HabitPeriod.Month
+          ? HabitPeriod.Month
+          : HabitPeriod.Week,
+    createdAt:
+      data?.createdAt?.toDate().toISOString() ?? new Date().toISOString(),
+    activeDays: Array.isArray(data?.activeDays)
+      ? (data.activeDays as number[]).filter((n) => typeof n === "number")
+      : undefined,
+    skippedPeriods: Array.isArray(data?.skippedPeriods)
+      ? (data.skippedPeriods as string[]).filter((s) => typeof s === "string")
+      : undefined,
+    timeOfDay: (["morning", "afternoon", "evening"] as HabitTimeOfDay[]).includes(
+      data?.timeOfDay as HabitTimeOfDay,
+    )
+      ? (data?.timeOfDay as HabitTimeOfDay)
+      : undefined,
+  };
+}
+
+function mapTaskDoc(id: string, data: TaskDoc): Task {
+  return {
+    id,
+    title: typeof data.title === "string" ? data.title : "",
+    createdAt: data.createdAt?.toDate().toISOString() ?? new Date().toISOString(),
+    completed: typeof data.completed === "boolean" ? data.completed : false,
+    scope:
+      data.scope === "day" || data.scope === "month"
+        ? (data.scope as TaskScope)
+        : "week",
+  };
+}
+
 function tasksCol(db: Firestore, projectId: string) {
   return collection(db, "projects", projectId, "tasks");
 }
@@ -131,22 +171,8 @@ export function createTaskRepository(
     subscribeTasks(onTasks: (tasks: Task[]) => void) {
       const q = query(tasksCol(db, projectId), orderBy("createdAt", "desc"));
       return onSnapshot(q, (snapshot: QuerySnapshot<DocumentData>) => {
-        const tasks = snapshot.docs.map(
-          (d: QueryDocumentSnapshot<DocumentData>) => {
-            const data = d.data() as TaskDoc;
-            return {
-              id: d.id,
-              title: typeof data.title === "string" ? data.title : "",
-              createdAt:
-                data.createdAt?.toDate().toISOString() ??
-                new Date().toISOString(),
-              completed:
-                typeof data.completed === "boolean" ? data.completed : false,
-              scope: (data.scope === "day" || data.scope === "month")
-                ? data.scope as TaskScope
-                : "week",
-            };
-          },
+        const tasks = snapshot.docs.map((d: QueryDocumentSnapshot<DocumentData>) =>
+          mapTaskDoc(d.id, d.data() as TaskDoc),
         );
         onTasks(tasks);
       });
@@ -188,33 +214,8 @@ export function createHabitRepository(
     subscribeHabits(onHabits: (habits: Habit[]) => void) {
       const q = query(habitsCol(db, projectId), orderBy("createdAt", "desc"));
       return onSnapshot(q, (snapshot: QuerySnapshot<DocumentData>) => {
-        const habits = snapshot.docs.map(
-          (d: QueryDocumentSnapshot<DocumentData>) => {
-            const data = d.data() as HabitDoc;
-            return {
-              id: d.id,
-              name: typeof data?.name === "string" ? data.name : "",
-              times: typeof data?.times === "number" ? data.times : 0,
-              period:
-                data?.period === HabitPeriod.Day
-                  ? HabitPeriod.Day
-                  : data?.period === HabitPeriod.Month
-                    ? HabitPeriod.Month
-                    : HabitPeriod.Week,
-              createdAt:
-                data?.createdAt?.toDate().toISOString() ??
-                new Date().toISOString(),
-              activeDays: Array.isArray(data?.activeDays)
-                ? (data.activeDays as number[]).filter((n) => typeof n === "number")
-                : undefined,
-              skippedPeriods: Array.isArray(data?.skippedPeriods)
-                ? (data.skippedPeriods as string[]).filter((s) => typeof s === "string")
-                : undefined,
-              timeOfDay: (["morning", "afternoon", "evening"] as HabitTimeOfDay[]).includes(data?.timeOfDay as HabitTimeOfDay)
-                ? data?.timeOfDay as HabitTimeOfDay
-                : undefined,
-            };
-          },
+        const habits = snapshot.docs.map((d: QueryDocumentSnapshot<DocumentData>) =>
+          mapHabitDoc(d.id, d.data() as HabitDoc),
         );
         onHabits(habits);
       });

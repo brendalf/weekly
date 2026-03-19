@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { Habit, HabitPeriod, HabitTimeOfDay, Project, filterHabitsByDay, isHabitSkipped } from "@weekly/domain";
+import { Habit, HabitPeriod, HabitTimeOfDay, Project, filterHabitsByDay, isHabitSkipped, PERIOD_ORDER, TIME_OF_DAY_ORDER } from "@weekly/domain";
 import { Plus } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { HabitItem } from "./HabitItem";
@@ -9,17 +9,6 @@ import { HabitAddModal } from "./HabitAddModal";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useCalendarStore } from "../../stores/calendar";
 
-const PERIOD_ORDER: Record<HabitPeriod, number> = {
-  [HabitPeriod.Day]: 0,
-  [HabitPeriod.Week]: 1,
-  [HabitPeriod.Month]: 2,
-};
-
-const TIME_OF_DAY_ORDER: Record<string, number> = {
-  morning: 0,
-  afternoon: 1,
-  evening: 2,
-};
 
 interface HabitListProps {
   habits: Habit[];

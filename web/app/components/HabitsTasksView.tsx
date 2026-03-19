@@ -11,6 +11,7 @@ import {
   filterHabitsByDay,
   isHabitSkipped,
   getTaskVisibility,
+  PERIOD_TABS,
 } from "@weekly/domain";
 import {
   Plus,
@@ -39,12 +40,6 @@ interface HabitsTasksViewProps {
   onToggleTaskCompleted: (taskId: string) => void;
   onLayoutChange: (layout: LayoutPreference) => void;
 }
-
-const PERIOD_TABS: { period: HabitPeriod; scope: TaskScope; label: string }[] = [
-  { period: HabitPeriod.Day, scope: "day", label: "Day" },
-  { period: HabitPeriod.Week, scope: "week", label: "Week" },
-  { period: HabitPeriod.Month, scope: "month", label: "Month" },
-];
 
 /** Tiny read-only ring showing done/total progress. */
 function PeriodProgress({ done, total }: { done: number; total: number }) {
@@ -240,7 +235,10 @@ export function HabitsTasksView({
   const [habitCompletions, setHabitCompletions] = useState<Record<string, boolean>>({});
   const { activeRepos, getProjectRepos } = useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
-  const selectedDay = selectedDayISO ? new Date(selectedDayISO) : new Date();
+  const selectedDay = useMemo(
+    () => (selectedDayISO ? new Date(selectedDayISO) : new Date()),
+    [selectedDayISO],
+  );
 
   // Merge completions from all period panels without overwriting each other
   const handleHabitsCompleted = useCallback((completions: Record<string, boolean>) => {
@@ -250,10 +248,9 @@ export function HabitsTasksView({
   const handleAddHabit = useCallback(
     (name: string, times: number, period: HabitPeriod, projectId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => {
       const repos = projectId ? getProjectRepos(projectId) : activeRepos;
-      const date = selectedDayISO ? new Date(selectedDayISO) : new Date();
-      repos?.habit.addHabit(name, times, period, date, activeDays, timeOfDay);
+      repos?.habit.addHabit(name, times, period, selectedDay, activeDays, timeOfDay);
     },
-    [activeRepos, getProjectRepos, selectedDayISO],
+    [activeRepos, getProjectRepos, selectedDay],
   );
 
   const handleAddTask = useCallback(

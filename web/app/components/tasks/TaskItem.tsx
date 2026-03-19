@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Task, TaskScope } from "@weekly/domain";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
+import { Badge } from "../general/Badge";
 import { TaskDetailsModal } from "./TaskDetailsModal";
 
 const SCOPE_LABELS: Record<TaskScope, string> = {
@@ -64,19 +65,19 @@ export function TaskItem({
         </span>
         <div className="ml-auto flex shrink-0 items-center gap-1">
           {showScopeLabel !== false && (
-            <span className={["rounded-full px-1.5 py-0.5 text-xs font-medium", SCOPE_COLORS[scope]].join(" ")}>
+            <Badge className={SCOPE_COLORS[scope]}>
               {SCOPE_LABELS[scope]}
-            </span>
+            </Badge>
           )}
           {openSinceLabel && (
-            <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-xs text-amber-600 dark:text-amber-400">
+            <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400">
               {openSinceLabel}
-            </span>
+            </Badge>
           )}
           {projectName && (
-            <span className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-xs text-foreground/50">
+            <Badge className="bg-foreground/10 text-foreground/50">
               {projectName}
-            </span>
+            </Badge>
           )}
         </div>
       </div>

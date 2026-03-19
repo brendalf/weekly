@@ -8,11 +8,11 @@ import {
   Label,
   TextField,
   Surface,
-  Select,
-  ListBox,
 } from "@heroui/react";
 import { Check } from "@gravity-ui/icons";
 import { TaskScope } from "@weekly/domain";
+import { ScopeSelector } from "./ScopeSelector";
+import { ProjectField } from "../general/ProjectField";
 
 interface TaskAddModalProps {
   onSubmit: (title: string, projectId?: string, scope?: TaskScope) => void;
@@ -21,12 +21,6 @@ interface TaskAddModalProps {
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
-
-const SCOPE_OPTIONS: { value: TaskScope; label: string }[] = [
-  { value: "day", label: "This day" },
-  { value: "week", label: "This week" },
-  { value: "month", label: "This month" },
-];
 
 export function TaskAddModal({
   onSubmit,
@@ -91,55 +85,21 @@ export function TaskAddModal({
                           autoFocus
                         />
                       </TextField>
-                      {projects && projects.length > 0 && (
-                        <div className="mt-4">
-                          <Label>Project</Label>
-                          <Select
-                            fullWidth
-                            placeholder="Select project"
-                            variant="secondary"
-                            value={projectId}
-                            onChange={(e) => setProjectId(e as string)}
-                          >
-                            <Select.Trigger>
-                              <Select.Value />
-                              <Select.Indicator />
-                            </Select.Trigger>
-                            <Select.Popover>
-                              <ListBox>
-                                {projects.map((p) => (
-                                  <ListBox.Item
-                                    key={p.id}
-                                    id={p.id}
-                                    textValue={p.name}
-                                  >
-                                    {p.name}
-                                    <ListBox.ItemIndicator />
-                                  </ListBox.Item>
-                                ))}
-                              </ListBox>
-                            </Select.Popover>
-                          </Select>
-                        </div>
+                      {projects && (
+                        <ProjectField
+                          projects={projects}
+                          value={projectId}
+                          onChange={setProjectId}
+                        />
                       )}
                       <div className="mt-4">
                         <Label>Scope</Label>
-                        <div className="mt-1 flex gap-1">
-                          {SCOPE_OPTIONS.map(({ value, label }) => (
-                            <button
-                              key={value}
-                              type="button"
-                              onClick={() => setScope(value)}
-                              className={[
-                                "flex-1 cursor-pointer rounded-lg px-2 py-1.5 text-xs font-medium transition-colors",
-                                scope === value
-                                  ? "bg-purple-500 text-white"
-                                  : "bg-foreground/10 text-foreground hover:bg-foreground/20",
-                              ].join(" ")}
-                            >
-                              {label}
-                            </button>
-                          ))}
+                        <div className="mt-1">
+                          <ScopeSelector
+                            value={scope}
+                            onChange={setScope}
+                            fullWidth
+                          />
                         </div>
                       </div>
                     </form>

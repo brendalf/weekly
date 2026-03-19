@@ -1,4 +1,5 @@
-import { HabitPeriod } from "../models/habit";
+import { HabitPeriod, HabitTimeOfDay } from "../models/habit";
+import { TaskScope } from "../models/task";
 
 /**
  * Formats a period key (e.g. "2026-W11", "2026-03", "2026-03-15") into a
@@ -67,3 +68,41 @@ export function formatDayLabel(date: Date): string {
   const month = date.toLocaleDateString("en-US", { month: "long" });
   return `${weekday}, ${day} of ${month}`;
 }
+
+/** Sunday–Saturday single-character labels for weekday pickers. */
+export const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"] as const;
+
+/** Sort order for HabitPeriod values. */
+export const PERIOD_ORDER: Record<HabitPeriod, number> = {
+  [HabitPeriod.Day]: 0,
+  [HabitPeriod.Week]: 1,
+  [HabitPeriod.Month]: 2,
+};
+
+/** Valid time-of-day values in display order. */
+export const TIME_OF_DAY_OPTIONS: readonly HabitTimeOfDay[] = [
+  "morning",
+  "afternoon",
+  "evening",
+];
+
+/** Sort order for time-of-day values. */
+export const TIME_OF_DAY_ORDER: Record<string, number> = {
+  morning: 0,
+  afternoon: 1,
+  evening: 2,
+};
+
+/** Convert a TaskScope to the corresponding HabitPeriod. */
+export function scopeToPeriod(scope: TaskScope): HabitPeriod {
+  if (scope === "day") return HabitPeriod.Day;
+  if (scope === "month") return HabitPeriod.Month;
+  return HabitPeriod.Week;
+}
+
+/** Period tab descriptor used by the period-tabs layout. */
+export const PERIOD_TABS: { period: HabitPeriod; scope: TaskScope; label: string }[] = [
+  { period: HabitPeriod.Day, scope: "day", label: "Day" },
+  { period: HabitPeriod.Week, scope: "week", label: "Week" },
+  { period: HabitPeriod.Month, scope: "month", label: "Month" },
+];

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Task, TaskScope, Project, getTaskVisibility, taskPeriodKey, HabitPeriod, formatPeriodKey } from "@weekly/domain";
+import { Task, TaskScope, Project, getTaskVisibility, taskPeriodKey, formatPeriodKey, scopeToPeriod } from "@weekly/domain";
 import { Plus } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { TaskAddModal } from "./TaskAddModal";
@@ -18,11 +18,6 @@ interface TaskListProps {
   showScopeLabel?: boolean;
 }
 
-function scopeToPeriod(scope: TaskScope): HabitPeriod {
-  if (scope === "day") return HabitPeriod.Day;
-  if (scope === "month") return HabitPeriod.Month;
-  return HabitPeriod.Week;
-}
 
 export function TaskList({
   tasks,

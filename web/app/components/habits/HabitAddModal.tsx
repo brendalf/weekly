@@ -4,17 +4,18 @@ import { ReactElement, useState } from "react";
 import {
   Modal,
   Button,
-  Select,
   Input,
   Label,
   TextField,
   Surface,
-  ListBox,
 } from "@heroui/react";
 import { HabitPeriod, HabitTimeOfDay } from "@weekly/domain";
 import { Check } from "@gravity-ui/icons";
+import { ActiveDaysSelector } from "./ActiveDaysSelector";
+import { TimeOfDaySelector } from "./TimeOfDaySelector";
+import { HabitPeriodSelect } from "./HabitPeriodSelect";
+import { ProjectField } from "../general/ProjectField";
 
-const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 
 interface HabitAddModalProps {
@@ -53,16 +54,6 @@ export function HabitAddModal({
     setProjectId(projects?.[0]?.id ?? "");
     setActiveDays(ALL_DAYS);
     setTimeOfDay(undefined);
-  }
-
-  function toggleDay(day: number) {
-    setActiveDays((prev) => {
-      if (prev.includes(day)) {
-        if (prev.length <= 1) return prev; // at least one must remain
-        return prev.filter((d) => d !== day);
-      }
-      return [...prev, day].sort((a, b) => a - b);
-    });
   }
 
   function handleSave(close: () => void) {
@@ -118,36 +109,12 @@ export function HabitAddModal({
                           autoFocus
                         />
                       </TextField>
-                      {projects && projects.length > 0 && (
-                        <div className="mt-4">
-                          <Label>Project</Label>
-                          <Select
-                            fullWidth
-                            placeholder="Select project"
-                            variant="secondary"
-                            value={projectId}
-                            onChange={(e) => setProjectId(e as string)}
-                          >
-                            <Select.Trigger>
-                              <Select.Value />
-                              <Select.Indicator />
-                            </Select.Trigger>
-                            <Select.Popover>
-                              <ListBox>
-                                {projects.map((p) => (
-                                  <ListBox.Item
-                                    key={p.id}
-                                    id={p.id}
-                                    textValue={p.name}
-                                  >
-                                    {p.name}
-                                    <ListBox.ItemIndicator />
-                                  </ListBox.Item>
-                                ))}
-                              </ListBox>
-                            </Select.Popover>
-                          </Select>
-                        </div>
+                      {projects && (
+                        <ProjectField
+                          projects={projects}
+                          value={projectId}
+                          onChange={setProjectId}
+                        />
                       )}
                       <div className="mt-4">Frequency</div>
                       <div className="mt-1 flex items-end gap-2">
@@ -159,84 +126,23 @@ export function HabitAddModal({
                           placeholder="Times"
                           onChange={(e) => setTimes(e.target.value)}
                         />
-                        <Select
-                          fullWidth
-                          placeholder="Period"
-                          variant="secondary"
-                          value={period}
-                          onChange={(e) => setPeriod(e as HabitPeriod)}
-                        >
-                          <Select.Trigger>
-                            <Select.Value />
-                            <Select.Indicator />
-                          </Select.Trigger>
-                          <Select.Popover>
-                            <ListBox>
-                              <ListBox.Item
-                                id={HabitPeriod.Day}
-                                textValue={HabitPeriod.Day}
-                              >
-                                per day
-                                <ListBox.ItemIndicator />
-                              </ListBox.Item>
-                              <ListBox.Item
-                                id={HabitPeriod.Week}
-                                textValue={HabitPeriod.Week}
-                              >
-                                per week
-                                <ListBox.ItemIndicator />
-                              </ListBox.Item>
-                              <ListBox.Item
-                                id={HabitPeriod.Month}
-                                textValue={HabitPeriod.Month}
-                              >
-                                per month
-                                <ListBox.ItemIndicator />
-                              </ListBox.Item>
-                            </ListBox>
-                          </Select.Popover>
-                        </Select>
+                        <HabitPeriodSelect value={period} onChange={setPeriod} />
                       </div>
                       {period === HabitPeriod.Day && (
                         <div className="mt-4">
                           <Label>Active days</Label>
-                          <div className="mt-1 flex gap-1">
-                            {WEEKDAY_LABELS.map((label, i) => (
-                              <button
-                                key={i}
-                                type="button"
-                                onClick={() => toggleDay(i)}
-                                className={[
-                                  "flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-xs font-medium transition-colors",
-                                  activeDays.includes(i)
-                                    ? "bg-purple-500 text-white"
-                                    : "bg-foreground/10 text-foreground/50 hover:bg-foreground/20",
-                                ].join(" ")}
-                              >
-                                {label}
-                              </button>
-                            ))}
+                          <div className="mt-1">
+                            <ActiveDaysSelector
+                              activeDays={activeDays}
+                              onChange={setActiveDays}
+                            />
                           </div>
                         </div>
                       )}
                       <div className="mt-4">
                         <Label>Time of day</Label>
-                        <div className="mt-1 flex gap-1 flex-wrap">
-                          {(["morning", "afternoon", "evening"] as HabitTimeOfDay[]).map((tod) => (
-                            <button
-                              key={tod}
-                              type="button"
-                              onClick={() => setTimeOfDay((prev) => prev === tod ? undefined : tod)}
-                              className={[
-                                "cursor-pointer rounded-lg px-3 py-1 text-xs font-medium transition-colors",
-                                timeOfDay === tod
-                                  ? "bg-purple-500 text-white"
-                                  : "bg-foreground/10 text-foreground/50 hover:bg-foreground/20",
-                              ].join(" ")}
-                            >
-                              {tod.charAt(0).toUpperCase() + tod.slice(1)}
-                            </button>
-                          ))}
+                        <div className="mt-1">
+                          <TimeOfDaySelector value={timeOfDay} onChange={setTimeOfDay} />
                         </div>
                       </div>
                     </form>
