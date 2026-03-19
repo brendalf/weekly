@@ -5,6 +5,7 @@ import type { DateValue } from "@internationalized/date";
 import { getLocalTimeZone } from "@internationalized/date";
 import {
   HabitPeriod,
+  HabitTimeOfDay,
   formatPeriodKey,
   habitProgress,
   getSkipPeriodKeys,
@@ -30,6 +31,12 @@ import { useCalendarStore } from "../../stores/calendar";
 import { HabitDetailsModal } from "./HabitDetailsModal";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 
+const PERIOD_BADGE: Record<HabitPeriod, { label: string; className: string }> = {
+  [HabitPeriod.Day]: { label: "Today", className: "bg-blue-500/15 text-blue-600 dark:text-blue-400" },
+  [HabitPeriod.Week]: { label: "This week", className: "bg-purple-500/15 text-purple-600 dark:text-purple-400" },
+  [HabitPeriod.Month]: { label: "This month", className: "bg-teal-500/15 text-teal-600 dark:text-teal-400" },
+};
+
 export interface HabitItemProps {
   id: string;
   name: string;
@@ -38,7 +45,9 @@ export interface HabitItemProps {
   createdAt: string;
   activeDays?: number[];
   skippedPeriods?: string[];
+  timeOfDay?: HabitTimeOfDay;
   isSkipped?: boolean;
+  showPeriodLabel?: boolean;
   onCompleteChange?: (id: string, complete: boolean, hasProgressToday: boolean) => void;
   projectName?: string;
 }
@@ -53,7 +62,9 @@ export function HabitItem({
   createdAt,
   activeDays,
   skippedPeriods,
+  timeOfDay,
   isSkipped = false,
+  showPeriodLabel = false,
   onCompleteChange,
   projectName,
 }: HabitItemProps) {
@@ -192,6 +203,11 @@ export function HabitItem({
             >
               {name}
             </span>
+            {showPeriodLabel && !isSkipped && (
+              <span className={["shrink-0 rounded-full px-1.5 py-0.5 text-xs font-medium", PERIOD_BADGE[period].className].join(" ")}>
+                {PERIOD_BADGE[period].label}
+              </span>
+            )}
             {isSkipped && (
               <span className="shrink-0 rounded-full bg-foreground/10 px-1.5 py-0.5 text-xs text-foreground/50">
                 Skipped
@@ -352,6 +368,7 @@ export function HabitItem({
         period={period}
         activeDays={activeDays}
         skippedPeriods={skippedPeriods}
+        timeOfDay={timeOfDay}
         value={value}
         referenceDate={referenceDate}
         streak={streak}

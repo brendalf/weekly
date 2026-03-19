@@ -15,6 +15,7 @@ interface TaskListProps {
   projects?: Project[];
   hideHeader?: boolean;
   scopeFilter?: TaskScope;
+  showScopeLabel?: boolean;
 }
 
 function scopeToPeriod(scope: TaskScope): HabitPeriod {
@@ -29,6 +30,7 @@ export function TaskList({
   projects,
   hideHeader,
   scopeFilter,
+  showScopeLabel,
 }: TaskListProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { activeRepos, getProjectRepos, getTaskProjectId } =
@@ -105,6 +107,7 @@ export function TaskList({
                     onToggleCompleted={onToggleCompleted}
                     projectName={projectName}
                     openSinceLabel={openSinceLabel}
+                    showScopeLabel={showScopeLabel}
                   />
                 );
               })}

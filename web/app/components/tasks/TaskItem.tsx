@@ -22,6 +22,7 @@ interface TaskItemProps {
   onToggleCompleted: (taskId: string) => void;
   projectName?: string;
   openSinceLabel?: string;
+  showScopeLabel?: boolean;
 }
 
 export function TaskItem({
@@ -29,6 +30,7 @@ export function TaskItem({
   onToggleCompleted,
   projectName,
   openSinceLabel,
+  showScopeLabel = true,
 }: TaskItemProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const scope = task.scope ?? "week";
@@ -61,9 +63,11 @@ export function TaskItem({
           {task.title}
         </span>
         <div className="ml-auto flex shrink-0 items-center gap-1">
-          <span className={["rounded-full px-1.5 py-0.5 text-xs font-medium", SCOPE_COLORS[scope]].join(" ")}>
-            {SCOPE_LABELS[scope]}
-          </span>
+          {showScopeLabel !== false && (
+            <span className={["rounded-full px-1.5 py-0.5 text-xs font-medium", SCOPE_COLORS[scope]].join(" ")}>
+              {SCOPE_LABELS[scope]}
+            </span>
+          )}
           {openSinceLabel && (
             <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-xs text-amber-600 dark:text-amber-400">
               {openSinceLabel}

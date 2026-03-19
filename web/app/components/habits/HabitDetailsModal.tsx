@@ -28,6 +28,7 @@ import {
 } from "@gravity-ui/icons";
 import {
   HabitPeriod,
+  HabitTimeOfDay,
   HabitCompletionLog,
   periodKeyOf,
   formatPeriodKey,
@@ -49,6 +50,7 @@ interface HabitDetailsModalProps {
   period: HabitPeriod;
   activeDays?: number[];
   skippedPeriods?: string[];
+  timeOfDay?: HabitTimeOfDay;
   value: number;
   referenceDate: Date;
   streak: {
@@ -68,6 +70,7 @@ export function HabitDetailsModal({
   period,
   activeDays,
   skippedPeriods,
+  timeOfDay,
   value,
   referenceDate,
   streak,
@@ -83,6 +86,7 @@ export function HabitDetailsModal({
   const [editActiveDays, setEditActiveDays] = useState<number[]>(
     activeDays ?? [0, 1, 2, 3, 4, 5, 6],
   );
+  const [editTimeOfDay, setEditTimeOfDay] = useState<HabitTimeOfDay | undefined>(timeOfDay);
   const [skipView, setSkipView] = useState<SkipView>("buttons");
   const [skipUntilDate, setSkipUntilDate] = useState<DateValue | null>(null);
 
@@ -134,7 +138,7 @@ export function HabitDetailsModal({
       editPeriod === HabitPeriod.Day && editActiveDays.length < 7
         ? editActiveDays
         : undefined;
-    await repos.habit.updateHabit(habitId, trimmed, n, editPeriod, days);
+    await repos.habit.updateHabit(habitId, trimmed, n, editPeriod, days, editTimeOfDay);
     setEditing(false);
   }
 
@@ -143,6 +147,7 @@ export function HabitDetailsModal({
     setEditTimes(String(times));
     setEditPeriod(period);
     setEditActiveDays(activeDays ?? [0, 1, 2, 3, 4, 5, 6]);
+    setEditTimeOfDay(timeOfDay);
     setEditing(true);
   }
 
@@ -273,6 +278,26 @@ export function HabitDetailsModal({
                       </div>
                     </div>
                   )}
+                  <div className="mt-2">
+                    <p className="text-xs text-foreground/50 mb-1">Time of day</p>
+                    <div className="flex gap-1 flex-wrap">
+                      {(["morning", "afternoon", "evening"] as HabitTimeOfDay[]).map((tod) => (
+                        <button
+                          key={tod}
+                          type="button"
+                          onClick={() => setEditTimeOfDay((prev) => prev === tod ? undefined : tod)}
+                          className={[
+                            "cursor-pointer rounded-lg px-3 py-1 text-xs font-medium transition-colors",
+                            editTimeOfDay === tod
+                              ? "bg-purple-500 text-white"
+                              : "bg-foreground/10 text-foreground/50 hover:bg-foreground/20",
+                          ].join(" ")}
+                        >
+                          {tod.charAt(0).toUpperCase() + tod.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <Modal.Heading>{name}</Modal.Heading>

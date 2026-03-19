@@ -11,7 +11,7 @@ import {
   Surface,
   ListBox,
 } from "@heroui/react";
-import { HabitPeriod } from "@weekly/domain";
+import { HabitPeriod, HabitTimeOfDay } from "@weekly/domain";
 import { Check } from "@gravity-ui/icons";
 
 const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
@@ -24,6 +24,7 @@ interface HabitAddModalProps {
     period: HabitPeriod,
     projectId?: string,
     activeDays?: number[],
+    timeOfDay?: HabitTimeOfDay,
   ) => void;
   trigger?: ReactElement;
   projects?: { id: string; name: string }[];
@@ -43,6 +44,7 @@ export function HabitAddModal({
   const [period, setPeriod] = useState<HabitPeriod>(HabitPeriod.Week);
   const [projectId, setProjectId] = useState<string>(projects?.[0]?.id ?? "");
   const [activeDays, setActiveDays] = useState<number[]>(ALL_DAYS);
+  const [timeOfDay, setTimeOfDay] = useState<HabitTimeOfDay | undefined>(undefined);
 
   function reset() {
     setName("");
@@ -50,6 +52,7 @@ export function HabitAddModal({
     setPeriod(HabitPeriod.Week);
     setProjectId(projects?.[0]?.id ?? "");
     setActiveDays(ALL_DAYS);
+    setTimeOfDay(undefined);
   }
 
   function toggleDay(day: number) {
@@ -68,7 +71,7 @@ export function HabitAddModal({
     if (!trimmed || !Number.isFinite(n) || n <= 0) return;
     if (projects && !projectId) return;
     const days = period === HabitPeriod.Day && activeDays.length < 7 ? activeDays : undefined;
-    onSubmit(trimmed, n, period, projects ? projectId : undefined, days);
+    onSubmit(trimmed, n, period, projects ? projectId : undefined, days, timeOfDay);
     reset();
     close();
   }
@@ -216,6 +219,26 @@ export function HabitAddModal({
                           </div>
                         </div>
                       )}
+                      <div className="mt-4">
+                        <Label>Time of day</Label>
+                        <div className="mt-1 flex gap-1 flex-wrap">
+                          {(["morning", "afternoon", "evening"] as HabitTimeOfDay[]).map((tod) => (
+                            <button
+                              key={tod}
+                              type="button"
+                              onClick={() => setTimeOfDay((prev) => prev === tod ? undefined : tod)}
+                              className={[
+                                "cursor-pointer rounded-lg px-3 py-1 text-xs font-medium transition-colors",
+                                timeOfDay === tod
+                                  ? "bg-purple-500 text-white"
+                                  : "bg-foreground/10 text-foreground/50 hover:bg-foreground/20",
+                              ].join(" ")}
+                            >
+                              {tod.charAt(0).toUpperCase() + tod.slice(1)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </form>
                   </Surface>
                 </Modal.Body>

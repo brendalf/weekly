@@ -1,4 +1,4 @@
-import type { Habit, HabitPeriod } from "../models/habit";
+import type { Habit, HabitPeriod, HabitTimeOfDay } from "../models/habit";
 import type { Unsubscribe } from "./types";
 
 export interface HabitCompletionLog {
@@ -12,7 +12,7 @@ export interface HabitCompletionLog {
 
 export interface HabitRepository {
   subscribeHabits(onHabits: (habits: Habit[]) => void): Unsubscribe;
-  addHabit(name: string, times: number, period: HabitPeriod, createdAt?: Date, activeDays?: number[]): Promise<void>;
+  addHabit(name: string, times: number, period: HabitPeriod, createdAt?: Date, activeDays?: number[], timeOfDay?: HabitTimeOfDay): Promise<void>;
   subscribeHabitCompletions(
     habitId: string,
     onLogs: (logs: HabitCompletionLog[]) => void,
@@ -24,6 +24,7 @@ export interface HabitRepository {
     times: number,
     period: HabitPeriod,
     activeDays?: number[],
+    timeOfDay?: HabitTimeOfDay,
   ): Promise<void>;
   deleteHabitLog(
     habitId: string,

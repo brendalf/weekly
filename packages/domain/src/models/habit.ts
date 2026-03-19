@@ -1,3 +1,5 @@
+export type HabitTimeOfDay = 'morning' | 'afternoon' | 'evening';
+
 export type Year = number;
 export type WeekOfYear = number; // 1-53
 
@@ -19,6 +21,8 @@ export interface Habit {
   activeDays?: number[];
   /** Period keys (from periodKeyOf) for which the habit is skipped. */
   skippedPeriods?: string[];
+  /** Only meaningful for Day habits; used for sub-sorting uncompleted habits. */
+  timeOfDay?: HabitTimeOfDay;
 }
 
 export interface WeekId {

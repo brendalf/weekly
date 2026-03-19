@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { Habit, HabitPeriod, Project, filterHabitsByDay, isHabitSkipped } from "@weekly/domain";
+import { Habit, HabitPeriod, HabitTimeOfDay, Project, filterHabitsByDay, isHabitSkipped } from "@weekly/domain";
 import { Plus } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { HabitItem } from "./HabitItem";
@@ -15,15 +15,22 @@ const PERIOD_ORDER: Record<HabitPeriod, number> = {
   [HabitPeriod.Month]: 2,
 };
 
+const TIME_OF_DAY_ORDER: Record<string, number> = {
+  morning: 0,
+  afternoon: 1,
+  evening: 2,
+};
+
 interface HabitListProps {
   habits: Habit[];
   projects?: Project[];
   hideHeader?: boolean;
   periodFilter?: HabitPeriod;
+  showPeriodLabel?: boolean;
   onHabitsCompleted?: (completions: Record<string, boolean>) => void;
 }
 
-export function HabitList({ habits, projects, hideHeader, periodFilter, onHabitsCompleted }: HabitListProps) {
+export function HabitList({ habits, projects, hideHeader, periodFilter, showPeriodLabel, onHabitsCompleted }: HabitListProps) {
   const { activeRepos, getProjectRepos, getHabitProjectId } =
     useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
@@ -79,10 +86,11 @@ export function HabitList({ habits, projects, hideHeader, periodFilter, onHabits
     period: HabitPeriod,
     projectId?: string,
     activeDays?: number[],
+    timeOfDay?: HabitTimeOfDay,
   ) => {
     const repos = projectId ? getProjectRepos(projectId) : activeRepos;
     const date = selectedDayISO ? new Date(selectedDayISO) : new Date();
-    repos?.habit.addHabit(name, times, period, date, activeDays);
+    repos?.habit.addHabit(name, times, period, date, activeDays, timeOfDay);
   };
 
   const sorted = useMemo(() => {
@@ -99,7 +107,11 @@ export function HabitList({ habits, projects, hideHeader, periodFilter, onHabits
     return [...visibleHabits].sort((a, b) => {
       const groupDiff = getGroup(a) - getGroup(b);
       if (groupDiff !== 0) return groupDiff;
-      return PERIOD_ORDER[a.period] - PERIOD_ORDER[b.period];
+      const periodDiff = PERIOD_ORDER[a.period] - PERIOD_ORDER[b.period];
+      if (periodDiff !== 0) return periodDiff;
+      const todA = a.timeOfDay ? (TIME_OF_DAY_ORDER[a.timeOfDay] ?? 3) : 3;
+      const todB = b.timeOfDay ? (TIME_OF_DAY_ORDER[b.timeOfDay] ?? 3) : 3;
+      return todA - todB;
     });
   }, [visibleHabits, completedIds, progressTodayIds, selectedDay]);
 
@@ -154,7 +166,9 @@ export function HabitList({ habits, projects, hideHeader, periodFilter, onHabits
                   createdAt={habit.createdAt}
                   activeDays={habit.activeDays}
                   skippedPeriods={habit.skippedPeriods}
+                  timeOfDay={habit.timeOfDay}
                   isSkipped={isHabitSkipped(habit, selectedDay)}
+                  showPeriodLabel={showPeriodLabel}
                   onCompleteChange={handleCompleteChange}
                   projectName={projectName}
                 />

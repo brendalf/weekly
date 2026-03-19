@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useRef } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   Habit,
   Task,
   Project,
   HabitPeriod,
+  HabitTimeOfDay,
   TaskScope,
   filterHabitsByDay,
   isHabitSkipped,
@@ -16,6 +17,7 @@ import {
   LayoutCells,
   LayoutColumns,
   BarsAscendingAlignLeftArrowDown,
+  ChevronsUp,
 } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import type { LayoutPreference } from "@weekly/domain";
@@ -115,8 +117,8 @@ function LayoutSettingsButton({
               Navigation
             </p>
             {([
-              { key: "period-tabs", label: "Period tabs", Icon: LayoutCells },
-              { key: "period-sequential", label: "Period sequential", Icon: BarsAscendingAlignLeftArrowDown },
+              { key: "period-tabs", label: "Tabs", Icon: LayoutCells },
+              { key: "period-sequential", label: "Overview", Icon: BarsAscendingAlignLeftArrowDown },
             ] as { key: LayoutPreference; label: string; Icon: React.ComponentType<{ width?: number; height?: number }> }[]).map(({ key, label, Icon }) => (
               <button
                 key={key}
@@ -165,7 +167,7 @@ function UnifiedAddButton({
   onAddTask,
 }: {
   projects?: Project[];
-  onAddHabit: (name: string, times: number, period: HabitPeriod, projectId?: string, activeDays?: number[]) => void;
+  onAddHabit: (name: string, times: number, period: HabitPeriod, projectId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => void;
   onAddTask: (title: string, projectId?: string, scope?: TaskScope) => void;
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -246,10 +248,10 @@ export function HabitsTasksView({
   }, []);
 
   const handleAddHabit = useCallback(
-    (name: string, times: number, period: HabitPeriod, projectId?: string, activeDays?: number[]) => {
+    (name: string, times: number, period: HabitPeriod, projectId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => {
       const repos = projectId ? getProjectRepos(projectId) : activeRepos;
       const date = selectedDayISO ? new Date(selectedDayISO) : new Date();
-      repos?.habit.addHabit(name, times, period, date, activeDays);
+      repos?.habit.addHabit(name, times, period, date, activeDays, timeOfDay);
     },
     [activeRepos, getProjectRepos, selectedDayISO],
   );
@@ -282,11 +284,29 @@ export function HabitsTasksView({
 
   const isPeriodTabs = layout !== "period-sequential";
 
+  // Overview mode collapse state
+  const [collapsedOverviewHabits, setCollapsedOverviewHabits] = useState(false);
+  const [collapsedOverviewTasks, setCollapsedOverviewTasks] = useState(false);
+
+  const overviewHabitTotal = useMemo(
+    () => filterHabitsByDay(habits, selectedDay).filter((h) => !isHabitSkipped(h, selectedDay)).length,
+    [habits, selectedDay],
+  );
+  const overviewHabitDone = Object.values(habitCompletions).filter(Boolean).length;
+  const overviewTaskTotal = useMemo(
+    () => tasks.filter((t) => getTaskVisibility(t, selectedDay) !== "hidden").length,
+    [tasks, selectedDay],
+  );
+  const overviewTaskDone = useMemo(
+    () => tasks.filter((t) => getTaskVisibility(t, selectedDay) !== "hidden" && t.completed).length,
+    [tasks, selectedDay],
+  );
+
   return (
     <div className="flex flex-col gap-3">
       {/* Controls row — stable position regardless of layout */}
       <div className="flex items-center gap-2">
-        {isPeriodTabs && (
+        {isPeriodTabs ? (
           <div className="flex gap-1">
             {PERIOD_TABS.map(({ period, label }) => {
               const prog = periodProgress.find((p) => p.period === period);
@@ -307,6 +327,14 @@ export function HabitsTasksView({
                 </button>
               );
             })}
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium bg-foreground/8 text-foreground">
+            Overview
+            <PeriodProgress
+              done={periodProgress.reduce((s, p) => s + p.done, 0)}
+              total={periodProgress.reduce((s, p) => s + p.total, 0)}
+            />
           </div>
         )}
 
@@ -339,42 +367,84 @@ export function HabitsTasksView({
                 tasks={tasks}
                 projects={projects}
                 innerLayout={innerLayout}
+                showHabitPeriodLabel={false}
+                showTaskScopeLabel={false}
                 onToggleTaskCompleted={onToggleTaskCompleted}
                 onHabitsCompleted={handleHabitsCompleted}
               />
             </div>
           ))}
         </div>
-      ) : (
-        <div className="flex flex-col gap-6">
-          {PERIOD_TABS.map(({ period, scope, label }) => {
-            const prog = periodProgress.find((p) => p.period === period);
-            return (
-              <div key={period} className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-foreground">{label}</p>
-                  {prog && <PeriodProgress done={prog.done} total={prog.total} />}
-                  {prog && prog.total > 0 && (
-                    <span className="text-xs text-foreground/40 tabular-nums">
-                      {prog.done}/{prog.total}
-                    </span>
-                  )}
-                </div>
-                <PeriodPanel
-                  period={period}
-                  scope={scope}
+      ) : (() => {
+        const habitSection = (
+          <div>
+            <div
+              className="flex items-center gap-1.5 cursor-pointer select-none pb-1"
+              onClick={() => setCollapsedOverviewHabits((v) => !v)}
+            >
+              {collapsedOverviewHabits && (
+                <ChevronsUp width={12} height={12} className="text-foreground/40 shrink-0" />
+              )}
+              <p className="text-xs font-semibold uppercase tracking-wide text-foreground/40">Habits</p>
+              {collapsedOverviewHabits && overviewHabitTotal > 0 && (
+                <p className="text-xs text-foreground/30">{overviewHabitDone}/{overviewHabitTotal}</p>
+              )}
+            </div>
+            <div className={`collapsible${collapsedOverviewHabits ? " collapsed" : ""}`}>
+              <div>
+                <HabitList
+                  hideHeader
                   habits={habits}
-                  tasks={tasks}
                   projects={projects}
-                  innerLayout={innerLayout}
-                  onToggleTaskCompleted={onToggleTaskCompleted}
+                  showPeriodLabel={true}
                   onHabitsCompleted={handleHabitsCompleted}
                 />
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+          </div>
+        );
+        const taskSection = (
+          <div>
+            <div
+              className="flex items-center gap-1.5 cursor-pointer select-none pb-1"
+              onClick={() => setCollapsedOverviewTasks((v) => !v)}
+            >
+              {collapsedOverviewTasks && (
+                <ChevronsUp width={12} height={12} className="text-foreground/40 shrink-0" />
+              )}
+              <p className="text-xs font-semibold uppercase tracking-wide text-foreground/40">Tasks</p>
+              {collapsedOverviewTasks && overviewTaskTotal > 0 && (
+                <p className="text-xs text-foreground/30">{overviewTaskDone}/{overviewTaskTotal}</p>
+              )}
+            </div>
+            <div className={`collapsible${collapsedOverviewTasks ? " collapsed" : ""}`}>
+              <div>
+                <TaskList
+                  hideHeader
+                  tasks={tasks}
+                  onToggleCompleted={onToggleTaskCompleted}
+                  projects={projects}
+                  showScopeLabel={true}
+                />
+              </div>
+            </div>
+          </div>
+        );
+        if (innerLayout === "side-by-side") {
+          return (
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <section>{habitSection}</section>
+              <section>{taskSection}</section>
+            </div>
+          );
+        }
+        return (
+          <div className="flex flex-col gap-3">
+            {habitSection}
+            {taskSection}
+          </div>
+        );
+      })()}
     </div>
   );
 }

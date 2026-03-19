@@ -30,6 +30,7 @@ import {
   type HabitCompletionLog,
   type HabitProgressRepository,
   type HabitRepository,
+  type HabitTimeOfDay,
   type Task,
   type TaskRepository,
   type TaskScope,
@@ -59,6 +60,7 @@ type HabitDoc = {
   createdAt?: Timestamp;
   activeDays?: unknown;
   skippedPeriods?: unknown;
+  timeOfDay?: unknown;
 };
 
 type HabitCompletionDoc = {
@@ -208,18 +210,22 @@ export function createHabitRepository(
               skippedPeriods: Array.isArray(data?.skippedPeriods)
                 ? (data.skippedPeriods as string[]).filter((s) => typeof s === "string")
                 : undefined,
+              timeOfDay: (["morning", "afternoon", "evening"] as HabitTimeOfDay[]).includes(data?.timeOfDay as HabitTimeOfDay)
+                ? data?.timeOfDay as HabitTimeOfDay
+                : undefined,
             };
           },
         );
         onHabits(habits);
       });
     },
-    async addHabit(name: string, times: number, period: HabitPeriod, createdAt?: Date, activeDays?: number[]) {
+    async addHabit(name: string, times: number, period: HabitPeriod, createdAt?: Date, activeDays?: number[], timeOfDay?: HabitTimeOfDay) {
       const date = createdAt ?? new Date();
       const habitRef = doc(habitsCol(db, projectId));
       const batch = writeBatch(db);
       const habitData: Record<string, unknown> = { name, times, period, createdAt: date };
       if (activeDays && activeDays.length > 0) habitData.activeDays = activeDays;
+      if (timeOfDay) habitData.timeOfDay = timeOfDay;
       batch.set(habitRef, habitData);
       const pk = periodKeyOf(date, period);
       batch.set(
@@ -310,11 +316,13 @@ export function createHabitRepository(
       times: number,
       period: HabitPeriod,
       activeDays?: number[],
+      timeOfDay?: HabitTimeOfDay,
     ) {
       const updates: Record<string, unknown> = { name, times, period };
       if (activeDays !== undefined) {
         updates.activeDays = activeDays.length > 0 ? activeDays : null;
       }
+      updates.timeOfDay = timeOfDay ?? null;
       await updateDoc(habitDocRef(db, projectId, habitId), updates);
     },
     async deleteHabit(habitId: string) {
@@ -352,9 +360,7 @@ export function createUserPreferencesRepository(
         const data = snap.data();
         const theme: ThemePreference =
           data?.theme === "light" ? "light" : "dark";
-        const VALID_LAYOUTS: LayoutPreference[] = [
-          "tabs", "side-by-side", "sequential", "period-tabs", "period-sequential",
-        ];
+        const VALID_LAYOUTS: LayoutPreference[] = ["period-tabs", "period-sequential"];
         const layout: LayoutPreference = VALID_LAYOUTS.includes(data?.layout)
           ? (data?.layout as LayoutPreference)
           : "period-tabs";
