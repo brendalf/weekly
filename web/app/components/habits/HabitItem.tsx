@@ -9,6 +9,7 @@ import {
   habitProgress,
   getSkipPeriodKeys,
   periodKeyOf,
+  dayKeyOf,
 } from "@weekly/domain";
 import {
   Flame,
@@ -38,7 +39,7 @@ export interface HabitItemProps {
   activeDays?: number[];
   skippedPeriods?: string[];
   isSkipped?: boolean;
-  onCompleteChange?: (id: string, complete: boolean) => void;
+  onCompleteChange?: (id: string, complete: boolean, hasProgressToday: boolean) => void;
   projectName?: string;
 }
 
@@ -60,6 +61,7 @@ export function HabitItem({
   const repos = getHabitRepos(id);
 
   const [value, setValue] = useState(0);
+  const [dayCounts, setDayCounts] = useState<Record<string, number>>({});
   const [streak, setStreak] = useState<{
     currentStrikeLength: number;
     openSincePeriodKey: string | null;
@@ -85,7 +87,10 @@ export function HabitItem({
       id,
       period,
       referenceDate,
-      ({ count }: { count: number }) => setValue(count),
+      ({ count, dayCounts }: { count: number; dayCounts: Record<string, number> }) => {
+        setValue(count);
+        setDayCounts(dayCounts);
+      },
     );
     return () => unsub();
   }, [repos, id, period, referenceDate]);
@@ -105,9 +110,13 @@ export function HabitItem({
 
   const { progress, complete } = habitProgress(value, target);
 
+  const hasProgressToday =
+    (period === HabitPeriod.Week || period === HabitPeriod.Month) &&
+    (dayCounts[dayKeyOf(referenceDate)] ?? 0) > 0;
+
   useEffect(() => {
-    if (!isSkipped) onCompleteChange?.(id, complete);
-  }, [id, complete, onCompleteChange, isSkipped]);
+    if (!isSkipped) onCompleteChange?.(id, complete, hasProgressToday);
+  }, [id, complete, hasProgressToday, onCompleteChange, isSkipped]);
 
   function openMenu() {
     setMenuView("main");

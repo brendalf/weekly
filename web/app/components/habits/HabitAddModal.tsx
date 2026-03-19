@@ -27,12 +27,16 @@ interface HabitAddModalProps {
   ) => void;
   trigger?: ReactElement;
   projects?: { id: string; name: string }[];
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function HabitAddModal({
   onSubmit,
   trigger,
   projects,
+  isOpen,
+  onOpenChange,
 }: HabitAddModalProps) {
   const [name, setName] = useState("");
   const [times, setTimes] = useState("1");
@@ -76,8 +80,10 @@ export function HabitAddModal({
 
   return (
     <Modal
-      onOpenChange={(isOpen) => {
-        if (!isOpen) reset();
+      isOpen={isOpen}
+      onOpenChange={(open) => {
+        if (!open) reset();
+        onOpenChange?.(open);
       }}
     >
       {trigger ?? <Button size="sm">Add habit</Button>}

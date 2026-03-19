@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Task, TaskScope } from "@weekly/domain";
-import { Checkbox, Label } from "@heroui/react";
+import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
 import { TaskDetailsModal } from "./TaskDetailsModal";
 
 const SCOPE_LABELS: Record<TaskScope, string> = {
@@ -42,18 +42,24 @@ export function TaskItem({
           task.completed ? "opacity-50" : "",
         ].join(" ")}
       >
-        <Checkbox
-          id={task.id}
-          isSelected={task.completed}
-          onChange={() => onToggleCompleted(task.id)}
+        <div onClick={(e) => e.stopPropagation()}>
+          <CircularCheckboxProgress
+            size={28}
+            stroke={4}
+            progress={task.completed ? 1 : 0}
+            complete={task.completed}
+            onClick={() => onToggleCompleted(task.id)}
+            ariaLabel={task.completed ? "Mark incomplete" : "Mark complete"}
+          />
+        </div>
+        <span
+          className={[
+            "flex-1 truncate text-sm text-foreground",
+            task.completed ? "line-through" : "",
+          ].join(" ")}
         >
-          <Checkbox.Control className="border-2 rounded-full before:rounded-full border-purple-500 data-[selected=true]:bg-purple-500 before:bg-purple-500">
-            <Checkbox.Indicator />
-          </Checkbox.Control>
-          <Checkbox.Content>
-            <Label htmlFor={task.id}>{task.title}</Label>
-          </Checkbox.Content>
-        </Checkbox>
+          {task.title}
+        </span>
         <div className="ml-auto flex shrink-0 items-center gap-1">
           <span className={["rounded-full px-1.5 py-0.5 text-xs font-medium", SCOPE_COLORS[scope]].join(" ")}>
             {SCOPE_LABELS[scope]}

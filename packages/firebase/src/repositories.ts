@@ -352,12 +352,12 @@ export function createUserPreferencesRepository(
         const data = snap.data();
         const theme: ThemePreference =
           data?.theme === "light" ? "light" : "dark";
-        const layout: LayoutPreference =
-          data?.layout === "side-by-side"
-            ? "side-by-side"
-            : data?.layout === "sequential"
-              ? "sequential"
-              : "tabs";
+        const VALID_LAYOUTS: LayoutPreference[] = [
+          "tabs", "side-by-side", "sequential", "period-tabs", "period-sequential",
+        ];
+        const layout: LayoutPreference = VALID_LAYOUTS.includes(data?.layout)
+          ? (data?.layout as LayoutPreference)
+          : "period-tabs";
         onPreferences({ theme, layout });
       });
     },

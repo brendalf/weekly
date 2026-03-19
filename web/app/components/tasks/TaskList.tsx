@@ -14,6 +14,7 @@ interface TaskListProps {
   onToggleCompleted: (taskId: string) => void;
   projects?: Project[];
   hideHeader?: boolean;
+  scopeFilter?: TaskScope;
 }
 
 function scopeToPeriod(scope: TaskScope): HabitPeriod {
@@ -27,6 +28,7 @@ export function TaskList({
   onToggleCompleted,
   projects,
   hideHeader,
+  scopeFilter,
 }: TaskListProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { activeRepos, getProjectRepos, getTaskProjectId } =
@@ -45,7 +47,8 @@ export function TaskList({
       task,
       visibility: getTaskVisibility(task, selectedDay),
     }))
-    .filter(({ visibility }) => visibility !== "hidden");
+    .filter(({ visibility }) => visibility !== "hidden")
+    .filter(({ task }) => scopeFilter === undefined || (task.scope ?? "week") === scopeFilter);
 
   const completedCount = visibleTasks.filter(({ task }) => task.completed).length;
 

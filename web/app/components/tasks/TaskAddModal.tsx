@@ -18,6 +18,8 @@ interface TaskAddModalProps {
   onSubmit: (title: string, projectId?: string, scope?: TaskScope) => void;
   trigger?: ReactElement;
   projects?: { id: string; name: string }[];
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const SCOPE_OPTIONS: { value: TaskScope; label: string }[] = [
@@ -30,6 +32,8 @@ export function TaskAddModal({
   onSubmit,
   trigger,
   projects,
+  isOpen,
+  onOpenChange,
 }: TaskAddModalProps) {
   const [title, setTitle] = useState("");
   const [projectId, setProjectId] = useState<string>(projects?.[0]?.id ?? "");
@@ -48,12 +52,14 @@ export function TaskAddModal({
 
   return (
     <Modal
-      onOpenChange={(isOpen) => {
-        if (!isOpen) {
+      isOpen={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
           setTitle("");
           setProjectId(projects?.[0]?.id ?? "");
           setScope("week");
         }
+        onOpenChange?.(open);
       }}
     >
       {trigger ?? <Button size="sm">Add task</Button>}

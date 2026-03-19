@@ -9,18 +9,26 @@ import { HabitAddModal } from "./HabitAddModal";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useCalendarStore } from "../../stores/calendar";
 
+const PERIOD_ORDER: Record<HabitPeriod, number> = {
+  [HabitPeriod.Day]: 0,
+  [HabitPeriod.Week]: 1,
+  [HabitPeriod.Month]: 2,
+};
+
 interface HabitListProps {
   habits: Habit[];
   projects?: Project[];
   hideHeader?: boolean;
+  periodFilter?: HabitPeriod;
   onHabitsCompleted?: (completions: Record<string, boolean>) => void;
 }
 
-export function HabitList({ habits, projects, hideHeader, onHabitsCompleted }: HabitListProps) {
+export function HabitList({ habits, projects, hideHeader, periodFilter, onHabitsCompleted }: HabitListProps) {
   const { activeRepos, getProjectRepos, getHabitProjectId } =
     useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [progressTodayIds, setProgressTodayIds] = useState<Set<string>>(new Set());
   const [collapsed, setCollapsed] = useState(false);
 
   const selectedDay = useMemo(
@@ -28,10 +36,13 @@ export function HabitList({ habits, projects, hideHeader, onHabitsCompleted }: H
     [selectedDayISO],
   );
 
-  const visibleHabits = useMemo(
-    () => filterHabitsByDay(habits, selectedDay),
-    [habits, selectedDay],
-  );
+  const visibleHabits = useMemo(() => {
+    const filtered = filterHabitsByDay(habits, selectedDay);
+    if (periodFilter !== undefined) {
+      return filtered.filter((h) => h.period === periodFilter);
+    }
+    return filtered;
+  }, [habits, selectedDay, periodFilter]);
 
   const visibleHabitIds = useMemo(
     () => visibleHabits.map((h) => h.id).join(","),
@@ -47,10 +58,16 @@ export function HabitList({ habits, projects, hideHeader, onHabitsCompleted }: H
     onHabitsCompleted(completions);
   }, [completedIds, onHabitsCompleted, visibleHabitIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleCompleteChange = useCallback((id: string, complete: boolean) => {
+  const handleCompleteChange = useCallback((id: string, complete: boolean, hasProgressToday: boolean) => {
     setCompletedIds((prev) => {
       const next = new Set(prev);
       if (complete) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+    setProgressTodayIds((prev) => {
+      const next = new Set(prev);
+      if (hasProgressToday) next.add(id);
       else next.delete(id);
       return next;
     });
@@ -68,13 +85,23 @@ export function HabitList({ habits, projects, hideHeader, onHabitsCompleted }: H
     repos?.habit.addHabit(name, times, period, date, activeDays);
   };
 
-  const sorted = useMemo(
-    () =>
-      [...visibleHabits].sort(
-        (a, b) => Number(completedIds.has(a.id)) - Number(completedIds.has(b.id)),
-      ),
-    [visibleHabits, completedIds],
-  );
+  const sorted = useMemo(() => {
+    const skippedIds = new Set(
+      visibleHabits.filter((h) => isHabitSkipped(h, selectedDay)).map((h) => h.id),
+    );
+
+    const getGroup = (h: Habit): number => {
+      if (skippedIds.has(h.id)) return 1;
+      if (completedIds.has(h.id) || progressTodayIds.has(h.id)) return 2;
+      return 0;
+    };
+
+    return [...visibleHabits].sort((a, b) => {
+      const groupDiff = getGroup(a) - getGroup(b);
+      if (groupDiff !== 0) return groupDiff;
+      return PERIOD_ORDER[a.period] - PERIOD_ORDER[b.period];
+    });
+  }, [visibleHabits, completedIds, progressTodayIds, selectedDay]);
 
   return (
     <div className="flex flex-col gap-2">

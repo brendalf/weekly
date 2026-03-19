@@ -34,7 +34,7 @@ export default function AppPage() {
 
   const personalProjectCreatedRef = useRef(false);
   const { setTheme } = useContext(ThemeContext);
-  const [layout, setLayout] = useState<LayoutPreference>("tabs");
+  const [layout, setLayout] = useState<LayoutPreference>("period-tabs");
 
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const selectedDayLabel = formatDayLabel(
