@@ -5,19 +5,28 @@ import {
   collection,
   doc,
   setDoc,
+  addDoc,
   updateDoc,
   deleteDoc,
   getDoc,
   onSnapshot,
   query,
   where,
+  orderBy,
+  limit,
   serverTimestamp,
   writeBatch,
   arrayUnion,
   arrayRemove,
+  Timestamp,
 } from "firebase/firestore";
 
-import type { Project, ProjectInvite, ProjectRepository } from "@weekly/domain";
+import type {
+  Project,
+  ProjectInvite,
+  ActivityNotification,
+  ProjectRepository,
+} from "@weekly/domain";
 
 type ProjectDoc = {
   name?: unknown;
@@ -26,6 +35,37 @@ type ProjectDoc = {
   members?: unknown[];
   pendingInviteEmails?: unknown[];
 };
+
+type ActivityDoc = {
+  type?: unknown;
+  actorUid?: unknown;
+  actorDisplayName?: unknown;
+  itemId?: unknown;
+  itemName?: unknown;
+  createdAt?: { toDate?: () => Date };
+};
+
+function toActivity(
+  id: string,
+  projectId: string,
+  data: ActivityDoc,
+): ActivityNotification {
+  return {
+    id,
+    projectId,
+    type:
+      data.type === "habit_completed" || data.type === "task_completed"
+        ? data.type
+        : "task_completed",
+    actorUid: typeof data.actorUid === "string" ? data.actorUid : "",
+    actorDisplayName:
+      typeof data.actorDisplayName === "string" ? data.actorDisplayName : "",
+    itemId: typeof data.itemId === "string" ? data.itemId : "",
+    itemName: typeof data.itemName === "string" ? data.itemName : "",
+    createdAt:
+      data.createdAt?.toDate?.().toISOString() ?? new Date().toISOString(),
+  };
+}
 
 type InviteDoc = {
   projectId?: unknown;
@@ -45,7 +85,9 @@ function toProject(id: string, data: ProjectDoc): Project {
       ? (data.members.filter((m) => typeof m === "string") as string[])
       : [],
     pendingInviteEmails: Array.isArray(data.pendingInviteEmails)
-      ? (data.pendingInviteEmails.filter((e) => typeof e === "string") as string[])
+      ? (data.pendingInviteEmails.filter(
+          (e) => typeof e === "string",
+        ) as string[])
       : [],
     createdAt:
       data.createdAt?.toDate?.().toISOString() ?? new Date().toISOString(),
@@ -56,8 +98,7 @@ function toInvite(id: string, data: InviteDoc): ProjectInvite {
   return {
     id,
     projectId: typeof data.projectId === "string" ? data.projectId : "",
-    projectName:
-      typeof data.projectName === "string" ? data.projectName : "",
+    projectName: typeof data.projectName === "string" ? data.projectName : "",
     invitedByUserId:
       typeof data.invitedByUserId === "string" ? data.invitedByUserId : "",
     invitedByDisplayName:
@@ -172,32 +213,27 @@ export function createProjectRepository(db: Firestore): ProjectRepository {
         inviteId,
       );
 
-      if (accept) {
-        const inviteSnap = await getDoc(inviteRef);
-        const inviteData = inviteSnap.data() as InviteDoc | undefined;
-        if (!inviteData) return;
+      const inviteSnap = await getDoc(inviteRef);
+      const inviteData = inviteSnap.data() as InviteDoc | undefined;
+      if (!inviteData) return;
 
-        const projectId = String(inviteData.projectId);
-        const batch = writeBatch(db);
+      const projectId = String(inviteData.projectId);
+      const batch = writeBatch(db);
+
+      if (accept) {
         batch.update(inviteRef, { status: "accepted" });
         batch.update(doc(db, "projects", projectId), {
           members: arrayUnion(userId),
           pendingInviteEmails: arrayRemove(userEmail),
         });
-        await batch.commit();
       } else {
-        const inviteSnap = await getDoc(inviteRef);
-        const inviteData = inviteSnap.data() as InviteDoc | undefined;
-        if (!inviteData) return;
-
-        const projectId = String(inviteData.projectId);
-        const batch = writeBatch(db);
         batch.update(inviteRef, { status: "declined" });
         batch.update(doc(db, "projects", projectId), {
           pendingInviteEmails: arrayRemove(userEmail),
         });
-        await batch.commit();
       }
+
+      await batch.commit();
     },
 
     subscribeInvites(
@@ -214,6 +250,38 @@ export function createProjectRepository(db: Firestore): ProjectRepository {
             toInvite(d.id, d.data() as InviteDoc),
         );
         onInvites(invites);
+      });
+    },
+
+    subscribeProjectActivities(
+      projectId: string,
+      currentUserId: string,
+      onActivities: (activities: ActivityNotification[]) => void,
+    ) {
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const q = query(
+        collection(db, "projects", projectId, "activities"),
+        where("createdAt", ">", Timestamp.fromDate(since)),
+        orderBy("createdAt", "desc"),
+        limit(50),
+      );
+      return onSnapshot(q, (snap) => {
+        const activities = snap.docs
+          .map((d: QueryDocumentSnapshot<DocumentData>) =>
+            toActivity(d.id, projectId, d.data() as ActivityDoc),
+          )
+          .filter((a) => a.actorUid !== currentUserId);
+        onActivities(activities);
+      });
+    },
+
+    async logActivity(
+      projectId: string,
+      activity: Omit<ActivityNotification, "id" | "createdAt" | "projectId">,
+    ) {
+      await addDoc(collection(db, "projects", projectId, "activities"), {
+        ...activity,
+        createdAt: serverTimestamp(),
       });
     },
   };

@@ -23,6 +23,8 @@ import { SkipMenu } from "./SkipMenu";
 import { useCalendarStore } from "../../stores/calendar";
 import { HabitDetailsModal } from "./HabitDetailsModal";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
+import { projectRepository } from "../../repositories";
+import { auth } from "../../config/firebase";
 
 const PERIOD_BADGE: Record<HabitPeriod, { label: string; className: string }> = {
   [HabitPeriod.Day]: { label: "Today", className: "bg-blue-500/15 text-blue-600 dark:text-blue-400" },
@@ -61,7 +63,7 @@ export function HabitItem({
   onCompleteChange,
   projectName,
 }: HabitItemProps) {
-  const { getHabitRepos } = useRepositoryContext();
+  const { getHabitRepos, getHabitProjectId } = useRepositoryContext();
   const repos = getHabitRepos(id);
 
   const [value, setValue] = useState(0);
@@ -137,6 +139,29 @@ export function HabitItem({
     setMenuView("main");
   }
 
+  async function handleIncrement() {
+    if (!repos || isSkipped) return;
+    await repos.habitProgress.incrementHabit(id, period, target, referenceDate);
+    // Log activity when this increment completes the habit
+    if (value + 1 >= target) {
+      const projectId = getHabitProjectId(id);
+      const user = auth.currentUser;
+      if (projectId && user) {
+        try {
+          await projectRepository.logActivity(projectId, {
+            type: "habit_completed",
+            actorUid: user.uid,
+            actorDisplayName: user.displayName ?? "User",
+            itemId: id,
+            itemName: name,
+          });
+        } catch {
+          // non-critical, ignore
+        }
+      }
+    }
+  }
+
   const size = 28;
   const stroke = 4;
 
@@ -160,11 +185,7 @@ export function HabitItem({
             stroke={stroke}
             progress={isSkipped ? 0 : progress}
             complete={!isSkipped && complete}
-            onClick={
-              isSkipped
-                ? undefined
-                : () => repos?.habitProgress.incrementHabit(id, period, target, referenceDate)
-            }
+            onClick={isSkipped ? undefined : handleIncrement}
             ariaLabel={complete ? "Completed" : "Mark one done"}
           />
 

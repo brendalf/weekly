@@ -1,4 +1,5 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -14,7 +15,7 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && request.auth.token.email == email;
     }
 
-    // isMember: only used for subcollections (reads parent doc — no recursion)
+    // Projects
     function isMember(projectId) {
       return request.auth != null &&
         exists(/databases/$(database)/documents/projects/$(projectId)) &&
@@ -22,12 +23,19 @@ service cloud.firestore {
     }
 
     match /projects/{projectId} {
-      // resource.data used directly — avoids recursive get() on this same document.
-      // members array includes the owner, so one check covers both.
-      allow read:   if request.auth != null && request.auth.uid in resource.data.members;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
-      allow update: if request.auth != null && request.auth.uid in resource.data.members;
-      allow delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+      allow read: if request.auth != null &&
+        (request.auth.uid in resource.data.members ||
+        request.auth.uid == request.resource.data.ownerId);
+      allow create: if request.auth != null &&
+        request.auth.uid == request.resource.data.ownerId;
+      allow update: if request.auth != null && (
+         request.auth.uid in resource.data.members ||
+         (request.auth.token.email in resource.data.pendingInviteEmails &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['members', 'pendingInviteEmails']))
+      );
+      allow delete: if request.auth != null &&
+        request.auth.uid == resource.data.ownerId;
 
       match /tasks/{taskId} {
         allow read, write: if isMember(projectId);
@@ -39,6 +47,9 @@ service cloud.firestore {
         }
       }
       match /habitProgress/{progressId} {
+        allow read, write: if isMember(projectId);
+      }
+      match /activities/{actId} {
         allow read, write: if isMember(projectId);
       }
     }

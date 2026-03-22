@@ -1,12 +1,14 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import type { Project, ProjectInvite } from "@weekly/domain";
+import type { Project, ProjectInvite, ActivityNotification } from "@weekly/domain";
 
 interface ProjectState {
   projects: Project[];
   activeProjectId: string | null;
   pendingInvites: ProjectInvite[];
+  activityNotifications: ActivityNotification[];
+  lastNotificationReadAt: string | null;
 }
 
 type Listener = () => void;
@@ -15,6 +17,8 @@ let state: ProjectState = {
   projects: [],
   activeProjectId: null,
   pendingInvites: [],
+  activityNotifications: [],
+  lastNotificationReadAt: null,
 };
 
 const listeners = new Set<Listener>();
@@ -44,6 +48,12 @@ export const projectStore = {
   },
   setPendingInvites(invites: ProjectInvite[]) {
     setState({ pendingInvites: invites });
+  },
+  setActivityNotifications(activities: ActivityNotification[]) {
+    setState({ activityNotifications: activities });
+  },
+  setLastNotificationReadAt(ts: string) {
+    setState({ lastNotificationReadAt: ts });
   },
 };
 

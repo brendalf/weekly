@@ -8,7 +8,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import type { LayoutPreference } from "@weekly/domain";
+import type { LayoutPreference, ActivityNotification } from "@weekly/domain";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { formatDayLabel } from "@weekly/domain";
 import { ArrowRightFromSquare } from "@gravity-ui/icons";
@@ -24,13 +24,14 @@ import { auth } from "../config/firebase";
 import { ThemeContext } from "../providers";
 import { ThemeToggleButton } from "../components/general/ThemeToggleButton";
 import { ProjectSwitcher } from "../components/projects/ProjectSwitcher";
-import { InviteNotification } from "../components/projects/InviteNotification";
+import { NotificationBell } from "../components/projects/NotificationBell";
 import { useProjectData } from "../hooks/useProjectData";
 
 export default function AppPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+
 
   const personalProjectCreatedRef = useRef(false);
   const { setTheme } = useContext(ThemeContext);
@@ -97,18 +98,62 @@ export default function AppPage() {
     });
   }, [user?.email]);
 
+  // Subscribe to activity notifications across all projects
+  useEffect(() => {
+    if (!userId || projects.length === 0) return;
+
+    const activitiesPerProject = new Map<string, ActivityNotification[]>();
+    const unsubs: (() => void)[] = [];
+
+    for (const project of projects) {
+      unsubs.push(
+        projectRepository.subscribeProjectActivities(
+          project.id,
+          userId,
+          (acts) => {
+            activitiesPerProject.set(project.id, acts);
+            const all = [...activitiesPerProject.values()].flat();
+            all.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+            projectStore.setActivityNotifications(all);
+          },
+        ),
+      );
+    }
+
+    return () => unsubs.forEach((u) => u());
+  }, [userId, projects]);
+
   const handleLayoutChange = useCallback(async (newLayout: LayoutPreference) => {
     if (!userId) return;
     setLayout(newLayout);
     await userPreferencesRepository.updateLayout(userId, newLayout);
   }, [userId]);
 
-  function handleToggleTaskCompleted(taskId: string) {
+  async function handleToggleTaskCompleted(taskId: string) {
     const repos = getTaskRepos(taskId);
     if (!repos) return;
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
-    repos.task.toggleTask(task);
+
+    const wasCompleted = task.completed;
+    await repos.task.toggleTask(task);
+    if (!wasCompleted && user) {
+      const projectId = getTaskProjectId(taskId);
+      const project = projects.find((p) => p.id === projectId);
+      if (projectId && project && project.members.length > 1) {
+        try {
+          await projectRepository.logActivity(projectId, {
+            type: "task_completed",
+            actorUid: user.uid,
+            actorDisplayName: user.displayName ?? "User",
+            itemId: taskId,
+            itemName: task.title,
+          });
+        } catch {
+          // non-critical
+        }
+      }
+    }
   }
 
   async function handleLogout() {
@@ -135,7 +180,7 @@ export default function AppPage() {
               <div className="flex items-center justify-between">
                 <ProjectSwitcher />
                 <div className="flex items-center gap-3 sm:hidden">
-                  {user?.email && <InviteNotification />}
+                  <NotificationBell />
                   <ThemeToggleButton userId={userId} />
                   <Button variant="danger" size="sm" isIconOnly aria-label="Log out" onPress={handleLogout}>
                     <ArrowRightFromSquare />
@@ -148,7 +193,6 @@ export default function AppPage() {
             </div>
 
             <div className="hidden sm:flex items-center gap-3">
-              {user?.email && <InviteNotification />}
               <div className="flex flex-col items-end">
                 <p className="text-sm font-medium text-foreground">
                   {user?.displayName ?? "Signed in"}
@@ -157,6 +201,7 @@ export default function AppPage() {
                   {user?.email ?? ""}
                 </p>
               </div>
+              <NotificationBell />
               <ThemeToggleButton userId={userId} />
               <Button variant="danger" size="sm" isIconOnly aria-label="Log out" onPress={handleLogout}>
                 <ArrowRightFromSquare />

@@ -1,4 +1,4 @@
-import type { Project, ProjectInvite } from '../models/project';
+import type { Project, ProjectInvite, ActivityNotification } from '../models/project';
 import type { Unsubscribe } from './types';
 
 export interface ProjectRepository {
@@ -25,4 +25,13 @@ export interface ProjectRepository {
     userEmail: string,
     onInvites: (invites: ProjectInvite[]) => void,
   ): Unsubscribe;
+  subscribeProjectActivities(
+    projectId: string,
+    currentUserId: string,
+    onActivities: (activities: ActivityNotification[]) => void,
+  ): Unsubscribe;
+  logActivity(
+    projectId: string,
+    activity: Omit<ActivityNotification, 'id' | 'createdAt' | 'projectId'>,
+  ): Promise<void>;
 }

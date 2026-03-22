@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { Toaster } from "sonner";
 import "./globals.css";
 import { AppProviders } from "./providers";
 
@@ -28,6 +29,7 @@ export default function RootLayout({
     <html lang="en" className="dark" data-theme="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
         <AppProviders>{children}</AppProviders>
+        <Toaster richColors position="bottom-right" />
         <Analytics />
       </body>
     </html>

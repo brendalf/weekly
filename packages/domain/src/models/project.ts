@@ -16,3 +16,14 @@ export interface ProjectInvite {
   status: 'pending' | 'accepted' | 'declined';
   createdAt: string;
 }
+
+export interface ActivityNotification {
+  id: string;
+  projectId: string;
+  type: 'habit_completed' | 'task_completed';
+  actorUid: string;
+  actorDisplayName: string;
+  itemId: string;
+  itemName: string;
+  createdAt: string;
+}
