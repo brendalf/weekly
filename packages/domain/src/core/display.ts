@@ -72,6 +72,13 @@ export function formatDayLabel(date: Date): string {
 /** Sunday–Saturday single-character labels for weekday pickers. */
 export const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"] as const;
 
+/** Short display label for a period ("Today", "Week", "Month"). */
+export function getPeriodLabel(period: HabitPeriod): string {
+  if (period === HabitPeriod.Day) return "Today";
+  if (period === HabitPeriod.Week) return "Week";
+  return "Month";
+}
+
 /** Sort order for HabitPeriod values. */
 export const PERIOD_ORDER: Record<HabitPeriod, number> = {
   [HabitPeriod.Day]: 0,

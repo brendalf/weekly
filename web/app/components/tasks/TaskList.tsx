@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Task, TaskScope, Project, getTaskVisibility, taskPeriodKey, formatPeriodKey, scopeToPeriod } from "@weekly/domain";
+import {
+  Task,
+  TaskScope,
+  Project,
+  getTaskVisibility,
+  taskPeriodKey,
+  formatPeriodKey,
+  scopeToPeriod,
+} from "@weekly/domain";
 import { Plus } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { TaskAddModal } from "./TaskAddModal";
@@ -18,7 +26,6 @@ interface TaskListProps {
   showScopeLabel?: boolean;
 }
 
-
 export function TaskList({
   tasks,
   onToggleCompleted,
@@ -33,7 +40,11 @@ export function TaskList({
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const selectedDay = selectedDayISO ? new Date(selectedDayISO) : new Date();
 
-  const handleAddTask = (title: string, projectId?: string, scope?: TaskScope) => {
+  const handleAddTask = (
+    title: string,
+    projectId?: string,
+    scope?: TaskScope,
+  ) => {
     const repos = projectId ? getProjectRepos(projectId) : activeRepos;
     repos?.task.addTask(title, scope, selectedDay);
   };
@@ -45,9 +56,14 @@ export function TaskList({
       visibility: getTaskVisibility(task, selectedDay),
     }))
     .filter(({ visibility }) => visibility !== "hidden")
-    .filter(({ task }) => scopeFilter === undefined || (task.scope ?? "week") === scopeFilter);
+    .filter(
+      ({ task }) =>
+        scopeFilter === undefined || (task.scope ?? "week") === scopeFilter,
+    );
 
-  const completedCount = visibleTasks.filter(({ task }) => task.completed).length;
+  const completedCount = visibleTasks.filter(
+    ({ task }) => task.completed,
+  ).length;
 
   return (
     <div className="flex flex-col gap-2">
@@ -70,7 +86,12 @@ export function TaskList({
                 onSubmit={handleAddTask}
                 projects={projects}
                 trigger={
-                  <Button size="sm" isIconOnly aria-label="Add task" variant="ghost">
+                  <Button
+                    size="sm"
+                    isIconOnly
+                    aria-label="Add task"
+                    variant="ghost"
+                  >
                     <Plus />
                   </Button>
                 }
@@ -87,14 +108,21 @@ export function TaskList({
           )}
           <div className="flex flex-col gap-0.5 pt-1">
             {[...visibleTasks]
-              .sort((a, b) => Number(a.task.completed) - Number(b.task.completed))
+              .sort(
+                (a, b) => Number(a.task.completed) - Number(b.task.completed),
+              )
               .map(({ task, visibility }) => {
                 const projectName = projects
-                  ? projects.find((p) => p.id === getTaskProjectId(task.id))?.name
+                  ? projects.find((p) => p.id === getTaskProjectId(task.id))
+                      ?.name
                   : undefined;
-                const openSinceLabel = visibility === "past_open"
-                  ? `since ${formatPeriodKey(taskPeriodKey(task), scopeToPeriod(task.scope ?? "week"))}`
-                  : undefined;
+                const openSinceLabel =
+                  visibility === "past_open"
+                    ? formatPeriodKey(
+                        taskPeriodKey(task),
+                        scopeToPeriod(task.scope ?? "week"),
+                      )
+                    : undefined;
                 return (
                   <TaskItem
                     key={task.id}

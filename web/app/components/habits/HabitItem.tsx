@@ -19,6 +19,7 @@ import {
 } from "@gravity-ui/icons";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
 import { Badge } from "../general/Badge";
+import { PeriodBadge } from "../general/PeriodBadge";
 import { SkipMenu } from "./SkipMenu";
 import { useCalendarStore } from "../../stores/calendar";
 import { HabitDetailsModal } from "./HabitDetailsModal";
@@ -26,11 +27,6 @@ import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { projectRepository } from "../../repositories";
 import { auth } from "../../config/firebase";
 
-const PERIOD_BADGE: Record<HabitPeriod, { label: string; className: string }> = {
-  [HabitPeriod.Day]: { label: "Today", className: "bg-blue-500/15 text-blue-600 dark:text-blue-400" },
-  [HabitPeriod.Week]: { label: "This week", className: "bg-purple-500/15 text-purple-600 dark:text-purple-400" },
-  [HabitPeriod.Month]: { label: "This month", className: "bg-teal-500/15 text-teal-600 dark:text-teal-400" },
-};
 
 export interface HabitItemProps {
   id: string;
@@ -43,7 +39,11 @@ export interface HabitItemProps {
   timeOfDay?: HabitTimeOfDay;
   isSkipped?: boolean;
   showPeriodLabel?: boolean;
-  onCompleteChange?: (id: string, complete: boolean, hasProgressToday: boolean) => void;
+  onCompleteChange?: (
+    id: string,
+    complete: boolean,
+    hasProgressToday: boolean,
+  ) => void;
   projectName?: string;
 }
 
@@ -76,7 +76,9 @@ export function HabitItem({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuView, setMenuView] = useState<MenuView>("main");
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(
+    null,
+  );
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
@@ -94,7 +96,13 @@ export function HabitItem({
       id,
       period,
       referenceDate,
-      ({ count, dayCounts }: { count: number; dayCounts: Record<string, number> }) => {
+      ({
+        count,
+        dayCounts,
+      }: {
+        count: number;
+        dayCounts: Record<string, number>;
+      }) => {
         setValue(count);
         setDayCounts(dayCounts);
       },
@@ -128,7 +136,10 @@ export function HabitItem({
   function openMenu() {
     if (menuButtonRef.current) {
       const rect = menuButtonRef.current.getBoundingClientRect();
-      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+      setMenuPos({
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      });
     }
     setMenuView("main");
     setMenuOpen(true);
@@ -170,9 +181,7 @@ export function HabitItem({
 
   return (
     <>
-      <div
-        className="flex items-center gap-2 rounded-lg border border-foreground/10 bg-background p-2 hover:border-foreground/20 transition-colors"
-      >
+      <div className="flex items-center gap-2 rounded-lg border border-foreground/10 bg-background p-2 hover:border-foreground/20 transition-colors">
         {/* Inner content that gets dimmed when skipped/complete */}
         <div
           className={[
@@ -189,6 +198,12 @@ export function HabitItem({
             ariaLabel={complete ? "Completed" : "Mark one done"}
           />
 
+          {projectName && !isSkipped && (
+            <Badge className="shrink-0 bg-foreground/10 text-foreground/50">
+              {projectName}
+            </Badge>
+          )}
+
           <button
             onClick={() => setDetailsOpen(true)}
             className="flex flex-1 cursor-pointer items-center justify-between gap-3 overflow-hidden text-left"
@@ -202,18 +217,11 @@ export function HabitItem({
               {name}
             </span>
             {showPeriodLabel && !isSkipped && (
-              <Badge className={["shrink-0", PERIOD_BADGE[period].className].join(" ")}>
-                {PERIOD_BADGE[period].label}
-              </Badge>
+              <PeriodBadge period={period} />
             )}
             {isSkipped && (
               <Badge className="shrink-0 bg-foreground/10 text-foreground/50">
                 Skipped
-              </Badge>
-            )}
-            {projectName && !isSkipped && (
-              <Badge className="shrink-0 bg-foreground/10 text-foreground/50">
-                {projectName}
               </Badge>
             )}
             {!isSkipped && (
@@ -228,7 +236,7 @@ export function HabitItem({
               </span>
             )}
             {!isSkipped && streak?.openSincePeriodKey && (
-              <Badge className="bg-foreground/10 text-foreground/50">
+              <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400">
                 {formatPeriodKey(streak.openSincePeriodKey, period)}
               </Badge>
             )}
@@ -242,7 +250,8 @@ export function HabitItem({
               ref={menuButtonRef}
               onClick={(e) => {
                 e.stopPropagation();
-                if (menuOpen) closeMenu(); else openMenu();
+                if (menuOpen) closeMenu();
+                else openMenu();
               }}
               className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-foreground/40 hover:text-foreground/70 transition-colors"
               aria-label="More options"
@@ -250,64 +259,74 @@ export function HabitItem({
               <Ellipsis width={14} height={14} />
             </button>
 
-            {menuOpen && menuPos && createPortal(
-              <>
-                <div className="fixed inset-0 z-40" onClick={closeMenu} />
-                <div
-                  className="fixed z-50 w-52 overflow-hidden rounded-xl border border-foreground/15 bg-background shadow-xl"
-                  style={{ top: menuPos.top, right: menuPos.right }}
-                >
-                  {/* ── Level 1: main ── */}
-                  {menuView === "main" && (
-                    <div className="p-1">
-                      {isSkipped ? (
-                        <button onClick={closeMenu} className={menuItemClass}>
-                          <CirclePlay width={14} height={14} className="shrink-0 text-foreground/60" />
-                          Unskip
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setMenuView("options")}
-                          className={menuItemClass}
-                        >
-                          <CirclePause width={14} height={14} className="shrink-0 text-foreground/60" />
-                          Skip
-                          <ArrowChevronLeft
-                            width={12}
-                            height={12}
-                            className="ml-auto rotate-180 text-foreground/30"
-                          />
-                        </button>
-                      )}
-                    </div>
-                  )}
+            {menuOpen &&
+              menuPos &&
+              createPortal(
+                <>
+                  <div className="fixed inset-0 z-40" onClick={closeMenu} />
+                  <div
+                    className="fixed z-50 w-52 overflow-hidden rounded-xl border border-foreground/15 bg-background shadow-xl"
+                    style={{ top: menuPos.top, right: menuPos.right }}
+                  >
+                    {/* ── Level 1: main ── */}
+                    {menuView === "main" && (
+                      <div className="p-1">
+                        {isSkipped ? (
+                          <button onClick={closeMenu} className={menuItemClass}>
+                            <CirclePlay
+                              width={14}
+                              height={14}
+                              className="shrink-0 text-foreground/60"
+                            />
+                            Unskip
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setMenuView("options")}
+                            className={menuItemClass}
+                          >
+                            <CirclePause
+                              width={14}
+                              height={14}
+                              className="shrink-0 text-foreground/60"
+                            />
+                            Skip
+                            <ArrowChevronLeft
+                              width={12}
+                              height={12}
+                              className="ml-auto rotate-180 text-foreground/30"
+                            />
+                          </button>
+                        )}
+                      </div>
+                    )}
 
-                  {/* ── Level 2: skip options (via SkipMenu) ── */}
-                  {menuView === "options" && (
-                    <div className="p-1">
-                      <button
-                        onClick={() => setMenuView("main")}
-                        className="flex w-full cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-foreground/50 hover:text-foreground transition-colors"
-                      >
-                        <ArrowChevronLeft width={12} height={12} />
-                        Skip
-                      </button>
-                      <div className="my-1 mx-2 border-t border-foreground/10" />
-                      <SkipMenu
-                        habitId={id}
-                        referenceDate={referenceDate}
-                        period={period}
-                        currentPeriodKey={currentPeriodKey}
-                        isSkipped={isSkipped}
-                        onClose={closeMenu}
-                        buttonClassName={menuItemClass}
-                      />
-                    </div>
-                  )}
-                </div>
-              </>,
-              document.body,
-            )}
+                    {/* ── Level 2: skip options (via SkipMenu) ── */}
+                    {menuView === "options" && (
+                      <div className="p-1">
+                        <button
+                          onClick={() => setMenuView("main")}
+                          className="flex w-full cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-foreground/50 hover:text-foreground transition-colors"
+                        >
+                          <ArrowChevronLeft width={12} height={12} />
+                          Skip
+                        </button>
+                        <div className="my-1 mx-2 border-t border-foreground/10" />
+                        <SkipMenu
+                          habitId={id}
+                          referenceDate={referenceDate}
+                          period={period}
+                          currentPeriodKey={currentPeriodKey}
+                          isSkipped={isSkipped}
+                          onClose={closeMenu}
+                          buttonClassName={menuItemClass}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </>,
+                document.body,
+              )}
           </div>
         )}
       </div>

@@ -1,22 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Task, TaskScope } from "@weekly/domain";
+import { Task } from "@weekly/domain";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
 import { Badge } from "../general/Badge";
+import { PeriodBadge } from "../general/PeriodBadge";
 import { TaskDetailsModal } from "./TaskDetailsModal";
-
-const SCOPE_LABELS: Record<TaskScope, string> = {
-  day: "Today",
-  week: "Week",
-  month: "Month",
-};
-
-const SCOPE_COLORS: Record<TaskScope, string> = {
-  day: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-  week: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
-  month: "bg-teal-500/15 text-teal-600 dark:text-teal-400",
-};
 
 interface TaskItemProps {
   task: Task;
@@ -55,6 +44,11 @@ export function TaskItem({
             ariaLabel={task.completed ? "Mark incomplete" : "Mark complete"}
           />
         </div>
+        {projectName && (
+          <Badge className="bg-foreground/10 text-foreground/50">
+            {projectName}
+          </Badge>
+        )}
         <span
           className={[
             "flex-1 truncate text-sm text-foreground",
@@ -64,19 +58,10 @@ export function TaskItem({
           {task.title}
         </span>
         <div className="ml-auto flex shrink-0 items-center gap-1">
-          {showScopeLabel !== false && (
-            <Badge className={SCOPE_COLORS[scope]}>
-              {SCOPE_LABELS[scope]}
-            </Badge>
-          )}
+          {showScopeLabel !== false && <PeriodBadge period={scope} />}
           {openSinceLabel && (
             <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400">
               {openSinceLabel}
-            </Badge>
-          )}
-          {projectName && (
-            <Badge className="bg-foreground/10 text-foreground/50">
-              {projectName}
             </Badge>
           )}
         </div>
