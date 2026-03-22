@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Habit, Task, Project, HabitPeriod, TaskScope } from "@weekly/domain";
+import { Habit, Task, Project, Period } from "@weekly/domain";
 import { ChevronsUp } from "@gravity-ui/icons";
 import { HabitList } from "./habits/HabitList";
 import { TaskList } from "./tasks/TaskList";
 
 interface PeriodPanelProps {
-  period: HabitPeriod;
-  scope: TaskScope;
+  period: Period;
+  scope: Period;
   habits: Habit[];
   tasks: Task[];
   projects?: Project[];
@@ -70,12 +70,12 @@ export function PeriodPanel({
   );
 
   const taskTotal = useMemo(
-    () => tasks.filter((t) => (t.scope ?? "week") === scope).length,
+    () => tasks.filter((t) => (t.scope ?? Period.WEEK) === scope).length,
     [tasks, scope],
   );
 
   const taskDone = useMemo(
-    () => tasks.filter((t) => (t.scope ?? "week") === scope && t.completed).length,
+    () => tasks.filter((t) => (t.scope ?? Period.WEEK) === scope && t.completed).length,
     [tasks, scope],
   );
 

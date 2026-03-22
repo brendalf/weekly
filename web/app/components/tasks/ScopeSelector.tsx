@@ -1,15 +1,15 @@
 "use client";
-import { TaskScope } from "@weekly/domain";
+import { Period } from "@weekly/domain";
 
-const SCOPE_OPTIONS: { value: TaskScope; label: string }[] = [
-  { value: "day", label: "Today" },
-  { value: "week", label: "This week" },
-  { value: "month", label: "This month" },
+const SCOPE_OPTIONS: { value: Period; label: string }[] = [
+  { value: Period.DAY, label: "Today" },
+  { value: Period.WEEK, label: "This week" },
+  { value: Period.MONTH, label: "This month" },
 ];
 
 interface ScopeSelectorProps {
-  value: TaskScope;
-  onChange: (scope: TaskScope) => void;
+  value: Period;
+  onChange: (scope: Period) => void;
   /** When true each button stretches to fill equal width (used in the add modal). */
   fullWidth?: boolean;
 }

@@ -1,4 +1,5 @@
-import { Task, TaskScope } from "../models/task";
+import { Task } from "../models/task";
+import { Period } from "../models/habit";
 import { dayKeyOf, monthKeyOf, weekKeyOf } from "./period";
 
 export function createTaskId(): string {
@@ -29,23 +30,23 @@ export function toggleTaskCompleted(task: Task): Task {
 /** Returns the period key for the task's creation date under its scope. */
 export function taskPeriodKey(task: Task): string {
   const date = new Date(task.createdAt);
-  const scope = task.scope ?? 'week';
-  if (scope === 'day') return dayKeyOf(date);
-  if (scope === 'month') return monthKeyOf(date);
+  const scope = task.scope ?? Period.WEEK;
+  if (scope === Period.DAY) return dayKeyOf(date);
+  if (scope === Period.MONTH) return monthKeyOf(date);
   return weekKeyOf(date);
 }
 
 /** Returns the period key for the selected day under a given scope. */
-export function selectedPeriodKey(scope: TaskScope, selectedDay: Date): string {
-  if (scope === 'day') return dayKeyOf(selectedDay);
-  if (scope === 'month') return monthKeyOf(selectedDay);
+export function selectedPeriodKey(scope: Period, selectedDay: Date): string {
+  if (scope === Period.DAY) return dayKeyOf(selectedDay);
+  if (scope === Period.MONTH) return monthKeyOf(selectedDay);
   return weekKeyOf(selectedDay);
 }
 
 export type TaskVisibility = 'current' | 'past_open' | 'hidden';
 
 export function getTaskVisibility(task: Task, selectedDay: Date): TaskVisibility {
-  const scope = task.scope ?? 'week';
+  const scope = task.scope ?? Period.WEEK;
   const tpk = taskPeriodKey(task);
   const spk = selectedPeriodKey(scope, selectedDay);
 

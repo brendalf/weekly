@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   Task,
-  TaskScope,
+  Period,
   Project,
   getTaskVisibility,
   taskPeriodKey,
@@ -22,7 +22,7 @@ interface TaskListProps {
   onToggleCompleted: (taskId: string) => void;
   projects?: Project[];
   hideHeader?: boolean;
-  scopeFilter?: TaskScope;
+  scopeFilter?: Period;
   showScopeLabel?: boolean;
 }
 
@@ -43,7 +43,7 @@ export function TaskList({
   const handleAddTask = (
     title: string,
     projectId?: string,
-    scope?: TaskScope,
+    scope?: Period,
   ) => {
     const repos = projectId ? getProjectRepos(projectId) : activeRepos;
     repos?.task.addTask(title, scope, selectedDay);
@@ -58,7 +58,7 @@ export function TaskList({
     .filter(({ visibility }) => visibility !== "hidden")
     .filter(
       ({ task }) =>
-        scopeFilter === undefined || (task.scope ?? "week") === scopeFilter,
+        scopeFilter === undefined || (task.scope ?? Period.WEEK) === scopeFilter,
     );
 
   const completedCount = visibleTasks.filter(
@@ -120,7 +120,7 @@ export function TaskList({
                   visibility === "past_open"
                     ? formatPeriodKey(
                         taskPeriodKey(task),
-                        scopeToPeriod(task.scope ?? "week"),
+                        scopeToPeriod(task.scope ?? Period.WEEK),
                       )
                     : undefined;
                 return (

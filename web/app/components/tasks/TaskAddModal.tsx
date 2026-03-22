@@ -10,12 +10,12 @@ import {
   Surface,
 } from "@heroui/react";
 import { Check } from "@gravity-ui/icons";
-import { TaskScope } from "@weekly/domain";
+import { Period } from "@weekly/domain";
 import { ScopeSelector } from "./ScopeSelector";
 import { ProjectField } from "../general/ProjectField";
 
 interface TaskAddModalProps {
-  onSubmit: (title: string, projectId?: string, scope?: TaskScope) => void;
+  onSubmit: (title: string, projectId?: string, scope?: Period) => void;
   trigger?: ReactElement;
   projects?: { id: string; name: string }[];
   isOpen?: boolean;
@@ -31,7 +31,7 @@ export function TaskAddModal({
 }: TaskAddModalProps) {
   const [title, setTitle] = useState("");
   const [projectId, setProjectId] = useState<string>(projects?.[0]?.id ?? "");
-  const [scope, setScope] = useState<TaskScope>("week");
+  const [scope, setScope] = useState<Period>(Period.WEEK);
 
   function handleSave(close: () => void) {
     const trimmed = title.trim();
@@ -40,7 +40,7 @@ export function TaskAddModal({
     onSubmit(trimmed, projects ? projectId : undefined, scope);
     setTitle("");
     setProjectId(projects?.[0]?.id ?? "");
-    setScope("week");
+    setScope(Period.WEEK);
     close();
   }
 
@@ -51,7 +51,7 @@ export function TaskAddModal({
         if (!open) {
           setTitle("");
           setProjectId(projects?.[0]?.id ?? "");
-          setScope("week");
+          setScope(Period.WEEK);
         }
         onOpenChange?.(open);
       }}

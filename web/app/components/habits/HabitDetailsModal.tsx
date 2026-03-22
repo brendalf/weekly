@@ -17,7 +17,7 @@ import {
   Check,
 } from "@gravity-ui/icons";
 import {
-  HabitPeriod,
+  Period,
   HabitTimeOfDay,
   HabitCompletionLog,
   periodKeyOf,
@@ -38,7 +38,7 @@ interface HabitDetailsModalProps {
   habitId: string;
   name: string;
   times: number;
-  period: HabitPeriod;
+  period: Period;
   activeDays?: number[];
   skippedPeriods?: string[];
   timeOfDay?: HabitTimeOfDay;
@@ -71,7 +71,7 @@ export function HabitDetailsModal({
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(name);
   const [editTimes, setEditTimes] = useState(String(times));
-  const [editPeriod, setEditPeriod] = useState<HabitPeriod>(period);
+  const [editPeriod, setEditPeriod] = useState<Period>(period);
   const [editActiveDays, setEditActiveDays] = useState<number[]>(
     activeDays ?? [0, 1, 2, 3, 4, 5, 6],
   );
@@ -120,7 +120,7 @@ export function HabitDetailsModal({
     const n = Number(editTimes);
     if (!trimmed || !Number.isFinite(n) || n <= 0) return;
     const days =
-      editPeriod === HabitPeriod.Day && editActiveDays.length < 7
+      editPeriod === Period.DAY && editActiveDays.length < 7
         ? editActiveDays
         : undefined;
     await repos.habit.updateHabit(habitId, trimmed, n, editPeriod, days, editTimeOfDay);
@@ -169,7 +169,7 @@ export function HabitDetailsModal({
                     />
                     <HabitPeriodSelect value={editPeriod} onChange={setEditPeriod} />
                   </div>
-                  {editPeriod === HabitPeriod.Day && (
+                  {editPeriod === Period.DAY && (
                     <div className="mt-2">
                       <p className="text-xs text-foreground/50 mb-1">
                         Active days

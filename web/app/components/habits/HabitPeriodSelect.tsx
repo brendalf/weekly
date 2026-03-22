@@ -1,10 +1,10 @@
 "use client";
-import { HabitPeriod } from "@weekly/domain";
+import { Period } from "@weekly/domain";
 import { Select, ListBox } from "@heroui/react";
 
 interface HabitPeriodSelectProps {
-  value: HabitPeriod;
-  onChange: (period: HabitPeriod) => void;
+  value: Period;
+  onChange: (period: Period) => void;
 }
 
 export function HabitPeriodSelect({ value, onChange }: HabitPeriodSelectProps) {
@@ -14,7 +14,7 @@ export function HabitPeriodSelect({ value, onChange }: HabitPeriodSelectProps) {
       placeholder="Period"
       variant="secondary"
       value={value}
-      onChange={(e) => onChange(e as HabitPeriod)}
+      onChange={(e) => onChange(e as Period)}
     >
       <Select.Trigger>
         <Select.Value />
@@ -22,15 +22,15 @@ export function HabitPeriodSelect({ value, onChange }: HabitPeriodSelectProps) {
       </Select.Trigger>
       <Select.Popover>
         <ListBox>
-          <ListBox.Item id={HabitPeriod.Day} textValue={HabitPeriod.Day}>
+          <ListBox.Item id="day" textValue="day">
             per day
             <ListBox.ItemIndicator />
           </ListBox.Item>
-          <ListBox.Item id={HabitPeriod.Week} textValue={HabitPeriod.Week}>
+          <ListBox.Item id="week" textValue="week">
             per week
             <ListBox.ItemIndicator />
           </ListBox.Item>
-          <ListBox.Item id={HabitPeriod.Month} textValue={HabitPeriod.Month}>
+          <ListBox.Item id="month" textValue="month">
             per month
             <ListBox.ItemIndicator />
           </ListBox.Item>

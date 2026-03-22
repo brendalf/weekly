@@ -1,17 +1,17 @@
-import type { HabitPeriod } from "../models/habit";
+import type { Period } from "../models/habit";
 import type { Unsubscribe } from "./types";
 
 export interface HabitProgressRepository {
   subscribeHabitProgress(
     habitId: string,
-    period: HabitPeriod,
+    period: Period,
     referenceDate: Date,
     onProgress: (data: { count: number; dayCounts: Record<string, number> }) => void,
   ): Unsubscribe;
 
   subscribeHabitStreak(
     habitId: string,
-    period: HabitPeriod,
+    period: Period,
     createdAt: Date,
     referenceDate: Date,
     onStreak: (streak: {
@@ -23,7 +23,7 @@ export interface HabitProgressRepository {
 
   incrementHabit(
     habitId: string,
-    period: HabitPeriod,
+    period: Period,
     target: number,
     referenceDate: Date,
   ): Promise<void>;

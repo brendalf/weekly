@@ -1,21 +1,23 @@
 export type HabitTimeOfDay = 'morning' | 'afternoon' | 'evening';
 
+export const Period = {
+  DAY: 'day',
+  WEEK: 'week',
+  MONTH: 'month',
+} as const;
+
+export type Period = typeof Period[keyof typeof Period];
+
 export type Year = number;
 export type WeekOfYear = number; // 1-53
 
 export type HabitId = string;
 
-export enum HabitPeriod {
-  Day = "day",
-  Week = "week",
-  Month = "month",
-}
-
 export interface Habit {
   id: HabitId;
   name: string;
   times: number;
-  period: HabitPeriod;
+  period: Period;
   createdAt: string;
   /** 0=Sun … 6=Sat. Absent/empty → all days active (only relevant for Day period). */
   activeDays?: number[];

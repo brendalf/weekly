@@ -9,7 +9,7 @@ import {
   TextField,
   Surface,
 } from "@heroui/react";
-import { HabitPeriod, HabitTimeOfDay } from "@weekly/domain";
+import { Period, HabitTimeOfDay } from "@weekly/domain";
 import { Check } from "@gravity-ui/icons";
 import { ActiveDaysSelector } from "./ActiveDaysSelector";
 import { TimeOfDaySelector } from "./TimeOfDaySelector";
@@ -22,7 +22,7 @@ interface HabitAddModalProps {
   onSubmit: (
     name: string,
     times: number,
-    period: HabitPeriod,
+    period: Period,
     projectId?: string,
     activeDays?: number[],
     timeOfDay?: HabitTimeOfDay,
@@ -42,7 +42,7 @@ export function HabitAddModal({
 }: HabitAddModalProps) {
   const [name, setName] = useState("");
   const [times, setTimes] = useState("1");
-  const [period, setPeriod] = useState<HabitPeriod>(HabitPeriod.Week);
+  const [period, setPeriod] = useState<Period>(Period.WEEK);
   const [projectId, setProjectId] = useState<string>(projects?.[0]?.id ?? "");
   const [activeDays, setActiveDays] = useState<number[]>(ALL_DAYS);
   const [timeOfDay, setTimeOfDay] = useState<HabitTimeOfDay | undefined>(undefined);
@@ -50,7 +50,7 @@ export function HabitAddModal({
   function reset() {
     setName("");
     setTimes("1");
-    setPeriod(HabitPeriod.Week);
+    setPeriod(Period.WEEK);
     setProjectId(projects?.[0]?.id ?? "");
     setActiveDays(ALL_DAYS);
     setTimeOfDay(undefined);
@@ -61,7 +61,7 @@ export function HabitAddModal({
     const n = Number(times);
     if (!trimmed || !Number.isFinite(n) || n <= 0) return;
     if (projects && !projectId) return;
-    const days = period === HabitPeriod.Day && activeDays.length < 7 ? activeDays : undefined;
+    const days = period === Period.DAY && activeDays.length < 7 ? activeDays : undefined;
     onSubmit(trimmed, n, period, projects ? projectId : undefined, days, timeOfDay);
     reset();
     close();
@@ -128,7 +128,7 @@ export function HabitAddModal({
                         />
                         <HabitPeriodSelect value={period} onChange={setPeriod} />
                       </div>
-                      {period === HabitPeriod.Day && (
+                      {period === Period.DAY && (
                         <div className="mt-4">
                           <Label>Active days</Label>
                           <div className="mt-1">

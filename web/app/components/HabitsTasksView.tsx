@@ -5,9 +5,8 @@ import {
   Habit,
   Task,
   Project,
-  HabitPeriod,
+  Period,
   HabitTimeOfDay,
-  TaskScope,
   filterHabitsByDay,
   isHabitSkipped,
   getTaskVisibility,
@@ -162,8 +161,8 @@ function UnifiedAddButton({
   onAddTask,
 }: {
   projects?: Project[];
-  onAddHabit: (name: string, times: number, period: HabitPeriod, projectId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => void;
-  onAddTask: (title: string, projectId?: string, scope?: TaskScope) => void;
+  onAddHabit: (name: string, times: number, period: Period, projectId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => void;
+  onAddTask: (title: string, projectId?: string, scope?: Period) => void;
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [habitModalOpen, setHabitModalOpen] = useState(false);
@@ -230,7 +229,7 @@ export function HabitsTasksView({
   onToggleTaskCompleted,
   onLayoutChange,
 }: HabitsTasksViewProps) {
-  const [activePeriodTab, setActivePeriodTab] = useState<HabitPeriod>(HabitPeriod.Day);
+  const [activePeriodTab, setActivePeriodTab] = useState<Period>(Period.DAY);
   const [innerLayout, setInnerLayout] = useState<InnerLayout>("sequential");
   const [habitCompletions, setHabitCompletions] = useState<Record<string, boolean>>({});
   const { activeRepos, getProjectRepos } = useRepositoryContext();
@@ -246,7 +245,7 @@ export function HabitsTasksView({
   }, []);
 
   const handleAddHabit = useCallback(
-    (name: string, times: number, period: HabitPeriod, projectId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => {
+    (name: string, times: number, period: Period, projectId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => {
       const repos = projectId ? getProjectRepos(projectId) : activeRepos;
       repos?.habit.addHabit(name, times, period, selectedDay, activeDays, timeOfDay);
     },
@@ -254,7 +253,7 @@ export function HabitsTasksView({
   );
 
   const handleAddTask = useCallback(
-    (title: string, projectId?: string, scope?: TaskScope) => {
+    (title: string, projectId?: string, scope?: Period) => {
       const repos = projectId ? getProjectRepos(projectId) : activeRepos;
       repos?.task.addTask(title, scope, selectedDay);
     },
@@ -269,7 +268,7 @@ export function HabitsTasksView({
         (h) => h.period === period && !isHabitSkipped(h, selectedDay),
       );
       const pt = tasks.filter(
-        (t) => (t.scope ?? "week") === scope && getTaskVisibility(t, selectedDay) !== "hidden",
+        (t) => (t.scope ?? Period.WEEK) === scope && getTaskVisibility(t, selectedDay) !== "hidden",
       );
       const done =
         ph.filter((h) => habitCompletions[h.id]).length +

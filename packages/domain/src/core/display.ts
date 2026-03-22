@@ -1,16 +1,15 @@
-import { HabitPeriod, HabitTimeOfDay } from "../models/habit";
-import { TaskScope } from "../models/task";
+import { Period, HabitTimeOfDay } from "../models/habit";
 
 /**
  * Formats a period key (e.g. "2026-W11", "2026-03", "2026-03-15") into a
  * short human-readable label without the year (used for streak "open since").
  */
-export function formatPeriodKey(periodKey: string, period: HabitPeriod): string {
-  if (period === HabitPeriod.Week) {
+export function formatPeriodKey(periodKey: string, period: Period): string {
+  if (period === Period.WEEK) {
     const [, w] = periodKey.split("-W");
     return `Week ${parseInt(w, 10)}`;
   }
-  if (period === HabitPeriod.Month) {
+  if (period === Period.MONTH) {
     const [y, m] = periodKey.split("-");
     return new Date(+y, +m - 1).toLocaleDateString("en-US", {
       month: "short",
@@ -27,12 +26,12 @@ export function formatPeriodKey(periodKey: string, period: HabitPeriod): string 
 /**
  * Formats a period key with full year context (used for non-current periods).
  */
-export function formatPeriodKeyFull(periodKey: string, period: HabitPeriod): string {
-  if (period === HabitPeriod.Week) {
+export function formatPeriodKeyFull(periodKey: string, period: Period): string {
+  if (period === Period.WEEK) {
     const [y, w] = periodKey.split("-W");
     return `Week ${parseInt(w, 10)}, ${y}`;
   }
-  if (period === HabitPeriod.Month) {
+  if (period === Period.MONTH) {
     const [y, m] = periodKey.split("-");
     return new Date(+y, +m - 1).toLocaleDateString("en-US", {
       month: "short",
@@ -73,17 +72,17 @@ export function formatDayLabel(date: Date): string {
 export const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"] as const;
 
 /** Short display label for a period ("Today", "Week", "Month"). */
-export function getPeriodLabel(period: HabitPeriod): string {
-  if (period === HabitPeriod.Day) return "Today";
-  if (period === HabitPeriod.Week) return "Week";
+export function getPeriodLabel(period: Period): string {
+  if (period === Period.DAY) return "Today";
+  if (period === Period.WEEK) return "Week";
   return "Month";
 }
 
-/** Sort order for HabitPeriod values. */
-export const PERIOD_ORDER: Record<HabitPeriod, number> = {
-  [HabitPeriod.Day]: 0,
-  [HabitPeriod.Week]: 1,
-  [HabitPeriod.Month]: 2,
+/** Sort order for Period values. */
+export const PERIOD_ORDER: Record<Period, number> = {
+  [Period.DAY]: 0,
+  [Period.WEEK]: 1,
+  [Period.MONTH]: 2,
 };
 
 /** Valid time-of-day values in display order. */
@@ -100,16 +99,14 @@ export const TIME_OF_DAY_ORDER: Record<string, number> = {
   evening: 2,
 };
 
-/** Convert a TaskScope to the corresponding HabitPeriod. */
-export function scopeToPeriod(scope: TaskScope): HabitPeriod {
-  if (scope === "day") return HabitPeriod.Day;
-  if (scope === "month") return HabitPeriod.Month;
-  return HabitPeriod.Week;
+/** Convert a period to itself (kept for call-site compatibility). */
+export function scopeToPeriod(scope: Period): Period {
+  return scope;
 }
 
 /** Period tab descriptor used by the period-tabs layout. */
-export const PERIOD_TABS: { period: HabitPeriod; scope: TaskScope; label: string }[] = [
-  { period: HabitPeriod.Day, scope: "day", label: "Day" },
-  { period: HabitPeriod.Week, scope: "week", label: "Week" },
-  { period: HabitPeriod.Month, scope: "month", label: "Month" },
+export const PERIOD_TABS: { period: Period; scope: Period; label: string }[] = [
+  { period: Period.DAY, scope: Period.DAY, label: "Day" },
+  { period: Period.WEEK, scope: Period.WEEK, label: "Week" },
+  { period: Period.MONTH, scope: Period.MONTH, label: "Month" },
 ];

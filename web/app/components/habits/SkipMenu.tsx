@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { DateValue } from "@internationalized/date";
 import { getLocalTimeZone } from "@internationalized/date";
 import {
-  HabitPeriod,
+  Period,
   getSkipPeriodKeys,
   periodKeyOf,
 } from "@weekly/domain";
@@ -21,7 +21,7 @@ import { useRepositoryContext } from "../../contexts/RepositoryContext";
 interface SkipMenuProps {
   habitId: string;
   referenceDate: Date;
-  period: HabitPeriod;
+  period: Period;
   currentPeriodKey: string;
   isSkipped: boolean;
   /** Called after a skip/unskip action completes (used by HabitItem to close the menu). */

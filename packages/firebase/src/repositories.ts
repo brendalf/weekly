@@ -33,11 +33,10 @@ import {
   type HabitTimeOfDay,
   type Task,
   type TaskRepository,
-  type TaskScope,
+  Period,
   type UserPreferencesRepository,
   type ThemePreference,
   type LayoutPreference,
-  HabitPeriod,
   computeStreak,
   prevPeriodDate,
   dayKeyOf,
@@ -73,7 +72,7 @@ type HabitCompletionDoc = {
 
 type HabitPeriodDoc = {
   habitId: string;
-  period: HabitPeriod;
+  period: Period;
   periodKey: string;
   count: number;
   succeeded: boolean;
@@ -87,11 +86,11 @@ function mapHabitDoc(id: string, data: HabitDoc): Habit {
     name: typeof data?.name === "string" ? data.name : "",
     times: typeof data?.times === "number" ? data.times : 0,
     period:
-      data?.period === HabitPeriod.Day
-        ? HabitPeriod.Day
-        : data?.period === HabitPeriod.Month
-          ? HabitPeriod.Month
-          : HabitPeriod.Week,
+      data?.period === Period.DAY
+        ? Period.DAY
+        : data?.period === Period.MONTH
+          ? Period.MONTH
+          : Period.WEEK,
     createdAt:
       data?.createdAt?.toDate().toISOString() ?? new Date().toISOString(),
     activeDays: Array.isArray(data?.activeDays)
@@ -115,9 +114,9 @@ function mapTaskDoc(id: string, data: TaskDoc): Task {
     createdAt: data.createdAt?.toDate().toISOString() ?? new Date().toISOString(),
     completed: typeof data.completed === "boolean" ? data.completed : false,
     scope:
-      data.scope === "day" || data.scope === "month"
-        ? (data.scope as TaskScope)
-        : "week",
+      data.scope === Period.DAY || data.scope === Period.MONTH
+        ? (data.scope as Period)
+        : Period.WEEK,
   };
 }
 
@@ -177,12 +176,12 @@ export function createTaskRepository(
         onTasks(tasks);
       });
     },
-    async addTask(title: string, scope?: TaskScope, createdAt?: Date) {
+    async addTask(title: string, scope?: Period, createdAt?: Date) {
       await addDoc(tasksCol(db, projectId), {
         title,
         completed: false,
         createdAt: createdAt ?? new Date(),
-        scope: scope ?? "week",
+        scope: scope ?? Period.WEEK,
       });
     },
     async toggleTask(task: Task) {
@@ -200,7 +199,7 @@ export function createTaskRepository(
         title,
       });
     },
-    async updateTask(taskId: string, updates: { title?: string; scope?: TaskScope }) {
+    async updateTask(taskId: string, updates: { title?: string; scope?: Period }) {
       await updateDoc(doc(db, "projects", projectId, "tasks", taskId), updates);
     },
   };
@@ -220,7 +219,7 @@ export function createHabitRepository(
         onHabits(habits);
       });
     },
-    async addHabit(name: string, times: number, period: HabitPeriod, createdAt?: Date, activeDays?: number[], timeOfDay?: HabitTimeOfDay) {
+    async addHabit(name: string, times: number, period: Period, createdAt?: Date, activeDays?: number[], timeOfDay?: HabitTimeOfDay) {
       const date = createdAt ?? new Date();
       const habitRef = doc(habitsCol(db, projectId));
       const batch = writeBatch(db);
@@ -315,7 +314,7 @@ export function createHabitRepository(
       habitId: string,
       name: string,
       times: number,
-      period: HabitPeriod,
+      period: Period,
       activeDays?: number[],
       timeOfDay?: HabitTimeOfDay,
     ) {
@@ -399,7 +398,7 @@ async function fillSummaryGaps(
   db: Firestore,
   projectId: string,
   habitId: string,
-  period: HabitPeriod,
+  period: Period,
   referenceDate: Date,
 ): Promise<void> {
   const currentPeriodKey = periodKeyOf(referenceDate, period);
@@ -456,7 +455,7 @@ export function createHabitProgressRepository(
   return {
     subscribeHabitProgress(
       habitId: string,
-      period: HabitPeriod,
+      period: Period,
       referenceDate: Date,
       onProgress: (data: {
         count: number;
@@ -475,7 +474,7 @@ export function createHabitProgressRepository(
     },
     subscribeHabitStreak(
       habitId: string,
-      period: HabitPeriod,
+      period: Period,
       createdAt: Date,
       referenceDate: Date,
       onStreak: (streak: {
@@ -506,7 +505,7 @@ export function createHabitProgressRepository(
     },
     async incrementHabit(
       habitId: string,
-      period: HabitPeriod,
+      period: Period,
       target: number,
       referenceDate: Date,
     ) {

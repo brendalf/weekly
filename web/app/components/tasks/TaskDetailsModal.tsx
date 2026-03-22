@@ -10,14 +10,14 @@ import {
   TextField,
 } from "@heroui/react";
 import { TrashBin, Pencil, Xmark, Check } from "@gravity-ui/icons";
-import { Task, TaskScope } from "@weekly/domain";
+import { Task, Period } from "@weekly/domain";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { ScopeSelector, SCOPE_OPTIONS } from "./ScopeSelector";
 
-const SCOPE_COLORS: Record<TaskScope, string> = {
-  day: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-  week: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
-  month: "bg-teal-500/15 text-teal-600 dark:text-teal-400",
+const SCOPE_COLORS: Record<Period, string> = {
+  [Period.DAY]: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  [Period.WEEK]: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
+  [Period.MONTH]: "bg-teal-500/15 text-teal-600 dark:text-teal-400",
 };
 
 interface TaskDetailsModalProps {
@@ -36,7 +36,7 @@ export function TaskDetailsModal({
 
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
-  const [editScope, setEditScope] = useState<TaskScope>(task.scope ?? "week");
+  const [editScope, setEditScope] = useState<Period>(task.scope ?? Period.WEEK);
 
   const state = useOverlayState({
     isOpen: open,
@@ -62,12 +62,12 @@ export function TaskDetailsModal({
 
   function startEditing() {
     setEditTitle(task.title);
-    setEditScope(task.scope ?? "week");
+    setEditScope(task.scope ?? Period.WEEK);
     setEditing(true);
   }
 
   const isEditValid = Boolean(editTitle.trim());
-  const scope = task.scope ?? "week";
+  const scope = task.scope ?? Period.WEEK;
 
   return (
     <Modal state={state}>

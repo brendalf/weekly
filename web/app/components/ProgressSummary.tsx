@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import {
   Habit,
   Task,
-  HabitPeriod,
+  Period,
   filterHabitsByDay,
   isHabitSkipped,
   getTaskVisibility,
@@ -35,13 +35,13 @@ export function ProgressSummary({
 
     // Exclude skipped habits from progress counts
     const dayHabits = visibleHabits.filter(
-      (h) => h.period === HabitPeriod.Day && !isHabitSkipped(h, selectedDay),
+      (h) => h.period === Period.DAY && !isHabitSkipped(h, selectedDay),
     );
     const weekHabits = visibleHabits.filter(
-      (h) => h.period === HabitPeriod.Week && !isHabitSkipped(h, selectedDay),
+      (h) => h.period === Period.WEEK && !isHabitSkipped(h, selectedDay),
     );
     const monthHabits = visibleHabits.filter(
-      (h) => h.period === HabitPeriod.Month && !isHabitSkipped(h, selectedDay),
+      (h) => h.period === Period.MONTH && !isHabitSkipped(h, selectedDay),
     );
 
     const classifiedTasks = tasks.map((task) => ({
@@ -50,13 +50,13 @@ export function ProgressSummary({
     }));
 
     const dayTasks = classifiedTasks.filter(
-      ({ task, visibility }) => (task.scope ?? "week") === "day" && visibility !== "hidden",
+      ({ task, visibility }) => (task.scope ?? Period.WEEK) === Period.DAY && visibility !== "hidden",
     );
     const weekTasks = classifiedTasks.filter(
-      ({ task, visibility }) => (task.scope ?? "week") === "week" && visibility !== "hidden",
+      ({ task, visibility }) => (task.scope ?? Period.WEEK) === Period.WEEK && visibility !== "hidden",
     );
     const monthTasks = classifiedTasks.filter(
-      ({ task, visibility }) => (task.scope ?? "week") === "month" && visibility !== "hidden",
+      ({ task, visibility }) => (task.scope ?? Period.WEEK) === Period.MONTH && visibility !== "hidden",
     );
 
     return [

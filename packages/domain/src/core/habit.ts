@@ -1,4 +1,4 @@
-import { Habit, HabitPeriod, WeekId, Year } from "../models/habit";
+import { Habit, Period, WeekId, Year } from "../models/habit";
 import { dayKeyOf, monthKeyOf, periodKeyOf, weekKeyOf } from "./period";
 
 export function filterHabitsByDay(habits: Habit[], day: Date): Habit[] {
@@ -22,10 +22,10 @@ export function isHabitSkipped(habit: Habit, day: Date): boolean {
   return habit.skippedPeriods.includes(periodKeyOf(day, habit.period));
 }
 
-export function prevPeriodDate(date: Date, period: HabitPeriod): Date {
+export function prevPeriodDate(date: Date, period: Period): Date {
   const d = new Date(date);
-  if (period === HabitPeriod.Day) d.setDate(d.getDate() - 1);
-  else if (period === HabitPeriod.Week) d.setDate(d.getDate() - 7);
+  if (period === Period.DAY) d.setDate(d.getDate() - 1);
+  else if (period === Period.WEEK) d.setDate(d.getDate() - 7);
   else d.setMonth(d.getMonth() - 1);
   return d;
 }
@@ -34,7 +34,7 @@ export function computeStreak(
   summaryMap: Map<string, boolean>,
   referenceDate: Date,
   createdAt: Date,
-  period: HabitPeriod,
+  period: Period,
   skippedPeriods?: string[],
 ): { currentStrikeLength: number; openSincePeriodKey: string | null } {
   const createdPeriodKey = periodKeyOf(createdAt, period);
@@ -73,8 +73,8 @@ export function isHabitSucceeded(count: number, target: number): boolean {
 }
 
 /**
- * Very small helper that lets us check if an ISO date belongs to a given Year/Week.
- */
+  * Very small helper that lets us check if an ISO date belongs to a given Year/Week.
+  */
 export function isDateInWeek(dateISO: string, week: WeekId): boolean {
   const date = new Date(dateISO);
   const { year, week: weekNumber } = getISOWeek(date);
@@ -82,8 +82,8 @@ export function isDateInWeek(dateISO: string, week: WeekId): boolean {
 }
 
 /**
- * Compute ISO week number and year for a given date.
- */
+  * Compute ISO week number and year for a given date.
+  */
 export function getISOWeek(date: Date): WeekId {
   const tmp = new Date(
     Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
@@ -109,11 +109,11 @@ function getMondayOfWeek(date: Date): Date {
 }
 
 /**
- * Returns period keys that should be skipped based on the skip type.
- */
+  * Returns period keys that should be skipped based on the skip type.
+  */
 export function getSkipPeriodKeys(
   date: Date,
-  period: HabitPeriod,
+  period: Period,
   skipType: 'today' | 'week' | 'month' | 'until',
   untilDate?: Date,
 ): string[] {
@@ -121,7 +121,7 @@ export function getSkipPeriodKeys(
     return [periodKeyOf(date, period)];
   }
 
-  if (period !== HabitPeriod.Day) {
+  if (period !== Period.DAY) {
     if (skipType === 'week') return [weekKeyOf(date)];
     if (skipType === 'month') return [monthKeyOf(date)];
     if (skipType === 'until' && untilDate) {
@@ -130,7 +130,7 @@ export function getSkipPeriodKeys(
       while (d <= untilDate) {
         const key = periodKeyOf(d, period);
         if (!keys.includes(key)) keys.push(key);
-        if (period === HabitPeriod.Week) d.setDate(d.getDate() + 7);
+        if (period === Period.WEEK) d.setDate(d.getDate() + 7);
         else d.setMonth(d.getMonth() + 1);
       }
       return keys;

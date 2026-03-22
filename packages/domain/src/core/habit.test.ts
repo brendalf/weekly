@@ -1,7 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { HabitPeriod } from "../models/habit";
 import {
   computeStreak,
   getISOWeek,
@@ -85,20 +84,20 @@ test("isDateInWeek returns false when year differs", () => {
 
 test("prevPeriodDate subtracts 1 day for Day period", () => {
   const d = new Date(2026, 2, 15); // Mar 15
-  const prev = prevPeriodDate(d, HabitPeriod.Day);
+  const prev = prevPeriodDate(d, 'day');
   assert.equal(prev.getDate(), 14);
   assert.equal(prev.getMonth(), 2);
 });
 
 test("prevPeriodDate subtracts 7 days for Week period", () => {
   const d = new Date(2026, 2, 16); // Mar 16 (week 12)
-  const prev = prevPeriodDate(d, HabitPeriod.Week);
+  const prev = prevPeriodDate(d, 'week');
   assert.equal(prev.getDate(), 9); // Mar 9 (week 11)
 });
 
 test("prevPeriodDate subtracts 1 month for Month period", () => {
   const d = new Date(2026, 2, 1); // Mar 2026
-  const prev = prevPeriodDate(d, HabitPeriod.Month);
+  const prev = prevPeriodDate(d, 'month');
   assert.equal(prev.getMonth(), 1); // Feb
   assert.equal(prev.getFullYear(), 2026);
 });
@@ -106,7 +105,7 @@ test("prevPeriodDate subtracts 1 month for Month period", () => {
 test("prevPeriodDate does not mutate the input", () => {
   const d = new Date(2026, 2, 15);
   const original = d.getTime();
-  prevPeriodDate(d, HabitPeriod.Day);
+  prevPeriodDate(d, 'day');
   assert.equal(d.getTime(), original);
 });
 
@@ -121,7 +120,7 @@ test("computeStreak returns zero streak and null openSince for no history", () =
     map,
     new Date(2026, 2, 16), // week 12 reference
     new Date(2026, 2, 16), // created week 12
-    HabitPeriod.Week,
+    'week',
   );
   assert.equal(result.currentStrikeLength, 0);
   assert.equal(result.openSincePeriodKey, null);
@@ -133,7 +132,7 @@ test("computeStreak returns streak of 1 when previous week succeeded", () => {
     map,
     new Date(2026, 2, 16), // week 12 reference
     new Date(2026, 2, 9),  // created week 11
-    HabitPeriod.Week,
+    'week',
   );
   assert.equal(result.currentStrikeLength, 1);
   assert.equal(result.openSincePeriodKey, null);
@@ -149,7 +148,7 @@ test("computeStreak counts consecutive succeeded weeks", () => {
     map,
     new Date(2026, 2, 16), // week 12 reference
     new Date(2026, 1, 23), // created week 9
-    HabitPeriod.Week,
+    'week',
   );
   assert.equal(result.currentStrikeLength, 3);
   assert.equal(result.openSincePeriodKey, null);
@@ -165,7 +164,7 @@ test("computeStreak stops counting at a failed week", () => {
     map,
     new Date(2026, 2, 16), // week 12 reference
     new Date(2026, 1, 23), // created week 9
-    HabitPeriod.Week,
+    'week',
   );
   // Streak starts from week 11 (most recent), stops at week 10 (failed)
   assert.equal(result.currentStrikeLength, 1);
@@ -182,7 +181,7 @@ test("computeStreak sets openSincePeriodKey when current run is all failures", (
     map,
     new Date(2026, 2, 16), // week 12 reference
     new Date(2026, 1, 23), // created week 9
-    HabitPeriod.Week,
+    'week',
   );
   assert.equal(result.currentStrikeLength, 0);
   // Open since week 10 — the earliest failing week in the run
@@ -196,7 +195,7 @@ test("computeStreak treats missing period docs as failed", () => {
     map,
     new Date(2026, 2, 16), // week 12 reference
     new Date(2026, 1, 23), // created week 9
-    HabitPeriod.Week,
+    'week',
   );
   // Week 11 missing → failed → streak from week 11 onward breaks
   assert.equal(result.currentStrikeLength, 0);
@@ -213,7 +212,7 @@ test("computeStreak does not count periods before createdAt", () => {
     map,
     new Date(2026, 2, 16), // week 12 reference
     new Date(2026, 2, 9),  // created week 11
-    HabitPeriod.Week,
+    'week',
   );
   assert.equal(result.currentStrikeLength, 1); // only week 11 counts
   assert.equal(result.openSincePeriodKey, null);
@@ -229,7 +228,7 @@ test("computeStreak works for Day period", () => {
     map,
     new Date(2026, 2, 16), // Mar 16 reference
     new Date(2026, 2, 10), // created Mar 10
-    HabitPeriod.Day,
+    'day',
   );
   assert.equal(result.currentStrikeLength, 0);
   // Mar 15 is the only failing day before the success run — open since Mar 15
@@ -245,7 +244,7 @@ test("computeStreak works for Month period", () => {
     map,
     new Date(2026, 2, 1), // March reference
     new Date(2026, 0, 1), // created January
-    HabitPeriod.Month,
+    'month',
   );
   assert.equal(result.currentStrikeLength, 2);
   assert.equal(result.openSincePeriodKey, null);

@@ -1,7 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { HabitPeriod } from "../models/habit";
 import { dayKeyOf, monthKeyOf, periodKeyOf, weekKeyOf } from "./period";
 
 // ---------------------------------------------------------------------------
@@ -65,15 +64,15 @@ test("monthKeyOf zero-pads single-digit months", () => {
 
 test("periodKeyOf delegates to dayKeyOf for Day period", () => {
   const d = new Date(2026, 2, 15);
-  assert.equal(periodKeyOf(d, HabitPeriod.Day), dayKeyOf(d));
+  assert.equal(periodKeyOf(d, 'day'), dayKeyOf(d));
 });
 
 test("periodKeyOf delegates to weekKeyOf for Week period", () => {
   const d = new Date(2026, 2, 15);
-  assert.equal(periodKeyOf(d, HabitPeriod.Week), weekKeyOf(d));
+  assert.equal(periodKeyOf(d, 'week'), weekKeyOf(d));
 });
 
 test("periodKeyOf delegates to monthKeyOf for Month period", () => {
   const d = new Date(2026, 2, 15);
-  assert.equal(periodKeyOf(d, HabitPeriod.Month), monthKeyOf(d));
+  assert.equal(periodKeyOf(d, 'month'), monthKeyOf(d));
 });

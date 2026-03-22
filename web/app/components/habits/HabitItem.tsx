@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  HabitPeriod,
+  Period,
   HabitTimeOfDay,
   formatPeriodKey,
   habitProgress,
@@ -32,7 +32,7 @@ export interface HabitItemProps {
   id: string;
   name: string;
   target: number;
-  period: HabitPeriod;
+  period: Period;
   createdAt: string;
   activeDays?: number[];
   skippedPeriods?: string[];
@@ -126,7 +126,7 @@ export function HabitItem({
   const { progress, complete } = habitProgress(value, target);
 
   const hasProgressToday =
-    (period === HabitPeriod.Week || period === HabitPeriod.Month) &&
+    (period === Period.WEEK || period === Period.MONTH) &&
     (dayCounts[dayKeyOf(referenceDate)] ?? 0) > 0;
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { HabitPeriod } from "../models/habit";
+import { Period } from "../models/habit";
 
 function pad(n: number, size = 2) {
   return String(n).padStart(size, "0");
@@ -27,8 +27,8 @@ export function monthKeyOf(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
 }
 
-export function periodKeyOf(date: Date, period: HabitPeriod): string {
-  if (period === HabitPeriod.Day) return dayKeyOf(date);
-  if (period === HabitPeriod.Week) return weekKeyOf(date);
+export function periodKeyOf(date: Date, period: Period): string {
+  if (period === Period.DAY) return dayKeyOf(date);
+  if (period === Period.WEEK) return weekKeyOf(date);
   return monthKeyOf(date);
 }

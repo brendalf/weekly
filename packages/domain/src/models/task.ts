@@ -1,4 +1,4 @@
-export type TaskScope = 'day' | 'week' | 'month';
+import type { Period } from "./habit";
 
 export interface Task {
   id: string;
@@ -6,5 +6,5 @@ export interface Task {
   createdAt: string;
   completed: boolean;
   /** Scope for which the task is relevant. Absent → treat as 'week'. */
-  scope?: TaskScope;
+  scope?: Period;
 }

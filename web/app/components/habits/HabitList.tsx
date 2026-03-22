@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { Habit, HabitPeriod, HabitTimeOfDay, Project, filterHabitsByDay, isHabitSkipped, PERIOD_ORDER, TIME_OF_DAY_ORDER } from "@weekly/domain";
+import { Habit, Period, HabitTimeOfDay, Project, filterHabitsByDay, isHabitSkipped, PERIOD_ORDER, TIME_OF_DAY_ORDER } from "@weekly/domain";
 import { Plus } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { HabitItem } from "./HabitItem";
@@ -14,7 +14,7 @@ interface HabitListProps {
   habits: Habit[];
   projects?: Project[];
   hideHeader?: boolean;
-  periodFilter?: HabitPeriod;
+  periodFilter?: Period;
   showPeriodLabel?: boolean;
   onHabitsCompleted?: (completions: Record<string, boolean>) => void;
 }
@@ -72,7 +72,7 @@ export function HabitList({ habits, projects, hideHeader, periodFilter, showPeri
   const handleAddHabit = (
     name: string,
     times: number,
-    period: HabitPeriod,
+    period: Period,
     projectId?: string,
     activeDays?: number[],
     timeOfDay?: HabitTimeOfDay,
