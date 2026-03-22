@@ -72,7 +72,13 @@ export default function AppPage() {
     if (!userId) return;
     return userPreferencesRepository.subscribeUserPreferences(
       userId,
-      ({ theme, layout }) => { setTheme(theme); setLayout(layout); },
+      ({ theme, layout, lastNotificationReadAt }) => {
+        setTheme(theme);
+        setLayout(layout);
+        if (lastNotificationReadAt) {
+          projectStore.setLastNotificationReadAt(lastNotificationReadAt);
+        }
+      },
     );
   }, [userId, setTheme]);
 

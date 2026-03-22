@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useCalendarStore, calendarStore } from "../../stores/calendar";
 
 export function WeekdaysCarousel() {
@@ -7,6 +8,15 @@ export function WeekdaysCarousel() {
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
 
   const weekDays: Date[] = calendarStore.getWeekDays();
+  const selectedRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    selectedRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [selectedDayISO]);
 
   return (
     <div
@@ -19,6 +29,7 @@ export function WeekdaysCarousel() {
         return (
           <button
             key={day.toISOString()}
+            ref={isSelected ? selectedRef : undefined}
             onClick={() => calendarStore.selectDay(day)}
             className={[
               "flex min-w-[70px] flex-1 cursor-pointer flex-col gap-1 rounded-xl border-2 p-2 text-left transition-colors",

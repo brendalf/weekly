@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Bell, BellDot } from "@gravity-ui/icons";
 import { toast } from "sonner";
 import { useProjectStore, projectStore } from "../../stores/project";
-import { projectRepository } from "../../repositories";
+import { projectRepository, userPreferencesRepository } from "../../repositories";
 import { auth } from "../../config/firebase";
 
 function relativeTime(isoString: string): string {
@@ -19,6 +19,8 @@ function relativeTime(isoString: string): string {
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const pendingInvites = useProjectStore((s) => s.pendingInvites);
   const activityNotifications = useProjectStore((s) => s.activityNotifications);
   const lastReadAt = useProjectStore((s) => s.lastNotificationReadAt);
@@ -30,8 +32,33 @@ export function NotificationBell() {
     ).length;
 
   function handleOpen() {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownWidth = 320;
+      const margin = 16;
+      const top = rect.bottom + 4;
+      // Prefer right-aligning with the button; shift left if it would overflow
+      const rightEdge = rect.right;
+      const leftEdge = rightEdge - dropdownWidth;
+      const style: React.CSSProperties = {
+        position: "fixed",
+        top,
+        width: Math.min(dropdownWidth, window.innerWidth - margin * 2),
+      };
+      if (leftEdge < margin) {
+        style.left = margin;
+      } else {
+        style.right = window.innerWidth - rightEdge;
+      }
+      setDropdownStyle(style);
+    }
     setOpen(true);
-    projectStore.setLastNotificationReadAt(new Date().toISOString());
+    const ts = new Date().toISOString();
+    projectStore.setLastNotificationReadAt(ts);
+    const user = auth.currentUser;
+    if (user) {
+      userPreferencesRepository.updateLastNotificationReadAt(user.uid, ts);
+    }
   }
 
   async function handleRespond(inviteId: string, accept: boolean) {
@@ -56,6 +83,7 @@ export function NotificationBell() {
   return (
     <div className="relative">
       <button
+        ref={buttonRef}
         onClick={() => (open ? setOpen(false) : handleOpen())}
         className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-foreground/20 bg-surface hover:border-foreground/40 transition-colors"
         aria-label={
@@ -79,7 +107,7 @@ export function NotificationBell() {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-20 mt-1 w-80 rounded-xl border border-foreground/10 bg-surface p-2 shadow-lg">
+          <div style={dropdownStyle} className="z-20 rounded-xl border border-foreground/10 bg-surface p-2 shadow-lg">
             <p className="mb-2 px-2 text-xs font-medium text-foreground/60">
               Notifications
             </p>

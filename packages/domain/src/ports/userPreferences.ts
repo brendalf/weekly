@@ -4,8 +4,9 @@ import type { Unsubscribe } from './types';
 export interface UserPreferencesRepository {
   subscribeUserPreferences(
     userId: string,
-    onPreferences: (prefs: { theme: ThemePreference; layout: LayoutPreference }) => void
+    onPreferences: (prefs: { theme: ThemePreference; layout: LayoutPreference; lastNotificationReadAt: string | null }) => void
   ): Unsubscribe;
   updateTheme(userId: string, theme: ThemePreference): Promise<void>;
   updateLayout(userId: string, layout: LayoutPreference): Promise<void>;
+  updateLastNotificationReadAt(userId: string, ts: string): Promise<void>;
 }

@@ -354,7 +354,7 @@ export function createUserPreferencesRepository(
   return {
     subscribeUserPreferences(
       userId: string,
-      onPreferences: (prefs: { theme: ThemePreference; layout: LayoutPreference }) => void,
+      onPreferences: (prefs: { theme: ThemePreference; layout: LayoutPreference; lastNotificationReadAt: string | null }) => void,
     ) {
       const ref = doc(db, "preferences", userId);
       return onSnapshot(ref, (snap: DocumentSnapshot<DocumentData>) => {
@@ -365,7 +365,11 @@ export function createUserPreferencesRepository(
         const layout: LayoutPreference = VALID_LAYOUTS.includes(data?.layout)
           ? (data?.layout as LayoutPreference)
           : "period-tabs";
-        onPreferences({ theme, layout });
+        const lastNotificationReadAt =
+          typeof data?.lastNotificationReadAt === "string"
+            ? data.lastNotificationReadAt
+            : null;
+        onPreferences({ theme, layout, lastNotificationReadAt });
       });
     },
     async updateTheme(userId: string, theme: ThemePreference) {
@@ -373,6 +377,9 @@ export function createUserPreferencesRepository(
     },
     async updateLayout(userId: string, layout: LayoutPreference) {
       await setDoc(doc(db, "preferences", userId), { layout }, { merge: true });
+    },
+    async updateLastNotificationReadAt(userId: string, ts: string) {
+      await setDoc(doc(db, "preferences", userId), { lastNotificationReadAt: ts }, { merge: true });
     },
   };
 }
