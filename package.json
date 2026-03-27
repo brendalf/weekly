@@ -7,6 +7,8 @@
   },
   "devDependencies": {
     "baseline-browser-mapping": "^2.10.8",
-    "firebase-tools": "^14"
+    "firebase-admin": "^13.7.0",
+    "firebase-tools": "^14",
+    "tsx": "^4.21.0"
   }
 }
