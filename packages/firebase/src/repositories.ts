@@ -70,7 +70,7 @@ type HabitCompletionDoc = {
   periodKey?: unknown;
 };
 
-type HabitPeriodDoc = {
+type HabitProgressDoc = {
   habitId: string;
   period: Period;
   periodKey: string;
@@ -121,19 +121,19 @@ function mapTaskDoc(id: string, data: TaskDoc): Task {
 }
 
 function tasksCol(db: Firestore, projectId: string) {
-  return collection(db, "projects", projectId, "tasks");
+  return collection(db, "workspaces", projectId, "tasks");
 }
 
 function habitsCol(db: Firestore, projectId: string) {
-  return collection(db, "projects", projectId, "habits");
+  return collection(db, "workspaces", projectId, "habits");
 }
 
 function habitDocRef(db: Firestore, projectId: string, habitId: string) {
-  return doc(db, "projects", projectId, "habits", habitId);
+  return doc(db, "workspaces", projectId, "habits", habitId);
 }
 
 function habitProgressCol(db: Firestore, projectId: string) {
-  return collection(db, "projects", projectId, "habitProgress");
+  return collection(db, "workspaces", projectId, "habitProgress");
 }
 
 function periodDocRef(
@@ -144,7 +144,7 @@ function periodDocRef(
 ) {
   return doc(
     db,
-    "projects",
+    "workspaces",
     projectId,
     "habitProgress",
     `${habitId}_${periodKey}`,
@@ -154,7 +154,7 @@ function periodDocRef(
 function completionsCol(db: Firestore, projectId: string, habitId: string) {
   return collection(
     db,
-    "projects",
+    "workspaces",
     projectId,
     "habits",
     habitId,
@@ -185,22 +185,22 @@ export function createTaskRepository(
       });
     },
     async toggleTask(task: Task) {
-      const ref = doc(db, "projects", projectId, "tasks", task.id);
+      const ref = doc(db, "workspaces", projectId, "tasks", task.id);
       await updateDoc(ref, { completed: !task.completed });
     },
     async deleteTask(taskId: string) {
-      const ref = doc(db, "projects", projectId, "tasks", taskId);
+      const ref = doc(db, "workspaces", projectId, "tasks", taskId);
       const batch = writeBatch(db);
       batch.delete(ref);
       await batch.commit();
     },
     async updateTaskTitle(taskId: string, title: string) {
-      await updateDoc(doc(db, "projects", projectId, "tasks", taskId), {
+      await updateDoc(doc(db, "workspaces", projectId, "tasks", taskId), {
         title,
       });
     },
     async updateTask(taskId: string, updates: { title?: string; scope?: Period }) {
-      await updateDoc(doc(db, "projects", projectId, "tasks", taskId), updates);
+      await updateDoc(doc(db, "workspaces", projectId, "tasks", taskId), updates);
     },
   };
 }
@@ -229,7 +229,7 @@ export function createHabitRepository(
       batch.set(habitRef, habitData);
       const pk = periodKeyOf(date, period);
       batch.set(
-        doc(db, "projects", projectId, "habitProgress", `${habitRef.id}_${pk}`),
+        doc(db, "workspaces", projectId, "habitProgress", `${habitRef.id}_${pk}`),
         {
           habitId: habitRef.id,
           period,
@@ -293,7 +293,7 @@ export function createHabitRepository(
       );
       await runTransaction(db, async (tx: Transaction) => {
         const progressSnap = await tx.get(progressRef);
-        const data = progressSnap.data() as HabitPeriodDoc | undefined;
+        const data = progressSnap.data() as HabitProgressDoc | undefined;
         const newCount = Math.max(0, (data?.count ?? 0) - 1);
         const prevDayCounts = data?.dayCounts ?? {};
         const updates: Record<string, unknown> = {
@@ -388,7 +388,7 @@ function buildSummaryMap(
 ): Map<string, boolean> {
   const map = new Map<string, boolean>();
   for (const d of docs) {
-    const data = d.data() as HabitPeriodDoc;
+    const data = d.data() as HabitProgressDoc;
     map.set(data.periodKey, data.succeeded);
   }
   return map;
@@ -412,7 +412,7 @@ async function fillSummaryGaps(
   const latestSnap = await getDocs(latestQ);
   if (latestSnap.empty) return;
 
-  const lastKey = (latestSnap.docs[0].data() as HabitPeriodDoc).periodKey;
+  const lastKey = (latestSnap.docs[0].data() as HabitProgressDoc).periodKey;
   if (lastKey >= currentPeriodKey) return;
 
   const gapKeys: string[] = [];
@@ -431,7 +431,7 @@ async function fillSummaryGaps(
   );
   const existingSnap = await getDocs(existingQ);
   const existingKeys = new Set(
-    existingSnap.docs.map((d) => (d.data() as HabitPeriodDoc).periodKey),
+    existingSnap.docs.map((d) => (d.data() as HabitProgressDoc).periodKey),
   );
 
   const batch = writeBatch(db);
@@ -439,7 +439,7 @@ async function fillSummaryGaps(
   for (const gapKey of gapKeys) {
     if (!existingKeys.has(gapKey)) {
       batch.set(
-        doc(db, "projects", projectId, "habitProgress", `${habitId}_${gapKey}`),
+        doc(db, "workspaces", projectId, "habitProgress", `${habitId}_${gapKey}`),
         { habitId, period, periodKey: gapKey, count: 0, succeeded: false },
       );
       wrote = true;
@@ -465,7 +465,7 @@ export function createHabitProgressRepository(
       const periodKey = periodKeyOf(referenceDate, period);
       const ref = periodDocRef(db, projectId, habitId, periodKey);
       return onSnapshot(ref, (snap: DocumentSnapshot<DocumentData>) => {
-        const data = snap.data() as HabitPeriodDoc | undefined;
+        const data = snap.data() as HabitProgressDoc | undefined;
         onProgress({
           count: data?.count ?? 0,
           dayCounts: data?.dayCounts ?? {},
@@ -519,7 +519,7 @@ export function createHabitProgressRepository(
       const ref = periodDocRef(db, projectId, habitId, periodKey);
       await runTransaction(db, async (tx: Transaction) => {
         const snap = await tx.get(ref);
-        const existing = snap.data() as HabitPeriodDoc | undefined;
+        const existing = snap.data() as HabitProgressDoc | undefined;
         const prevCount = existing?.count ?? 0;
         const nextCount = Math.min(prevCount + 1, Math.max(1, target));
         const prevDayCounts = existing?.dayCounts ?? {};

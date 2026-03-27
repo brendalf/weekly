@@ -1,9 +1,9 @@
 import { db } from "./config/firebase";
 import {
-  createProjectRepository,
+  createWorkspaceRepository,
   createUserPreferencesRepository,
 } from "@weekly/firebase";
 
 export const userPreferencesRepository = createUserPreferencesRepository(db);
-export const projectRepository = createProjectRepository(db);
+export const workspaceRepository = createWorkspaceRepository(db);
 export { db };

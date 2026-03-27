@@ -24,7 +24,7 @@ import { SkipMenu } from "./SkipMenu";
 import { useCalendarStore } from "../../stores/calendar";
 import { HabitDetailsModal } from "./HabitDetailsModal";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
-import { projectRepository } from "../../repositories";
+import { workspaceRepository } from "../../repositories";
 import { auth } from "../../config/firebase";
 
 
@@ -159,7 +159,7 @@ export function HabitItem({
       const user = auth.currentUser;
       if (projectId && user) {
         try {
-          await projectRepository.logActivity(projectId, {
+          await workspaceRepository.logActivity(projectId, {
             type: "habit_completed",
             actorUid: user.uid,
             actorDisplayName: user.displayName ?? "User",

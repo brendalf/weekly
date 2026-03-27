@@ -13,12 +13,7 @@ import { TrashBin, Pencil, Xmark, Check } from "@gravity-ui/icons";
 import { Task, Period } from "@weekly/domain";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { ScopeSelector, SCOPE_OPTIONS } from "./ScopeSelector";
-
-const SCOPE_COLORS: Record<Period, string> = {
-  [Period.DAY]: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-  [Period.WEEK]: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
-  [Period.MONTH]: "bg-teal-500/15 text-teal-600 dark:text-teal-400",
-};
+import { PERIOD_COLORS } from "../general/PeriodBadge";
 
 interface TaskDetailsModalProps {
   open: boolean;
@@ -107,7 +102,7 @@ export function TaskDetailsModal({
                       <span
                         className={[
                           "w-fit rounded-full px-2.5 py-0.5 text-xs font-medium",
-                          SCOPE_COLORS[scope],
+                          PERIOD_COLORS[scope],
                         ].join(" ")}
                       >
                         {SCOPE_OPTIONS.find((o) => o.value === scope)?.label}

@@ -1,2 +1,3 @@
 export * from "./repositories";
-export * from "./projectRepository";
+export * from "./workspaceRepository";
+export * from "./noteRepository";

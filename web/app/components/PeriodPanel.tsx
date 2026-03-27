@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Habit, Task, Project, Period } from "@weekly/domain";
-import { ChevronsUp } from "@gravity-ui/icons";
+import { Workspace, Task, Habit, Period } from "@weekly/domain";
 import { HabitList } from "./habits/HabitList";
 import { TaskList } from "./tasks/TaskList";
+import { NoteList } from "./notes/NoteList";
+import { SectionHeader } from "./general/SectionHeader";
 
 interface PeriodPanelProps {
   period: Period;
-  scope: Period;
   habits: Habit[];
   tasks: Task[];
-  projects?: Project[];
+  workspaces?: Workspace[];
   innerLayout?: "sequential" | "side-by-side";
   showHabitPeriodLabel?: boolean;
   showTaskScopeLabel?: boolean;
@@ -19,47 +19,18 @@ interface PeriodPanelProps {
   onHabitsCompleted?: (completions: Record<string, boolean>) => void;
 }
 
-function SectionHeader({
-  label,
-  collapsed,
-  done,
-  total,
-  onToggle,
-}: {
-  label: string;
-  collapsed: boolean;
-  done: number;
-  total: number;
-  onToggle: () => void;
-}) {
-  return (
-    <div
-      className="flex items-center gap-1.5 cursor-pointer select-none pb-1"
-      onClick={onToggle}
-    >
-      {collapsed && (
-        <ChevronsUp width={12} height={12} className="text-foreground/40 shrink-0" />
-      )}
-      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/40">{label}</p>
-      {collapsed && total > 0 && (
-        <p className="text-xs text-foreground/30">{done}/{total}</p>
-      )}
-    </div>
-  );
-}
-
 export function PeriodPanel({
   period,
-  scope,
   habits,
   tasks,
-  projects,
+  workspaces,
   innerLayout = "sequential",
   showHabitPeriodLabel = false,
   showTaskScopeLabel = true,
   onToggleTaskCompleted,
   onHabitsCompleted,
 }: PeriodPanelProps) {
+  const [collapsedNotes, setCollapsedNotes] = useState(false);
   const [collapsedHabits, setCollapsedHabits] = useState(false);
   const [collapsedTasks, setCollapsedTasks] = useState(false);
   const [habitCompletedCount, setHabitCompletedCount] = useState(0);
@@ -70,13 +41,13 @@ export function PeriodPanel({
   );
 
   const taskTotal = useMemo(
-    () => tasks.filter((t) => (t.scope ?? Period.WEEK) === scope).length,
-    [tasks, scope],
+    () => tasks.filter((t) => (t.scope ?? Period.WEEK) === period).length,
+    [tasks, period],
   );
 
   const taskDone = useMemo(
-    () => tasks.filter((t) => (t.scope ?? Period.WEEK) === scope && t.completed).length,
-    [tasks, scope],
+    () => tasks.filter((t) => (t.scope ?? Period.WEEK) === period && t.completed).length,
+    [tasks, period],
   );
 
   const wrappedOnHabitsCompleted = useCallback(
@@ -85,6 +56,23 @@ export function PeriodPanel({
       onHabitsCompleted?.(completions);
     },
     [onHabitsCompleted],
+  );
+
+  const notesSection = period === Period.WEEK && (
+    <div>
+      <SectionHeader
+        label="Notes"
+        collapsed={collapsedNotes}
+        done={0}
+        total={0}
+        onToggle={() => setCollapsedNotes((v) => !v)}
+      />
+      <div className={`collapsible${collapsedNotes ? " collapsed" : ""}`}>
+        <div>
+          <NoteList />
+        </div>
+      </div>
+    </div>
   );
 
   const habitSection = (
@@ -101,7 +89,7 @@ export function PeriodPanel({
           <HabitList
             hideHeader
             habits={habits}
-            projects={projects}
+            workspaces={workspaces}
             periodFilter={period}
             showPeriodLabel={showHabitPeriodLabel}
             onHabitsCompleted={wrappedOnHabitsCompleted}
@@ -126,8 +114,8 @@ export function PeriodPanel({
             hideHeader
             tasks={tasks}
             onToggleCompleted={onToggleTaskCompleted}
-            projects={projects}
-            scopeFilter={scope}
+            workspaces={workspaces}
+            scopeFilter={period}
             showScopeLabel={showTaskScopeLabel}
           />
         </div>
@@ -137,15 +125,19 @@ export function PeriodPanel({
 
   if (innerLayout === "side-by-side") {
     return (
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <section>{habitSection}</section>
-        <section>{taskSection}</section>
+      <div className="flex flex-col gap-3">
+        {notesSection}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <section>{habitSection}</section>
+          <section>{taskSection}</section>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-3">
+      {notesSection}
       {habitSection}
       {taskSection}
     </div>

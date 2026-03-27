@@ -14,7 +14,7 @@ import { Check } from "@gravity-ui/icons";
 import { ActiveDaysSelector } from "./ActiveDaysSelector";
 import { TimeOfDaySelector } from "./TimeOfDaySelector";
 import { HabitPeriodSelect } from "./HabitPeriodSelect";
-import { ProjectField } from "../general/ProjectField";
+import { WorkspaceField } from "../general/WorkspaceField";
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 
@@ -23,12 +23,12 @@ interface HabitAddModalProps {
     name: string,
     times: number,
     period: Period,
-    projectId?: string,
+    workspaceId?: string,
     activeDays?: number[],
     timeOfDay?: HabitTimeOfDay,
   ) => void;
   trigger?: ReactElement;
-  projects?: { id: string; name: string }[];
+  workspaces?: { id: string; name: string }[];
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -36,14 +36,14 @@ interface HabitAddModalProps {
 export function HabitAddModal({
   onSubmit,
   trigger,
-  projects,
+  workspaces,
   isOpen,
   onOpenChange,
 }: HabitAddModalProps) {
   const [name, setName] = useState("");
   const [times, setTimes] = useState("1");
   const [period, setPeriod] = useState<Period>(Period.WEEK);
-  const [projectId, setProjectId] = useState<string>(projects?.[0]?.id ?? "");
+  const [workspaceId, setWorkspaceId] = useState<string>(workspaces?.[0]?.id ?? "");
   const [activeDays, setActiveDays] = useState<number[]>(ALL_DAYS);
   const [timeOfDay, setTimeOfDay] = useState<HabitTimeOfDay | undefined>(undefined);
 
@@ -51,7 +51,7 @@ export function HabitAddModal({
     setName("");
     setTimes("1");
     setPeriod(Period.WEEK);
-    setProjectId(projects?.[0]?.id ?? "");
+    setWorkspaceId(workspaces?.[0]?.id ?? "");
     setActiveDays(ALL_DAYS);
     setTimeOfDay(undefined);
   }
@@ -60,9 +60,9 @@ export function HabitAddModal({
     const trimmed = name.trim();
     const n = Number(times);
     if (!trimmed || !Number.isFinite(n) || n <= 0) return;
-    if (projects && !projectId) return;
+    if (workspaces && !workspaceId) return;
     const days = period === Period.DAY && activeDays.length < 7 ? activeDays : undefined;
-    onSubmit(trimmed, n, period, projects ? projectId : undefined, days, timeOfDay);
+    onSubmit(trimmed, n, period, workspaces ? workspaceId : undefined, days, timeOfDay);
     reset();
     close();
   }
@@ -70,7 +70,7 @@ export function HabitAddModal({
   const isValid =
     Boolean(name.trim()) &&
     Number(times) > 0 &&
-    (!projects || Boolean(projectId));
+    (!workspaces || Boolean(workspaceId));
 
   return (
     <Modal
@@ -109,11 +109,11 @@ export function HabitAddModal({
                           autoFocus
                         />
                       </TextField>
-                      {projects && (
-                        <ProjectField
-                          projects={projects}
-                          value={projectId}
-                          onChange={setProjectId}
+                      {workspaces && (
+                        <WorkspaceField
+                          workspaces={workspaces}
+                          value={workspaceId}
+                          onChange={setWorkspaceId}
                         />
                       )}
                       <div className="mt-4">Frequency</div>

@@ -1,5 +1,6 @@
-import { Habit, Period, WeekId, Year } from "../models/habit";
-import { dayKeyOf, monthKeyOf, periodKeyOf, weekKeyOf } from "./period";
+import { Habit, Period, WeekId } from "../models/habit";
+import { dayKeyOf, getISOWeek, monthKeyOf, periodKeyOf, weekKeyOf } from "./period";
+export { getISOWeek } from "./period";
 
 export function filterHabitsByDay(habits: Habit[], day: Date): Habit[] {
   const selected = new Date(day.getFullYear(), day.getMonth(), day.getDate());
@@ -81,24 +82,6 @@ export function isDateInWeek(dateISO: string, week: WeekId): boolean {
   return year === week.year && weekNumber === week.week;
 }
 
-/**
-  * Compute ISO week number and year for a given date.
-  */
-export function getISOWeek(date: Date): WeekId {
-  const tmp = new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
-  );
-
-  const dayNum = tmp.getUTCDay() || 7; // 1 (Mon) - 7 (Sun)
-  tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
-
-  const year = tmp.getUTCFullYear() as Year;
-
-  const yearStart = new Date(Date.UTC(year, 0, 1));
-  const week = Math.ceil(((+tmp - +yearStart) / 86400000 + 1) / 7) as number;
-
-  return { year, week };
-}
 
 function getMondayOfWeek(date: Date): Date {
   const d = new Date(date);

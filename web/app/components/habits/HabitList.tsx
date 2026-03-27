@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { Habit, Period, HabitTimeOfDay, Project, filterHabitsByDay, isHabitSkipped, PERIOD_ORDER, TIME_OF_DAY_ORDER } from "@weekly/domain";
+import { Habit, Period, HabitTimeOfDay, Workspace, filterHabitsByDay, isHabitSkipped, PERIOD_ORDER, TIME_OF_DAY_ORDER } from "@weekly/domain";
 import { Plus } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { HabitItem } from "./HabitItem";
@@ -12,15 +12,15 @@ import { useCalendarStore } from "../../stores/calendar";
 
 interface HabitListProps {
   habits: Habit[];
-  projects?: Project[];
+  workspaces?: Workspace[];
   hideHeader?: boolean;
   periodFilter?: Period;
   showPeriodLabel?: boolean;
   onHabitsCompleted?: (completions: Record<string, boolean>) => void;
 }
 
-export function HabitList({ habits, projects, hideHeader, periodFilter, showPeriodLabel, onHabitsCompleted }: HabitListProps) {
-  const { activeRepos, getProjectRepos, getHabitProjectId } =
+export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPeriodLabel, onHabitsCompleted }: HabitListProps) {
+  const { activeRepos, getWorkspaceRepos, getHabitProjectId } =
     useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
@@ -73,11 +73,11 @@ export function HabitList({ habits, projects, hideHeader, periodFilter, showPeri
     name: string,
     times: number,
     period: Period,
-    projectId?: string,
+    workspaceId?: string,
     activeDays?: number[],
     timeOfDay?: HabitTimeOfDay,
   ) => {
-    const repos = projectId ? getProjectRepos(projectId) : activeRepos;
+    const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
     const date = selectedDayISO ? new Date(selectedDayISO) : new Date();
     repos?.habit.addHabit(name, times, period, date, activeDays, timeOfDay);
   };
@@ -119,11 +119,11 @@ export function HabitList({ habits, projects, hideHeader, periodFilter, showPeri
               </p>
             )}
           </div>
-          {(activeRepos || projects) && (
+          {(activeRepos || workspaces) && (
             <div onClick={(e) => e.stopPropagation()}>
               <HabitAddModal
                 onSubmit={handleAddHabit}
-                projects={projects}
+                workspaces={workspaces}
                 trigger={
                   <Button size="sm" isIconOnly aria-label="Add habit" variant="ghost">
                     <Plus />
@@ -142,8 +142,8 @@ export function HabitList({ habits, projects, hideHeader, periodFilter, showPeri
           )}
           <div className="flex flex-col gap-0.5 pt-1">
             {sorted.map((habit) => {
-              const projectName = projects
-                ? projects.find((p) => p.id === getHabitProjectId(habit.id))?.name
+              const projectName = workspaces
+                ? workspaces.find((w) => w.id === getHabitProjectId(habit.id))?.name
                 : undefined;
               return (
                 <HabitItem

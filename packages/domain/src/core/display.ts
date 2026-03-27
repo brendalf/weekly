@@ -99,14 +99,9 @@ export const TIME_OF_DAY_ORDER: Record<string, number> = {
   evening: 2,
 };
 
-/** Convert a period to itself (kept for call-site compatibility). */
-export function scopeToPeriod(scope: Period): Period {
-  return scope;
-}
-
 /** Period tab descriptor used by the period-tabs layout. */
-export const PERIOD_TABS: { period: Period; scope: Period; label: string }[] = [
-  { period: Period.DAY, scope: Period.DAY, label: "Day" },
-  { period: Period.WEEK, scope: Period.WEEK, label: "Week" },
-  { period: Period.MONTH, scope: Period.MONTH, label: "Month" },
+export const PERIOD_TABS: { period: Period; label: string }[] = [
+  { period: Period.DAY, label: "Day" },
+  { period: Period.WEEK, label: "Week" },
+  { period: Period.MONTH, label: "Month" },
 ];

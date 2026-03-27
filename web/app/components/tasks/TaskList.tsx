@@ -4,11 +4,10 @@ import { useState } from "react";
 import {
   Task,
   Period,
-  Project,
+  Workspace,
   getTaskVisibility,
   taskPeriodKey,
   formatPeriodKey,
-  scopeToPeriod,
 } from "@weekly/domain";
 import { Plus } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
@@ -20,7 +19,7 @@ import { useCalendarStore } from "../../stores/calendar";
 interface TaskListProps {
   tasks: Task[];
   onToggleCompleted: (taskId: string) => void;
-  projects?: Project[];
+  workspaces?: Workspace[];
   hideHeader?: boolean;
   scopeFilter?: Period;
   showScopeLabel?: boolean;
@@ -29,23 +28,23 @@ interface TaskListProps {
 export function TaskList({
   tasks,
   onToggleCompleted,
-  projects,
+  workspaces,
   hideHeader,
   scopeFilter,
   showScopeLabel,
 }: TaskListProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const { activeRepos, getProjectRepos, getTaskProjectId } =
+  const { activeRepos, getWorkspaceRepos, getTaskProjectId } =
     useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const selectedDay = selectedDayISO ? new Date(selectedDayISO) : new Date();
 
   const handleAddTask = (
     title: string,
-    projectId?: string,
+    workspaceId?: string,
     scope?: Period,
   ) => {
-    const repos = projectId ? getProjectRepos(projectId) : activeRepos;
+    const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
     repos?.task.addTask(title, scope, selectedDay);
   };
 
@@ -80,11 +79,11 @@ export function TaskList({
               </p>
             )}
           </div>
-          {(activeRepos || projects) && (
+          {(activeRepos || workspaces) && (
             <div onClick={(e) => e.stopPropagation()}>
               <TaskAddModal
                 onSubmit={handleAddTask}
-                projects={projects}
+                workspaces={workspaces}
                 trigger={
                   <Button
                     size="sm"
@@ -112,15 +111,15 @@ export function TaskList({
                 (a, b) => Number(a.task.completed) - Number(b.task.completed),
               )
               .map(({ task, visibility }) => {
-                const projectName = projects
-                  ? projects.find((p) => p.id === getTaskProjectId(task.id))
+                const projectName = workspaces
+                  ? workspaces.find((w) => w.id === getTaskProjectId(task.id))
                       ?.name
                   : undefined;
                 const openSinceLabel =
                   visibility === "past_open"
                     ? formatPeriodKey(
                         taskPeriodKey(task),
-                        scopeToPeriod(task.scope ?? Period.WEEK),
+                        task.scope ?? Period.WEEK,
                       )
                     : undefined;
                 return (

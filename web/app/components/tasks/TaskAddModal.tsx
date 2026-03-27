@@ -12,12 +12,12 @@ import {
 import { Check } from "@gravity-ui/icons";
 import { Period } from "@weekly/domain";
 import { ScopeSelector } from "./ScopeSelector";
-import { ProjectField } from "../general/ProjectField";
+import { WorkspaceField } from "../general/WorkspaceField";
 
 interface TaskAddModalProps {
-  onSubmit: (title: string, projectId?: string, scope?: Period) => void;
+  onSubmit: (title: string, workspaceId?: string, scope?: Period) => void;
   trigger?: ReactElement;
-  projects?: { id: string; name: string }[];
+  workspaces?: { id: string; name: string }[];
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -25,21 +25,21 @@ interface TaskAddModalProps {
 export function TaskAddModal({
   onSubmit,
   trigger,
-  projects,
+  workspaces,
   isOpen,
   onOpenChange,
 }: TaskAddModalProps) {
   const [title, setTitle] = useState("");
-  const [projectId, setProjectId] = useState<string>(projects?.[0]?.id ?? "");
+  const [workspaceId, setWorkspaceId] = useState<string>(workspaces?.[0]?.id ?? "");
   const [scope, setScope] = useState<Period>(Period.WEEK);
 
   function handleSave(close: () => void) {
     const trimmed = title.trim();
     if (!trimmed) return;
-    if (projects && !projectId) return;
-    onSubmit(trimmed, projects ? projectId : undefined, scope);
+    if (workspaces && !workspaceId) return;
+    onSubmit(trimmed, workspaces ? workspaceId : undefined, scope);
     setTitle("");
-    setProjectId(projects?.[0]?.id ?? "");
+    setWorkspaceId(workspaces?.[0]?.id ?? "");
     setScope(Period.WEEK);
     close();
   }
@@ -50,7 +50,7 @@ export function TaskAddModal({
       onOpenChange={(open) => {
         if (!open) {
           setTitle("");
-          setProjectId(projects?.[0]?.id ?? "");
+          setWorkspaceId(workspaces?.[0]?.id ?? "");
           setScope(Period.WEEK);
         }
         onOpenChange?.(open);
@@ -85,11 +85,11 @@ export function TaskAddModal({
                           autoFocus
                         />
                       </TextField>
-                      {projects && (
-                        <ProjectField
-                          projects={projects}
-                          value={projectId}
-                          onChange={setProjectId}
+                      {workspaces && (
+                        <WorkspaceField
+                          workspaces={workspaces}
+                          value={workspaceId}
+                          onChange={setWorkspaceId}
                         />
                       )}
                       <div className="mt-4">
@@ -108,7 +108,7 @@ export function TaskAddModal({
                 <Modal.Footer>
                   <Button
                     isDisabled={
-                      !title.trim() || (Boolean(projects?.length) && !projectId)
+                      !title.trim() || (Boolean(workspaces?.length) && !workspaceId)
                     }
                     onPress={() => handleSave(close)}
                   >

@@ -17,15 +17,15 @@ import { HabitsTasksView } from "../components/HabitsTasksView";
 import { WeekPicker } from "../components/calendar/WeekPicker";
 import { WeekdaysCarousel } from "../components/calendar/WeekdaysCarousel";
 import { useCalendarStore } from "../stores/calendar";
-import { useProjectStore, projectStore } from "../stores/project";
+import { useWorkspaceStore, workspaceStore } from "../stores/workspace";
 import { RepositoryContext } from "../contexts/RepositoryContext";
-import { projectRepository, userPreferencesRepository, db } from "../repositories";
+import { workspaceRepository, userPreferencesRepository, db } from "../repositories";
 import { auth } from "../config/firebase";
 import { ThemeContext } from "../providers";
 import { ThemeToggleButton } from "../components/general/ThemeToggleButton";
-import { ProjectSwitcher } from "../components/projects/ProjectSwitcher";
-import { NotificationBell } from "../components/projects/NotificationBell";
-import { useProjectData } from "../hooks/useProjectData";
+import { WorkspaceSwitcher } from "../components/workspaces/WorkspaceSwitcher";
+import { NotificationBell } from "../components/workspaces/NotificationBell";
+import { useWorkspaceData } from "../hooks/useWorkspaceData";
 
 export default function AppPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -33,7 +33,7 @@ export default function AppPage() {
   const [user, setUser] = useState<User | null>(null);
 
 
-  const personalProjectCreatedRef = useRef(false);
+  const personalWorkspaceCreatedRef = useRef(false);
   const { setTheme } = useContext(ThemeContext);
   const [layout, setLayout] = useState<LayoutPreference>("period-tabs");
 
@@ -42,15 +42,15 @@ export default function AppPage() {
     selectedDayISO ? new Date(selectedDayISO) : new Date(),
   );
 
-  const projects = useProjectStore((s) => s.projects);
-  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const workspaces = useWorkspaceStore((s) => s.workspaces);
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
 
-  const { tasks, habits, activeRepos, getHabitRepos, getTaskRepos, getProjectRepos, getHabitProjectId, getTaskProjectId } =
-    useProjectData(db);
+  const { tasks, habits, activeRepos, getHabitRepos, getTaskRepos, getWorkspaceRepos, getHabitProjectId, getTaskProjectId } =
+    useWorkspaceData(db);
 
   const contextValue = useMemo(
-    () => ({ activeRepos, getHabitRepos, getTaskRepos, getProjectRepos, getHabitProjectId, getTaskProjectId }),
-    [activeRepos, getHabitRepos, getTaskRepos, getProjectRepos, getHabitProjectId, getTaskProjectId],
+    () => ({ activeRepos, getHabitRepos, getTaskRepos, getWorkspaceRepos, getHabitProjectId, getTaskProjectId }),
+    [activeRepos, getHabitRepos, getTaskRepos, getWorkspaceRepos, getHabitProjectId, getTaskProjectId],
   );
 
   // Auth
@@ -76,22 +76,22 @@ export default function AppPage() {
         setTheme(theme);
         setLayout(layout);
         if (lastNotificationReadAt) {
-          projectStore.setLastNotificationReadAt(lastNotificationReadAt);
+          workspaceStore.setLastNotificationReadAt(lastNotificationReadAt);
         }
       },
     );
   }, [userId, setTheme]);
 
-  // Subscribe to projects; create Personal project on first login
+  // Subscribe to workspaces; create Personal workspace on first login
   useEffect(() => {
     if (!userId || !user) return;
-    return projectRepository.subscribeUserProjects(userId, (userProjects) => {
-      projectStore.setProjects(userProjects);
-      if (userProjects.length === 0 && !personalProjectCreatedRef.current) {
-        personalProjectCreatedRef.current = true;
-        projectRepository.createPersonalProject(userId);
-      } else if (userProjects.length === 1) {
-        projectStore.setActiveProject(userProjects[0].id);
+    return workspaceRepository.subscribeUserWorkspaces(userId, (userWorkspaces) => {
+      workspaceStore.setWorkspaces(userWorkspaces);
+      if (userWorkspaces.length === 0 && !personalWorkspaceCreatedRef.current) {
+        personalWorkspaceCreatedRef.current = true;
+        workspaceRepository.createPersonalWorkspace(userId);
+      } else if (userWorkspaces.length === 1) {
+        workspaceStore.setActiveWorkspace(userWorkspaces[0].id);
       }
     });
   }, [userId, user]);
@@ -99,35 +99,35 @@ export default function AppPage() {
   // Subscribe to pending invites
   useEffect(() => {
     if (!user?.email) return;
-    return projectRepository.subscribeInvites(user.email, (invites) => {
-      projectStore.setPendingInvites(invites);
+    return workspaceRepository.subscribeInvites(user.email, (invites) => {
+      workspaceStore.setPendingInvites(invites);
     });
   }, [user?.email]);
 
-  // Subscribe to activity notifications across all projects
+  // Subscribe to activity notifications across all workspaces
   useEffect(() => {
-    if (!userId || projects.length === 0) return;
+    if (!userId || workspaces.length === 0) return;
 
-    const activitiesPerProject = new Map<string, ActivityNotification[]>();
+    const activitiesPerWorkspace = new Map<string, ActivityNotification[]>();
     const unsubs: (() => void)[] = [];
 
-    for (const project of projects) {
+    for (const workspace of workspaces) {
       unsubs.push(
-        projectRepository.subscribeProjectActivities(
-          project.id,
+        workspaceRepository.subscribeWorkspaceActivities(
+          workspace.id,
           userId,
           (acts) => {
-            activitiesPerProject.set(project.id, acts);
-            const all = [...activitiesPerProject.values()].flat();
+            activitiesPerWorkspace.set(workspace.id, acts);
+            const all = [...activitiesPerWorkspace.values()].flat();
             all.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-            projectStore.setActivityNotifications(all);
+            workspaceStore.setActivityNotifications(all);
           },
         ),
       );
     }
 
     return () => unsubs.forEach((u) => u());
-  }, [userId, projects]);
+  }, [userId, workspaces]);
 
   const handleLayoutChange = useCallback(async (newLayout: LayoutPreference) => {
     if (!userId) return;
@@ -144,11 +144,11 @@ export default function AppPage() {
     const wasCompleted = task.completed;
     await repos.task.toggleTask(task);
     if (!wasCompleted && user) {
-      const projectId = getTaskProjectId(taskId);
-      const project = projects.find((p) => p.id === projectId);
-      if (projectId && project && project.members.length > 1) {
+      const workspaceId = getTaskProjectId(taskId);
+      const workspace = workspaces.find((w) => w.id === workspaceId);
+      if (workspaceId && workspace && workspace.members.length > 1) {
         try {
-          await projectRepository.logActivity(projectId, {
+          await workspaceRepository.logActivity(workspaceId, {
             type: "task_completed",
             actorUid: user.uid,
             actorDisplayName: user.displayName ?? "User",
@@ -184,7 +184,7 @@ export default function AppPage() {
           <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center justify-between">
-                <ProjectSwitcher />
+                <WorkspaceSwitcher />
                 <div className="flex items-center gap-3 sm:hidden">
                   <NotificationBell />
                   <ThemeToggleButton userId={userId} />
@@ -223,7 +223,7 @@ export default function AppPage() {
           <HabitsTasksView
             habits={habits}
             tasks={tasks}
-            projects={activeProjectId === null ? projects : undefined}
+            workspaces={activeWorkspaceId === null ? workspaces : undefined}
             layout={layout}
             onToggleTaskCompleted={handleToggleTaskCompleted}
             onLayoutChange={handleLayoutChange}

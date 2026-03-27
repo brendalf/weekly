@@ -4,7 +4,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import {
   Habit,
   Task,
-  Project,
+  Workspace,
   Period,
   HabitTimeOfDay,
   filterHabitsByDay,
@@ -34,7 +34,7 @@ type InnerLayout = "sequential" | "side-by-side";
 interface HabitsTasksViewProps {
   habits: Habit[];
   tasks: Task[];
-  projects?: Project[];
+  workspaces?: Workspace[];
   layout: LayoutPreference;
   onToggleTaskCompleted: (taskId: string) => void;
   onLayoutChange: (layout: LayoutPreference) => void;
@@ -156,13 +156,13 @@ function LayoutSettingsButton({
 }
 
 function UnifiedAddButton({
-  projects,
+  workspaces,
   onAddHabit,
   onAddTask,
 }: {
-  projects?: Project[];
-  onAddHabit: (name: string, times: number, period: Period, projectId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => void;
-  onAddTask: (title: string, projectId?: string, scope?: Period) => void;
+  workspaces?: Workspace[];
+  onAddHabit: (name: string, times: number, period: Period, workspaceId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => void;
+  onAddTask: (title: string, workspaceId?: string, scope?: Period) => void;
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [habitModalOpen, setHabitModalOpen] = useState(false);
@@ -207,14 +207,14 @@ function UnifiedAddButton({
         isOpen={habitModalOpen}
         onOpenChange={setHabitModalOpen}
         onSubmit={onAddHabit}
-        projects={projects}
+        workspaces={workspaces}
         trigger={<span style={{ display: "none" }} />}
       />
       <TaskAddModal
         isOpen={taskModalOpen}
         onOpenChange={setTaskModalOpen}
         onSubmit={onAddTask}
-        projects={projects}
+        workspaces={workspaces}
         trigger={<span style={{ display: "none" }} />}
       />
     </div>
@@ -224,7 +224,7 @@ function UnifiedAddButton({
 export function HabitsTasksView({
   habits,
   tasks,
-  projects,
+  workspaces,
   layout,
   onToggleTaskCompleted,
   onLayoutChange,
@@ -232,43 +232,41 @@ export function HabitsTasksView({
   const [activePeriodTab, setActivePeriodTab] = useState<Period>(Period.DAY);
   const [innerLayout, setInnerLayout] = useState<InnerLayout>("sequential");
   const [habitCompletions, setHabitCompletions] = useState<Record<string, boolean>>({});
-  const { activeRepos, getProjectRepos } = useRepositoryContext();
+  const { activeRepos, getWorkspaceRepos } = useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const selectedDay = useMemo(
     () => (selectedDayISO ? new Date(selectedDayISO) : new Date()),
     [selectedDayISO],
   );
 
-  // Merge completions from all period panels without overwriting each other
   const handleHabitsCompleted = useCallback((completions: Record<string, boolean>) => {
     setHabitCompletions((prev) => ({ ...prev, ...completions }));
   }, []);
 
   const handleAddHabit = useCallback(
-    (name: string, times: number, period: Period, projectId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => {
-      const repos = projectId ? getProjectRepos(projectId) : activeRepos;
+    (name: string, times: number, period: Period, workspaceId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => {
+      const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
       repos?.habit.addHabit(name, times, period, selectedDay, activeDays, timeOfDay);
     },
-    [activeRepos, getProjectRepos, selectedDay],
+    [activeRepos, getWorkspaceRepos, selectedDay],
   );
 
   const handleAddTask = useCallback(
-    (title: string, projectId?: string, scope?: Period) => {
-      const repos = projectId ? getProjectRepos(projectId) : activeRepos;
+    (title: string, workspaceId?: string, scope?: Period) => {
+      const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
       repos?.task.addTask(title, scope, selectedDay);
     },
-    [activeRepos, getProjectRepos, selectedDay],
+    [activeRepos, getWorkspaceRepos, selectedDay],
   );
 
-  // Per-period progress for circular indicators
   const periodProgress = useMemo(() => {
     const visibleHabits = filterHabitsByDay(habits, selectedDay);
-    return PERIOD_TABS.map(({ period, scope, label }) => {
+    return PERIOD_TABS.map(({ period, label }) => {
       const ph = visibleHabits.filter(
         (h) => h.period === period && !isHabitSkipped(h, selectedDay),
       );
       const pt = tasks.filter(
-        (t) => (t.scope ?? Period.WEEK) === scope && getTaskVisibility(t, selectedDay) !== "hidden",
+        (t) => (t.scope ?? Period.WEEK) === period && getTaskVisibility(t, selectedDay) !== "hidden",
       );
       const done =
         ph.filter((h) => habitCompletions[h.id]).length +
@@ -280,7 +278,6 @@ export function HabitsTasksView({
 
   const isPeriodTabs = layout !== "period-sequential";
 
-  // Overview mode collapse state
   const [collapsedOverviewHabits, setCollapsedOverviewHabits] = useState(false);
   const [collapsedOverviewTasks, setCollapsedOverviewTasks] = useState(false);
 
@@ -300,7 +297,6 @@ export function HabitsTasksView({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Controls row — stable position regardless of layout */}
       <div className="flex items-center gap-2">
         {isPeriodTabs ? (
           <div className="flex gap-1">
@@ -336,9 +332,9 @@ export function HabitsTasksView({
 
         <div className="flex-1" />
 
-        {(activeRepos || projects) && (
+        {(activeRepos || workspaces) && (
           <UnifiedAddButton
-            projects={projects}
+            workspaces={workspaces}
             onAddHabit={handleAddHabit}
             onAddTask={handleAddTask}
           />
@@ -351,17 +347,15 @@ export function HabitsTasksView({
         />
       </div>
 
-      {/* Content */}
       {isPeriodTabs ? (
         <div>
-          {PERIOD_TABS.map(({ period, scope }) => (
+          {PERIOD_TABS.map(({ period }) => (
             <div key={period} className={activePeriodTab !== period ? "hidden" : ""}>
               <PeriodPanel
                 period={period}
-                scope={scope}
                 habits={habits}
                 tasks={tasks}
-                projects={projects}
+                workspaces={workspaces}
                 innerLayout={innerLayout}
                 showHabitPeriodLabel={false}
                 showTaskScopeLabel={false}
@@ -391,7 +385,7 @@ export function HabitsTasksView({
                 <HabitList
                   hideHeader
                   habits={habits}
-                  projects={projects}
+                  workspaces={workspaces}
                   showPeriodLabel={true}
                   onHabitsCompleted={handleHabitsCompleted}
                 />
@@ -419,7 +413,7 @@ export function HabitsTasksView({
                   hideHeader
                   tasks={tasks}
                   onToggleCompleted={onToggleTaskCompleted}
-                  projects={projects}
+                  workspaces={workspaces}
                   showScopeLabel={true}
                 />
               </div>

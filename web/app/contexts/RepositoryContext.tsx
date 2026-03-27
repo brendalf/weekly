@@ -5,19 +5,21 @@ import type {
   TaskRepository,
   HabitRepository,
   HabitProgressRepository,
+  NoteRepository,
 } from "@weekly/domain";
 
 export interface RepoSet {
   task: TaskRepository;
   habit: HabitRepository;
   habitProgress: HabitProgressRepository;
+  note: NoteRepository;
 }
 
 interface RepositoryContextValue {
   activeRepos: RepoSet | null;
   getHabitRepos(habitId: string): RepoSet | null;
   getTaskRepos(taskId: string): RepoSet | null;
-  getProjectRepos(projectId: string): RepoSet | null;
+  getWorkspaceRepos(workspaceId: string): RepoSet | null;
   getHabitProjectId(habitId: string): string | null;
   getTaskProjectId(taskId: string): string | null;
 }
@@ -26,7 +28,7 @@ export const RepositoryContext = createContext<RepositoryContextValue>({
   activeRepos: null,
   getHabitRepos: () => null,
   getTaskRepos: () => null,
-  getProjectRepos: () => null,
+  getWorkspaceRepos: () => null,
   getHabitProjectId: () => null,
   getTaskProjectId: () => null,
 });

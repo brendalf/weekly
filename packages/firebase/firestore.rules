@@ -15,14 +15,14 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && request.auth.token.email == email;
     }
 
-    // Projects
-    function isMember(projectId) {
+    // Workspaces
+    function isMember(workspaceId) {
       return request.auth != null &&
-        exists(/databases/$(database)/documents/projects/$(projectId)) &&
-        request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.members;
+        exists(/databases/$(database)/documents/workspaces/$(workspaceId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.members;
     }
 
-    match /projects/{projectId} {
+    match /workspaces/{workspaceId} {
       allow read: if request.auth != null &&
         (request.auth.uid in resource.data.members ||
         request.auth.uid == request.resource.data.ownerId);
@@ -38,19 +38,22 @@ service cloud.firestore {
         request.auth.uid == resource.data.ownerId;
 
       match /tasks/{taskId} {
-        allow read, write: if isMember(projectId);
+        allow read, write: if isMember(workspaceId);
       }
       match /habits/{habitId} {
-        allow read, write: if isMember(projectId);
+        allow read, write: if isMember(workspaceId);
         match /completions/{logId} {
-          allow read, write: if isMember(projectId);
+          allow read, write: if isMember(workspaceId);
         }
       }
       match /habitProgress/{progressId} {
-        allow read, write: if isMember(projectId);
+        allow read, write: if isMember(workspaceId);
       }
       match /activities/{actId} {
-        allow read, write: if isMember(projectId);
+        allow read, write: if isMember(workspaceId);
+      }
+      match /weekNotes/{weekKey}/items/{noteId} {
+        allow read, write: if isMember(workspaceId);
       }
     }
   }
