@@ -28,6 +28,9 @@ import { TaskAddModal } from "./tasks/TaskAddModal";
 import { PeriodPanel } from "./PeriodPanel";
 import { useRepositoryContext } from "../contexts/RepositoryContext";
 import { useCalendarStore } from "../stores/calendar";
+import { useWorkspaceStore } from "../stores/workspace";
+import { workspaceRepository } from "../repositories";
+import { auth } from "../config/firebase";
 
 type InnerLayout = "sequential" | "side-by-side";
 
@@ -238,25 +241,57 @@ export function HabitsTasksView({
     () => (selectedDayISO ? new Date(selectedDayISO) : new Date()),
     [selectedDayISO],
   );
+  const storeWorkspaces = useWorkspaceStore((s) => s.workspaces);
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
 
   const handleHabitsCompleted = useCallback((completions: Record<string, boolean>) => {
     setHabitCompletions((prev) => ({ ...prev, ...completions }));
   }, []);
 
   const handleAddHabit = useCallback(
-    (name: string, times: number, period: Period, workspaceId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => {
+    async (name: string, times: number, period: Period, workspaceId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => {
       const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
-      repos?.habit.addHabit(name, times, period, selectedDay, activeDays, timeOfDay);
+      const habitId = await repos?.habit.addHabit(name, times, period, selectedDay, activeDays, timeOfDay);
+      if (!habitId) return;
+      const targetWorkspaceId = workspaceId ?? activeWorkspaceId;
+      if (!targetWorkspaceId) return;
+      const workspace = storeWorkspaces.find((w) => w.id === targetWorkspaceId);
+      const user = auth.currentUser;
+      if (!user || !workspace || workspace.members.length < 2) return;
+      workspaceRepository
+        .logActivity(targetWorkspaceId, {
+          type: "habit_added",
+          actorUid: user.uid,
+          actorDisplayName: user.displayName ?? "User",
+          itemId: habitId,
+          itemName: name,
+        })
+        .catch(() => {/* non-critical */});
     },
-    [activeRepos, getWorkspaceRepos, selectedDay],
+    [activeRepos, getWorkspaceRepos, selectedDay, storeWorkspaces, activeWorkspaceId],
   );
 
   const handleAddTask = useCallback(
-    (title: string, workspaceId?: string, scope?: Period) => {
+    async (title: string, workspaceId?: string, scope?: Period) => {
       const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
-      repos?.task.addTask(title, scope, selectedDay);
+      const taskId = await repos?.task.addTask(title, scope, selectedDay);
+      if (!taskId) return;
+      const targetWorkspaceId = workspaceId ?? activeWorkspaceId;
+      if (!targetWorkspaceId) return;
+      const workspace = storeWorkspaces.find((w) => w.id === targetWorkspaceId);
+      const user = auth.currentUser;
+      if (!user || !workspace || workspace.members.length < 2) return;
+      workspaceRepository
+        .logActivity(targetWorkspaceId, {
+          type: "task_added",
+          actorUid: user.uid,
+          actorDisplayName: user.displayName ?? "User",
+          itemId: taskId,
+          itemName: title,
+        })
+        .catch(() => {/* non-critical */});
     },
-    [activeRepos, getWorkspaceRepos, selectedDay],
+    [activeRepos, getWorkspaceRepos, selectedDay, storeWorkspaces, activeWorkspaceId],
   );
 
   const periodProgress = useMemo(() => {

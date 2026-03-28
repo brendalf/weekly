@@ -171,10 +171,13 @@ export function NotificationBell() {
                         <span className="font-medium">
                           {activity.actorDisplayName}
                         </span>{" "}
-                        {activity.type === "habit_completed"
-                          ? "completed"
-                          : "finished"}{" "}
-                        <span className="font-medium">{activity.itemName}</span>
+                        {activity.type === "habit_completed" && <>completed habit <span className="font-medium">{activity.itemName}</span></>}
+                        {activity.type === "task_completed" && <>finished task <span className="font-medium">{activity.itemName}</span></>}
+                        {activity.type === "habit_added" && <>added habit <span className="font-medium">{activity.itemName}</span></>}
+                        {activity.type === "task_added" && <>added task <span className="font-medium">{activity.itemName}</span></>}
+                        {activity.type === "note_added" && <>added a note <span className="font-medium">{activity.itemName}</span>{activity.weekKey ? <> for {activity.weekKey}</> : null}</>}
+                        {activity.type === "note_edited" && <>edited note <span className="font-medium">{activity.itemName}</span></>}
+                        {activity.type === "note_deleted" && <>deleted note <span className="font-medium">{activity.itemName}</span></>}
                       </p>
                     </div>
                     <span className="shrink-0 text-[10px] text-foreground/40">

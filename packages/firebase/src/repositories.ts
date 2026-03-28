@@ -177,12 +177,13 @@ export function createTaskRepository(
       });
     },
     async addTask(title: string, scope?: Period, createdAt?: Date) {
-      await addDoc(tasksCol(db, projectId), {
+      const ref = await addDoc(tasksCol(db, projectId), {
         title,
         completed: false,
         createdAt: createdAt ?? new Date(),
         scope: scope ?? Period.WEEK,
       });
+      return ref.id;
     },
     async toggleTask(task: Task) {
       const ref = doc(db, "workspaces", projectId, "tasks", task.id);
@@ -239,6 +240,7 @@ export function createHabitRepository(
         },
       );
       await batch.commit();
+      return habitRef.id;
     },
     subscribeHabitCompletions(
       habitId: string,

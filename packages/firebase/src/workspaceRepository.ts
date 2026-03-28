@@ -36,12 +36,23 @@ type WorkspaceDoc = {
   pendingInviteEmails?: unknown[];
 };
 
+const KNOWN_ACTIVITY_TYPES = new Set([
+  "habit_completed",
+  "task_completed",
+  "habit_added",
+  "task_added",
+  "note_added",
+  "note_edited",
+  "note_deleted",
+] as const);
+
 type ActivityDoc = {
   type?: unknown;
   actorUid?: unknown;
   actorDisplayName?: unknown;
   itemId?: unknown;
   itemName?: unknown;
+  weekKey?: unknown;
   createdAt?: { toDate?: () => Date };
 };
 
@@ -53,15 +64,15 @@ function toActivity(
   return {
     id,
     workspaceId,
-    type:
-      data.type === "habit_completed" || data.type === "task_completed"
-        ? data.type
-        : "task_completed",
+    type: KNOWN_ACTIVITY_TYPES.has(data.type as ActivityNotification["type"])
+      ? (data.type as ActivityNotification["type"])
+      : "task_completed",
     actorUid: typeof data.actorUid === "string" ? data.actorUid : "",
     actorDisplayName:
       typeof data.actorDisplayName === "string" ? data.actorDisplayName : "",
     itemId: typeof data.itemId === "string" ? data.itemId : "",
     itemName: typeof data.itemName === "string" ? data.itemName : "",
+    ...(typeof data.weekKey === "string" ? { weekKey: data.weekKey } : {}),
     createdAt:
       data.createdAt?.toDate?.().toISOString() ?? new Date().toISOString(),
   };

@@ -19,9 +19,10 @@ interface NoteAddModalProps {
   noteRepo: NoteRepository;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAdded?: (noteId: string, noteTitle: string) => void;
 }
 
-export function NoteAddModal({ weekKey, noteRepo, open, onOpenChange }: NoteAddModalProps) {
+export function NoteAddModal({ weekKey, noteRepo, open, onOpenChange, onAdded }: NoteAddModalProps) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
 
@@ -41,12 +42,13 @@ export function NoteAddModal({ weekKey, noteRepo, open, onOpenChange }: NoteAddM
     if (!trimmedTitle) return;
     const user = auth.currentUser;
     if (!user) return;
-    await noteRepo.addNote(weekKey, {
+    const noteId = await noteRepo.addNote(weekKey, {
       title: trimmedTitle,
       body: body.trim(),
       authorId: user.uid,
       authorDisplayName: user.displayName ?? "User",
     });
+    onAdded?.(noteId, trimmedTitle);
     setTitle("");
     setBody("");
     state.close();

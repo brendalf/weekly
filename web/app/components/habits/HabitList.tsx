@@ -8,6 +8,9 @@ import { HabitItem } from "./HabitItem";
 import { HabitAddModal } from "./HabitAddModal";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useCalendarStore } from "../../stores/calendar";
+import { useWorkspaceStore } from "../../stores/workspace";
+import { workspaceRepository } from "../../repositories";
+import { auth } from "../../config/firebase";
 
 
 interface HabitListProps {
@@ -23,6 +26,8 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
   const { activeRepos, getWorkspaceRepos, getHabitProjectId } =
     useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
+  const storeWorkspaces = useWorkspaceStore((s) => s.workspaces);
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [progressTodayIds, setProgressTodayIds] = useState<Set<string>>(new Set());
   const [collapsed, setCollapsed] = useState(false);
@@ -69,7 +74,7 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
     });
   }, []);
 
-  const handleAddHabit = (
+  const handleAddHabit = async (
     name: string,
     times: number,
     period: Period,
@@ -79,7 +84,22 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
   ) => {
     const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
     const date = selectedDayISO ? new Date(selectedDayISO) : new Date();
-    repos?.habit.addHabit(name, times, period, date, activeDays, timeOfDay);
+    const habitId = await repos?.habit.addHabit(name, times, period, date, activeDays, timeOfDay);
+    if (!habitId) return;
+    const targetWorkspaceId = workspaceId ?? activeWorkspaceId;
+    if (!targetWorkspaceId) return;
+    const workspace = storeWorkspaces.find((w) => w.id === targetWorkspaceId);
+    const user = auth.currentUser;
+    if (!user || !workspace || workspace.members.length < 2) return;
+    workspaceRepository
+      .logActivity(targetWorkspaceId, {
+        type: "habit_added",
+        actorUid: user.uid,
+        actorDisplayName: user.displayName ?? "User",
+        itemId: habitId,
+        itemName: name,
+      })
+      .catch(() => {/* non-critical */});
   };
 
   const sorted = useMemo(() => {

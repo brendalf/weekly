@@ -12,7 +12,7 @@ export interface HabitCompletionLog {
 
 export interface HabitRepository {
   subscribeHabits(onHabits: (habits: Habit[]) => void): Unsubscribe;
-  addHabit(name: string, times: number, period: Period, createdAt?: Date, activeDays?: number[], timeOfDay?: HabitTimeOfDay): Promise<void>;
+  addHabit(name: string, times: number, period: Period, createdAt?: Date, activeDays?: number[], timeOfDay?: HabitTimeOfDay): Promise<string>;
   subscribeHabitCompletions(
     habitId: string,
     onLogs: (logs: HabitCompletionLog[]) => void,
