@@ -120,9 +120,9 @@ export function useWorkspaceData(db: Firestore) {
 
   const getWorkspaceRepos = useCallback(
     (workspaceId: string): RepoSet | null => {
-      return workspaceReposRef.current.get(workspaceId) ?? null;
+      return getOrCreateRepos(workspaceId);
     },
-    [],
+    [getOrCreateRepos],
   );
 
   const getHabitProjectId = useCallback(

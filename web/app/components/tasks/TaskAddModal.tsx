@@ -58,7 +58,7 @@ export function TaskAddModal({
     >
       {trigger ?? <Button size="sm">Add task</Button>}
       <Modal.Backdrop variant="blur">
-        <Modal.Container placement="center" size="sm">
+        <Modal.Container placement="top" size="sm" className="sm:items-center sm:[&]:mt-0 mt-16">
           <Modal.Dialog>
             {({ close }) => (
               <>

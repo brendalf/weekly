@@ -11,20 +11,19 @@ import {
   useOverlayState,
 } from "@heroui/react";
 import { Check } from "@gravity-ui/icons";
-import { auth } from "../../config/firebase";
-import type { NoteRepository } from "@weekly/domain";
+import { WorkspaceField } from "../general/WorkspaceField";
 
 interface NoteAddModalProps {
-  weekKey: string;
-  noteRepo: NoteRepository;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdded?: (noteId: string, noteTitle: string) => void;
+  workspaces?: { id: string; name: string }[];
+  onSubmit: (title: string, body: string, workspaceId?: string) => void;
 }
 
-export function NoteAddModal({ weekKey, noteRepo, open, onOpenChange, onAdded }: NoteAddModalProps) {
+export function NoteAddModal({ open, onOpenChange, workspaces, onSubmit }: NoteAddModalProps) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [workspaceId, setWorkspaceId] = useState<string>(workspaces?.[0]?.id ?? "");
 
   const state = useOverlayState({
     isOpen: open,
@@ -32,27 +31,24 @@ export function NoteAddModal({ weekKey, noteRepo, open, onOpenChange, onAdded }:
       if (!isOpen) {
         setTitle("");
         setBody("");
+        setWorkspaceId(workspaces?.[0]?.id ?? "");
       }
       onOpenChange(isOpen);
     },
   });
 
-  async function handleAdd() {
+  function handleAdd() {
     const trimmedTitle = title.trim();
     if (!trimmedTitle) return;
-    const user = auth.currentUser;
-    if (!user) return;
-    const noteId = await noteRepo.addNote(weekKey, {
-      title: trimmedTitle,
-      body: body.trim(),
-      authorId: user.uid,
-      authorDisplayName: user.displayName ?? "User",
-    });
-    onAdded?.(noteId, trimmedTitle);
+    if (workspaces && !workspaceId) return;
+    onSubmit(trimmedTitle, body.trim(), workspaces ? workspaceId : undefined);
     setTitle("");
     setBody("");
+    setWorkspaceId(workspaces?.[0]?.id ?? "");
     state.close();
   }
+
+  const isValid = Boolean(title.trim()) && (!workspaces || Boolean(workspaceId));
 
   return (
     <Modal state={state}>
@@ -82,6 +78,13 @@ export function NoteAddModal({ weekKey, noteRepo, open, onOpenChange, onAdded }:
                       onChange={(e) => setTitle(e.target.value)}
                     />
                   </TextField>
+                  {workspaces && (
+                    <WorkspaceField
+                      workspaces={workspaces}
+                      value={workspaceId}
+                      onChange={setWorkspaceId}
+                    />
+                  )}
                   <div className="flex flex-col gap-1">
                     <Label>Body</Label>
                     <textarea
@@ -96,7 +99,7 @@ export function NoteAddModal({ weekKey, noteRepo, open, onOpenChange, onAdded }:
               </Surface>
             </Modal.Body>
             <Modal.Footer>
-              <Button isDisabled={!title.trim()} onPress={handleAdd}>
+              <Button isDisabled={!isValid} onPress={handleAdd}>
                 <Check />
               </Button>
             </Modal.Footer>

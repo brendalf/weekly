@@ -8,11 +8,12 @@ import type { Note } from "@weekly/domain";
 interface NoteItemProps {
   note: Note;
   weekKey: string;
+  workspaceName?: string;
   onUpdate: (weekKey: string, noteId: string, title: string, body: string) => Promise<void>;
   onDelete: (weekKey: string, noteId: string) => Promise<void>;
 }
 
-export function NoteItem({ note, weekKey, onUpdate, onDelete }: NoteItemProps) {
+export function NoteItem({ note, weekKey, workspaceName, onUpdate, onDelete }: NoteItemProps) {
   const [collapsed, setCollapsed] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(note.title);
@@ -80,8 +81,13 @@ export function NoteItem({ note, weekKey, onUpdate, onDelete }: NoteItemProps) {
     <div className="rounded-lg border border-foreground/10 bg-background">
       <button
         onClick={() => setCollapsed((v) => !v)}
-        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left"
+        className="flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left"
       >
+        {workspaceName && (
+          <span className="shrink-0 rounded-md bg-foreground/10 px-1.5 py-0.5 text-xs text-foreground/60">
+            {workspaceName}
+          </span>
+        )}
         <span className="flex-1 truncate text-sm font-medium text-foreground">
           {note.title}
         </span>

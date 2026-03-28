@@ -279,7 +279,7 @@ export function createHabitRepository(
       if (!log.periodKey) return;
       const logRef = doc(
         db,
-        "projects",
+        "workspaces",
         projectId,
         "habits",
         habitId,
@@ -288,7 +288,7 @@ export function createHabitRepository(
       );
       const progressRef = doc(
         db,
-        "projects",
+        "workspaces",
         projectId,
         "habitProgress",
         `${habitId}_${log.periodKey}`,

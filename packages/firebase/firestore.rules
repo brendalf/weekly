@@ -43,7 +43,7 @@ service cloud.firestore {
       match /habits/{habitId} {
         allow read, write: if isMember(workspaceId);
         match /completions/{logId} {
-          allow read, write: if isMember(workspaceId);
+          allow read, write, delete: if isMember(workspaceId);
         }
       }
       match /habitProgress/{progressId} {

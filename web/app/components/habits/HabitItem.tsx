@@ -27,7 +27,6 @@ import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { workspaceRepository } from "../../repositories";
 import { auth } from "../../config/firebase";
 
-
 export interface HabitItemProps {
   id: string;
   name: string;
@@ -216,9 +215,7 @@ export function HabitItem({
             >
               {name}
             </span>
-            {showPeriodLabel && !isSkipped && (
-              <PeriodBadge period={period} />
-            )}
+            {showPeriodLabel && !isSkipped && <PeriodBadge period={period} />}
             {isSkipped && (
               <Badge className="shrink-0 bg-foreground/10 text-foreground/50">
                 Skipped
@@ -341,7 +338,6 @@ export function HabitItem({
         activeDays={activeDays}
         skippedPeriods={skippedPeriods}
         timeOfDay={timeOfDay}
-        value={value}
         referenceDate={referenceDate}
         streak={streak}
       />

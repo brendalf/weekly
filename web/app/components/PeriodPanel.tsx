@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo } from "react";
 import { Workspace, Task, Habit, Period } from "@weekly/domain";
 import { HabitList } from "./habits/HabitList";
 import { TaskList } from "./tasks/TaskList";
-import { NoteList } from "./notes/NoteList";
 import { SectionHeader } from "./general/SectionHeader";
 
 interface PeriodPanelProps {
@@ -30,7 +29,6 @@ export function PeriodPanel({
   onToggleTaskCompleted,
   onHabitsCompleted,
 }: PeriodPanelProps) {
-  const [collapsedNotes, setCollapsedNotes] = useState(false);
   const [collapsedHabits, setCollapsedHabits] = useState(false);
   const [collapsedTasks, setCollapsedTasks] = useState(false);
   const [habitCompletedCount, setHabitCompletedCount] = useState(0);
@@ -56,23 +54,6 @@ export function PeriodPanel({
       onHabitsCompleted?.(completions);
     },
     [onHabitsCompleted],
-  );
-
-  const notesSection = period === Period.WEEK && (
-    <div>
-      <SectionHeader
-        label="Notes"
-        collapsed={collapsedNotes}
-        done={0}
-        total={0}
-        onToggle={() => setCollapsedNotes((v) => !v)}
-      />
-      <div className={`collapsible${collapsedNotes ? " collapsed" : ""}`}>
-        <div>
-          <NoteList />
-        </div>
-      </div>
-    </div>
   );
 
   const habitSection = (
@@ -125,19 +106,15 @@ export function PeriodPanel({
 
   if (innerLayout === "side-by-side") {
     return (
-      <div className="flex flex-col gap-3">
-        {notesSection}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <section>{habitSection}</section>
-          <section>{taskSection}</section>
-        </div>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <section>{habitSection}</section>
+        <section>{taskSection}</section>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-3">
-      {notesSection}
       {habitSection}
       {taskSection}
     </div>

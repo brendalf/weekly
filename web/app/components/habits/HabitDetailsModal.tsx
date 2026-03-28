@@ -46,7 +46,6 @@ interface HabitDetailsModalProps {
   activeDays?: number[];
   skippedPeriods?: string[];
   timeOfDay?: HabitTimeOfDay;
-  value: number;
   referenceDate: Date;
   streak: {
     currentStrikeLength: number;
@@ -64,7 +63,6 @@ export function HabitDetailsModal({
   activeDays,
   skippedPeriods,
   timeOfDay,
-  value,
   referenceDate,
   streak,
 }: HabitDetailsModalProps) {
@@ -79,10 +77,15 @@ export function HabitDetailsModal({
   const [editActiveDays, setEditActiveDays] = useState<number[]>(
     activeDays ?? [0, 1, 2, 3, 4, 5, 6],
   );
-  const [editTimeOfDay, setEditTimeOfDay] = useState<HabitTimeOfDay | undefined>(timeOfDay);
+  const [editTimeOfDay, setEditTimeOfDay] = useState<
+    HabitTimeOfDay | undefined
+  >(timeOfDay);
 
   const [skipMenuOpen, setSkipMenuOpen] = useState(false);
-  const [skipMenuPos, setSkipMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const [skipMenuPos, setSkipMenuPos] = useState<{
+    top: number;
+    right: number;
+  } | null>(null);
   const skipBtnRef = useRef<HTMLButtonElement>(null);
 
   const state = useOverlayState({
@@ -132,7 +135,14 @@ export function HabitDetailsModal({
       editPeriod === Period.DAY && editActiveDays.length < 7
         ? editActiveDays
         : undefined;
-    await repos.habit.updateHabit(habitId, trimmed, n, editPeriod, days, editTimeOfDay);
+    await repos.habit.updateHabit(
+      habitId,
+      trimmed,
+      n,
+      editPeriod,
+      days,
+      editTimeOfDay,
+    );
     setEditing(false);
   }
 
@@ -157,7 +167,12 @@ export function HabitDetailsModal({
   }
 
   async function handleIncrement() {
-    await repos?.habitProgress.incrementHabit(habitId, period, times, referenceDate);
+    await repos?.habitProgress.incrementHabit(
+      habitId,
+      period,
+      times,
+      referenceDate,
+    );
   }
 
   async function handleDecrement() {
@@ -169,7 +184,8 @@ export function HabitDetailsModal({
     await repos.habit.deleteHabitLog(habitId, latestLog, times);
   }
 
-  const { progress, complete } = habitProgress(value, times);
+  const displayCount = periodLogs.length;
+  const { progress, complete } = habitProgress(displayCount, times);
   const isEditValid = Boolean(editName.trim()) && Number(editTimes) > 0;
 
   const skipMenuItemClass =
@@ -201,7 +217,10 @@ export function HabitDetailsModal({
                         variant="secondary"
                         onChange={(e) => setEditTimes(e.target.value)}
                       />
-                      <HabitPeriodSelect value={editPeriod} onChange={setEditPeriod} />
+                      <HabitPeriodSelect
+                        value={editPeriod}
+                        onChange={setEditPeriod}
+                      />
                     </div>
                     {editPeriod === Period.DAY && (
                       <div className="mt-2">
@@ -215,21 +234,20 @@ export function HabitDetailsModal({
                       </div>
                     )}
                     <div className="mt-2">
-                      <p className="text-xs text-foreground/50 mb-1">Time of day</p>
-                      <TimeOfDaySelector value={editTimeOfDay} onChange={setEditTimeOfDay} />
+                      <p className="text-xs text-foreground/50 mb-1">
+                        Time of day
+                      </p>
+                      <TimeOfDaySelector
+                        value={editTimeOfDay}
+                        onChange={setEditTimeOfDay}
+                      />
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 pr-8 w-full">
-                    <span className="flex-1 text-base font-semibold text-foreground truncate">{name}</span>
-                    <button
-                      ref={skipBtnRef}
-                      onClick={openSkipMenu}
-                      className="shrink-0 flex h-6 w-6 cursor-pointer items-center justify-center rounded text-foreground/40 hover:text-foreground/70 transition-colors"
-                      aria-label="Skip options"
-                    >
-                      <CirclePause width={14} height={14} />
-                    </button>
+                    <span className="flex-1 text-base font-semibold text-foreground truncate">
+                      {name}
+                    </span>
                   </div>
                 )}
               </Modal.Header>
@@ -260,6 +278,7 @@ export function HabitDetailsModal({
                       isIconOnly
                       variant="ghost"
                       size="sm"
+                      isDisabled={displayCount >= times}
                       onPress={handleIncrement}
                       aria-label="Add one completion"
                     >
@@ -267,7 +286,7 @@ export function HabitDetailsModal({
                     </Button>
                     <div className="flex flex-col">
                       <span className="font-semibold text-foreground">
-                        {value} / {times}
+                        {displayCount} / {times}
                       </span>
                       <span className="text-xs text-foreground/50">
                         {periodLabel}
@@ -342,6 +361,14 @@ export function HabitDetailsModal({
                   </>
                 ) : (
                   <>
+                    <button
+                      ref={skipBtnRef}
+                      onClick={openSkipMenu}
+                      className="shrink-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground/40 hover:text-foreground/70 transition-colors"
+                      aria-label="Skip options"
+                    >
+                      <CirclePause width={14} height={14} />
+                    </button>
                     <Button variant="ghost" onPress={startEditing}>
                       <Pencil />
                     </Button>

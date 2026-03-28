@@ -21,10 +21,13 @@ import {
 } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import type { LayoutPreference } from "@weekly/domain";
+import { weekKeyOf } from "@weekly/domain";
 import { HabitList } from "./habits/HabitList";
 import { TaskList } from "./tasks/TaskList";
 import { HabitAddModal } from "./habits/HabitAddModal";
 import { TaskAddModal } from "./tasks/TaskAddModal";
+import { NoteAddModal } from "./notes/NoteAddModal";
+import { NoteList } from "./notes/NoteList";
 import { PeriodPanel } from "./PeriodPanel";
 import { useRepositoryContext } from "../contexts/RepositoryContext";
 import { useCalendarStore } from "../stores/calendar";
@@ -162,14 +165,17 @@ function UnifiedAddButton({
   workspaces,
   onAddHabit,
   onAddTask,
+  onAddNote,
 }: {
   workspaces?: Workspace[];
   onAddHabit: (name: string, times: number, period: Period, workspaceId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => void;
   onAddTask: (title: string, workspaceId?: string, scope?: Period) => void;
+  onAddNote: (title: string, body: string, workspaceId?: string) => void;
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [habitModalOpen, setHabitModalOpen] = useState(false);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
 
   const itemClass =
     "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs text-foreground hover:bg-foreground/5 transition-colors";
@@ -202,6 +208,12 @@ function UnifiedAddButton({
             >
               Add Task
             </button>
+            <button
+              className={itemClass}
+              onClick={() => { setDropdownOpen(false); setNoteModalOpen(true); }}
+            >
+              Add Note
+            </button>
           </div>
         </>
       )}
@@ -219,6 +231,12 @@ function UnifiedAddButton({
         onSubmit={onAddTask}
         workspaces={workspaces}
         trigger={<span style={{ display: "none" }} />}
+      />
+      <NoteAddModal
+        open={noteModalOpen}
+        onOpenChange={setNoteModalOpen}
+        workspaces={workspaces}
+        onSubmit={onAddNote}
       />
     </div>
   );
@@ -243,6 +261,11 @@ export function HabitsTasksView({
   );
   const storeWorkspaces = useWorkspaceStore((s) => s.workspaces);
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+
+  const noteWorkspaceId = useMemo(() => {
+    if (activeWorkspaceId) return activeWorkspaceId;
+    return workspaces?.[0]?.id ?? storeWorkspaces[0]?.id ?? null;
+  }, [activeWorkspaceId, workspaces, storeWorkspaces]);
 
   const handleHabitsCompleted = useCallback((completions: Record<string, boolean>) => {
     setHabitCompletions((prev) => ({ ...prev, ...completions }));
@@ -292,6 +315,39 @@ export function HabitsTasksView({
         .catch(() => {/* non-critical */});
     },
     [activeRepos, getWorkspaceRepos, selectedDay, storeWorkspaces, activeWorkspaceId],
+  );
+
+  const handleAddNote = useCallback(
+    async (title: string, body: string, workspaceId?: string) => {
+      const user = auth.currentUser;
+      if (!user) return;
+      const targetId = workspaceId ?? noteWorkspaceId;
+      if (!targetId) return;
+      const repos = targetId === activeWorkspaceId
+        ? activeRepos
+        : getWorkspaceRepos(targetId);
+      if (!repos) return;
+      const weekKey = weekKeyOf(selectedDay);
+      const noteId = await repos.note.addNote(weekKey, {
+        title,
+        body,
+        authorId: user.uid,
+        authorDisplayName: user.displayName ?? "User",
+      });
+      const workspace = storeWorkspaces.find((w) => w.id === targetId);
+      if (!workspace || workspace.members.length < 2) return;
+      workspaceRepository
+        .logActivity(targetId, {
+          type: "note_added",
+          actorUid: user.uid,
+          actorDisplayName: user.displayName ?? "User",
+          itemId: noteId,
+          itemName: title,
+          weekKey,
+        })
+        .catch(() => {/* non-critical */});
+    },
+    [noteWorkspaceId, activeWorkspaceId, activeRepos, getWorkspaceRepos, storeWorkspaces, selectedDay],
   );
 
   const periodProgress = useMemo(() => {
@@ -372,6 +428,7 @@ export function HabitsTasksView({
             workspaces={workspaces}
             onAddHabit={handleAddHabit}
             onAddTask={handleAddTask}
+            onAddNote={handleAddNote}
           />
         )}
         <LayoutSettingsButton
@@ -381,6 +438,8 @@ export function HabitsTasksView({
           onInnerLayoutChange={setInnerLayout}
         />
       </div>
+
+      <NoteList />
 
       {isPeriodTabs ? (
         <div>

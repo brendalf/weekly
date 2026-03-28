@@ -12,7 +12,15 @@ interface PeriodBadgeProps {
   className?: string;
 }
 
+const PERIOD_SHORT: Record<Period, string> = {
+  [Period.DAY]: "T",
+  [Period.WEEK]: "W",
+  [Period.MONTH]: "M",
+};
+
 export function PeriodBadge({ period, className }: PeriodBadgeProps) {
+  const full = getPeriodLabel(period);
+  const short = PERIOD_SHORT[period];
   return (
     <Badge
       className={[
@@ -21,7 +29,8 @@ export function PeriodBadge({ period, className }: PeriodBadgeProps) {
         className ?? "",
       ].join(" ")}
     >
-      {getPeriodLabel(period)}
+      <span className="sm:hidden">{short}</span>
+      <span className="hidden sm:inline">{full}</span>
     </Badge>
   );
 }
