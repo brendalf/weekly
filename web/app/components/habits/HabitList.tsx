@@ -19,10 +19,12 @@ interface HabitListProps {
   hideHeader?: boolean;
   periodFilter?: Period;
   showPeriodLabel?: boolean;
+  showSkipped?: boolean;
+  showCompleted?: boolean;
   onHabitsCompleted?: (completions: Record<string, boolean>) => void;
 }
 
-export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPeriodLabel, onHabitsCompleted }: HabitListProps) {
+export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPeriodLabel, showSkipped = true, showCompleted = true, onHabitsCompleted }: HabitListProps) {
   const { activeRepos, getWorkspaceRepos, getHabitProjectId } =
     useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
@@ -113,7 +115,15 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
       return 0;
     };
 
-    return [...visibleHabits].sort((a, b) => {
+    let habitsToRender = showSkipped
+      ? visibleHabits
+      : visibleHabits.filter((h) => !skippedIds.has(h.id));
+
+    if (!showCompleted) {
+      habitsToRender = habitsToRender.filter((h) => !completedIds.has(h.id));
+    }
+
+    return [...habitsToRender].sort((a, b) => {
       const groupDiff = getGroup(a) - getGroup(b);
       if (groupDiff !== 0) return groupDiff;
       const periodDiff = PERIOD_ORDER[a.period] - PERIOD_ORDER[b.period];
@@ -122,7 +132,7 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
       const todB = b.timeOfDay ? (TIME_OF_DAY_ORDER[b.timeOfDay] ?? 3) : 3;
       return todA - todB;
     });
-  }, [visibleHabits, completedIds, progressTodayIds, selectedDay]);
+  }, [visibleHabits, completedIds, progressTodayIds, selectedDay, showSkipped, showCompleted]);
 
   return (
     <div className="flex flex-col gap-2">

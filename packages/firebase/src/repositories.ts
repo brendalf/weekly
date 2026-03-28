@@ -37,6 +37,7 @@ import {
   type UserPreferencesRepository,
   type ThemePreference,
   type LayoutPreference,
+  type InnerLayoutPreference,
   computeStreak,
   prevPeriodDate,
   dayKeyOf,
@@ -355,7 +356,14 @@ export function createUserPreferencesRepository(
   return {
     subscribeUserPreferences(
       userId: string,
-      onPreferences: (prefs: { theme: ThemePreference; layout: LayoutPreference; lastNotificationReadAt: string | null }) => void,
+      onPreferences: (prefs: {
+        theme: ThemePreference;
+        layout: LayoutPreference;
+        innerLayout: InnerLayoutPreference;
+        showCompletedTasks: boolean;
+        showSkippedHabits: boolean;
+        lastNotificationReadAt: string | null;
+      }) => void,
     ) {
       const ref = doc(db, "preferences", userId);
       return onSnapshot(ref, (snap: DocumentSnapshot<DocumentData>) => {
@@ -366,11 +374,19 @@ export function createUserPreferencesRepository(
         const layout: LayoutPreference = VALID_LAYOUTS.includes(data?.layout)
           ? (data?.layout as LayoutPreference)
           : "period-tabs";
+        const VALID_INNER_LAYOUTS: InnerLayoutPreference[] = ["sequential", "side-by-side"];
+        const innerLayout: InnerLayoutPreference = VALID_INNER_LAYOUTS.includes(data?.innerLayout)
+          ? (data?.innerLayout as InnerLayoutPreference)
+          : "sequential";
+        const showCompletedTasks: boolean =
+          typeof data?.showCompletedTasks === "boolean" ? data.showCompletedTasks : true;
+        const showSkippedHabits: boolean =
+          typeof data?.showSkippedHabits === "boolean" ? data.showSkippedHabits : true;
         const lastNotificationReadAt =
           typeof data?.lastNotificationReadAt === "string"
             ? data.lastNotificationReadAt
             : null;
-        onPreferences({ theme, layout, lastNotificationReadAt });
+        onPreferences({ theme, layout, innerLayout, showCompletedTasks, showSkippedHabits, lastNotificationReadAt });
       });
     },
     async updateTheme(userId: string, theme: ThemePreference) {
@@ -378,6 +394,15 @@ export function createUserPreferencesRepository(
     },
     async updateLayout(userId: string, layout: LayoutPreference) {
       await setDoc(doc(db, "preferences", userId), { layout }, { merge: true });
+    },
+    async updateInnerLayout(userId: string, innerLayout: InnerLayoutPreference) {
+      await setDoc(doc(db, "preferences", userId), { innerLayout }, { merge: true });
+    },
+    async updateShowCompletedTasks(userId: string, show: boolean) {
+      await setDoc(doc(db, "preferences", userId), { showCompletedTasks: show }, { merge: true });
+    },
+    async updateShowSkippedHabits(userId: string, show: boolean) {
+      await setDoc(doc(db, "preferences", userId), { showSkippedHabits: show }, { merge: true });
     },
     async updateLastNotificationReadAt(userId: string, ts: string) {
       await setDoc(doc(db, "preferences", userId), { lastNotificationReadAt: ts }, { merge: true });

@@ -26,6 +26,7 @@ interface TaskListProps {
   hideHeader?: boolean;
   scopeFilter?: Period;
   showScopeLabel?: boolean;
+  showCompleted?: boolean;
 }
 
 export function TaskList({
@@ -35,6 +36,7 @@ export function TaskList({
   hideHeader,
   scopeFilter,
   showScopeLabel,
+  showCompleted = true,
 }: TaskListProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { activeRepos, getWorkspaceRepos, getTaskProjectId } =
@@ -78,7 +80,8 @@ export function TaskList({
     .filter(
       ({ task }) =>
         scopeFilter === undefined || (task.scope ?? Period.WEEK) === scopeFilter,
-    );
+    )
+    .filter(({ task }) => showCompleted || !task.completed);
 
   const completedCount = visibleTasks.filter(
     ({ task }) => task.completed,

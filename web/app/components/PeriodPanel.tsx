@@ -14,6 +14,8 @@ interface PeriodPanelProps {
   innerLayout?: "sequential" | "side-by-side";
   showHabitPeriodLabel?: boolean;
   showTaskScopeLabel?: boolean;
+  showCompletedTasks?: boolean;
+  showSkippedHabits?: boolean;
   onToggleTaskCompleted: (taskId: string) => void;
   onHabitsCompleted?: (completions: Record<string, boolean>) => void;
 }
@@ -26,6 +28,8 @@ export function PeriodPanel({
   innerLayout = "sequential",
   showHabitPeriodLabel = false,
   showTaskScopeLabel = true,
+  showCompletedTasks = true,
+  showSkippedHabits = true,
   onToggleTaskCompleted,
   onHabitsCompleted,
 }: PeriodPanelProps) {
@@ -73,6 +77,8 @@ export function PeriodPanel({
             workspaces={workspaces}
             periodFilter={period}
             showPeriodLabel={showHabitPeriodLabel}
+            showSkipped={showSkippedHabits}
+            showCompleted={showCompletedTasks}
             onHabitsCompleted={wrappedOnHabitsCompleted}
           />
         </div>
@@ -98,6 +104,7 @@ export function PeriodPanel({
             workspaces={workspaces}
             scopeFilter={period}
             showScopeLabel={showTaskScopeLabel}
+            showCompleted={showCompletedTasks}
           />
         </div>
       </div>

@@ -8,7 +8,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import type { LayoutPreference, ActivityNotification } from "@weekly/domain";
+import type { LayoutPreference, InnerLayoutPreference, ActivityNotification } from "@weekly/domain";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { formatDayLabel } from "@weekly/domain";
 import { ArrowRightFromSquare } from "@gravity-ui/icons";
@@ -36,6 +36,9 @@ export default function AppPage() {
   const personalWorkspaceCreatedRef = useRef(false);
   const { setTheme } = useContext(ThemeContext);
   const [layout, setLayout] = useState<LayoutPreference>("period-tabs");
+  const [innerLayout, setInnerLayout] = useState<InnerLayoutPreference>("sequential");
+  const [showCompletedTasks, setShowCompletedTasks] = useState(true);
+  const [showSkippedHabits, setShowSkippedHabits] = useState(true);
 
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const selectedDayLabel = formatDayLabel(
@@ -72,9 +75,12 @@ export default function AppPage() {
     if (!userId) return;
     return userPreferencesRepository.subscribeUserPreferences(
       userId,
-      ({ theme, layout, lastNotificationReadAt }) => {
+      ({ theme, layout, innerLayout, showCompletedTasks, showSkippedHabits, lastNotificationReadAt }) => {
         setTheme(theme);
         setLayout(layout);
+        setInnerLayout(innerLayout);
+        setShowCompletedTasks(showCompletedTasks);
+        setShowSkippedHabits(showSkippedHabits);
         if (lastNotificationReadAt) {
           workspaceStore.setLastNotificationReadAt(lastNotificationReadAt);
         }
@@ -133,6 +139,24 @@ export default function AppPage() {
     if (!userId) return;
     setLayout(newLayout);
     await userPreferencesRepository.updateLayout(userId, newLayout);
+  }, [userId]);
+
+  const handleInnerLayoutChange = useCallback(async (newInnerLayout: InnerLayoutPreference) => {
+    if (!userId) return;
+    setInnerLayout(newInnerLayout);
+    await userPreferencesRepository.updateInnerLayout(userId, newInnerLayout);
+  }, [userId]);
+
+  const handleShowCompletedTasksChange = useCallback(async (show: boolean) => {
+    if (!userId) return;
+    setShowCompletedTasks(show);
+    await userPreferencesRepository.updateShowCompletedTasks(userId, show);
+  }, [userId]);
+
+  const handleShowSkippedHabitsChange = useCallback(async (show: boolean) => {
+    if (!userId) return;
+    setShowSkippedHabits(show);
+    await userPreferencesRepository.updateShowSkippedHabits(userId, show);
   }, [userId]);
 
   async function handleToggleTaskCompleted(taskId: string) {
@@ -225,8 +249,14 @@ export default function AppPage() {
             tasks={tasks}
             workspaces={activeWorkspaceId === null ? workspaces : undefined}
             layout={layout}
+            innerLayout={innerLayout}
+            showCompletedTasks={showCompletedTasks}
+            showSkippedHabits={showSkippedHabits}
             onToggleTaskCompleted={handleToggleTaskCompleted}
             onLayoutChange={handleLayoutChange}
+            onInnerLayoutChange={handleInnerLayoutChange}
+            onShowCompletedTasksChange={handleShowCompletedTasksChange}
+            onShowSkippedHabitsChange={handleShowSkippedHabitsChange}
           />
         </div>
       </main>

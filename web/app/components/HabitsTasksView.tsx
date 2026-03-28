@@ -20,7 +20,7 @@ import {
   ChevronsUp,
 } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
-import type { LayoutPreference } from "@weekly/domain";
+import type { LayoutPreference, InnerLayoutPreference } from "@weekly/domain";
 import { weekKeyOf } from "@weekly/domain";
 import { HabitList } from "./habits/HabitList";
 import { TaskList } from "./tasks/TaskList";
@@ -35,15 +35,19 @@ import { useWorkspaceStore } from "../stores/workspace";
 import { workspaceRepository } from "../repositories";
 import { auth } from "../config/firebase";
 
-type InnerLayout = "sequential" | "side-by-side";
-
 interface HabitsTasksViewProps {
   habits: Habit[];
   tasks: Task[];
   workspaces?: Workspace[];
   layout: LayoutPreference;
+  innerLayout: InnerLayoutPreference;
+  showCompletedTasks: boolean;
+  showSkippedHabits: boolean;
   onToggleTaskCompleted: (taskId: string) => void;
   onLayoutChange: (layout: LayoutPreference) => void;
+  onInnerLayoutChange: (il: InnerLayoutPreference) => void;
+  onShowCompletedTasksChange: (show: boolean) => void;
+  onShowSkippedHabitsChange: (show: boolean) => void;
 }
 
 /** Tiny read-only ring showing done/total progress. */
@@ -84,13 +88,21 @@ function PeriodProgress({ done, total }: { done: number; total: number }) {
 function LayoutSettingsButton({
   layout,
   innerLayout,
+  showCompletedTasks,
+  showSkippedHabits,
   onLayoutChange,
   onInnerLayoutChange,
+  onShowCompletedTasksChange,
+  onShowSkippedHabitsChange,
 }: {
   layout: LayoutPreference;
-  innerLayout: InnerLayout;
+  innerLayout: InnerLayoutPreference;
+  showCompletedTasks: boolean;
+  showSkippedHabits: boolean;
   onLayoutChange: (layout: LayoutPreference) => void;
-  onInnerLayoutChange: (il: InnerLayout) => void;
+  onInnerLayoutChange: (il: InnerLayoutPreference) => void;
+  onShowCompletedTasksChange: (show: boolean) => void;
+  onShowSkippedHabitsChange: (show: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -139,8 +151,8 @@ function LayoutSettingsButton({
               Period layout
             </p>
             {([
-              { key: "sequential" as InnerLayout, label: "Sequential", Icon: BarsAscendingAlignLeftArrowDown },
-              { key: "side-by-side" as InnerLayout, label: "Side by side", Icon: LayoutColumns },
+              { key: "sequential" as InnerLayoutPreference, label: "Sequential", Icon: BarsAscendingAlignLeftArrowDown },
+              { key: "side-by-side" as InnerLayoutPreference, label: "Side by side", Icon: LayoutColumns },
             ]).map(({ key, label, Icon }) => (
               <button
                 key={key}
@@ -154,6 +166,36 @@ function LayoutSettingsButton({
                 {label}
               </button>
             ))}
+
+            <div className="my-1 mx-2 border-t border-foreground/10" />
+
+            <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-foreground/40">
+              Display
+            </p>
+            <button
+              onClick={() => onShowCompletedTasksChange(!showCompletedTasks)}
+              className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-foreground/5 transition-colors text-foreground"
+            >
+              <span className={[
+                "flex h-3 w-3 shrink-0 items-center justify-center rounded border",
+                showCompletedTasks ? "border-primary bg-primary text-white" : "border-foreground/30",
+              ].join(" ")}>
+                {showCompletedTasks && <span className="text-[8px] leading-none">✓</span>}
+              </span>
+              Show completed
+            </button>
+            <button
+              onClick={() => onShowSkippedHabitsChange(!showSkippedHabits)}
+              className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-foreground/5 transition-colors text-foreground"
+            >
+              <span className={[
+                "flex h-3 w-3 shrink-0 items-center justify-center rounded border",
+                showSkippedHabits ? "border-primary bg-primary text-white" : "border-foreground/30",
+              ].join(" ")}>
+                {showSkippedHabits && <span className="text-[8px] leading-none">✓</span>}
+              </span>
+              Show skipped
+            </button>
           </div>
         </>
       )}
@@ -247,11 +289,16 @@ export function HabitsTasksView({
   tasks,
   workspaces,
   layout,
+  innerLayout,
+  showCompletedTasks,
+  showSkippedHabits,
   onToggleTaskCompleted,
   onLayoutChange,
+  onInnerLayoutChange,
+  onShowCompletedTasksChange,
+  onShowSkippedHabitsChange,
 }: HabitsTasksViewProps) {
   const [activePeriodTab, setActivePeriodTab] = useState<Period>(Period.DAY);
-  const [innerLayout, setInnerLayout] = useState<InnerLayout>("sequential");
   const [habitCompletions, setHabitCompletions] = useState<Record<string, boolean>>({});
   const { activeRepos, getWorkspaceRepos } = useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
@@ -434,8 +481,12 @@ export function HabitsTasksView({
         <LayoutSettingsButton
           layout={layout}
           innerLayout={innerLayout}
+          showCompletedTasks={showCompletedTasks}
+          showSkippedHabits={showSkippedHabits}
           onLayoutChange={onLayoutChange}
-          onInnerLayoutChange={setInnerLayout}
+          onInnerLayoutChange={onInnerLayoutChange}
+          onShowCompletedTasksChange={onShowCompletedTasksChange}
+          onShowSkippedHabitsChange={onShowSkippedHabitsChange}
         />
       </div>
 
@@ -453,6 +504,8 @@ export function HabitsTasksView({
                 innerLayout={innerLayout}
                 showHabitPeriodLabel={false}
                 showTaskScopeLabel={false}
+                showCompletedTasks={showCompletedTasks}
+                showSkippedHabits={showSkippedHabits}
                 onToggleTaskCompleted={onToggleTaskCompleted}
                 onHabitsCompleted={handleHabitsCompleted}
               />
@@ -481,6 +534,8 @@ export function HabitsTasksView({
                   habits={habits}
                   workspaces={workspaces}
                   showPeriodLabel={true}
+                  showSkipped={showSkippedHabits}
+                  showCompleted={showCompletedTasks}
                   onHabitsCompleted={handleHabitsCompleted}
                 />
               </div>
@@ -509,6 +564,7 @@ export function HabitsTasksView({
                   onToggleCompleted={onToggleTaskCompleted}
                   workspaces={workspaces}
                   showScopeLabel={true}
+                  showCompleted={showCompletedTasks}
                 />
               </div>
             </div>
