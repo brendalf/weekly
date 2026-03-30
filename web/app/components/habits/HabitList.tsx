@@ -30,8 +30,18 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const storeWorkspaces = useWorkspaceStore((s) => s.workspaces);
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
-  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
-  const [progressTodayIds, setProgressTodayIds] = useState<Set<string>>(new Set());
+  const [completions, setCompletions] = useState<{ day: string; completedIds: Set<string>; progressTodayIds: Set<string> }>(
+    { day: "", completedIds: new Set(), progressTodayIds: new Set() },
+  );
+  const currentDay = selectedDayISO ?? "";
+  const completedIds = useMemo(
+    () => (completions.day === currentDay ? completions.completedIds : new Set<string>()),
+    [completions, currentDay],
+  );
+  const progressTodayIds = useMemo(
+    () => (completions.day === currentDay ? completions.progressTodayIds : new Set<string>()),
+    [completions, currentDay],
+  );
   const [collapsed, setCollapsed] = useState(false);
 
   const selectedDay = useMemo(
@@ -62,19 +72,19 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
   }, [completedIds, onHabitsCompleted, visibleHabitIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCompleteChange = useCallback((id: string, complete: boolean, hasProgressToday: boolean) => {
-    setCompletedIds((prev) => {
-      const next = new Set(prev);
-      if (complete) next.add(id);
-      else next.delete(id);
-      return next;
+    const day = selectedDayISO ?? "";
+    setCompletions((prev) => {
+      const prevCompleted = prev.day === day ? prev.completedIds : new Set<string>();
+      const prevProgress = prev.day === day ? prev.progressTodayIds : new Set<string>();
+      const nextCompleted = new Set(prevCompleted);
+      const nextProgress = new Set(prevProgress);
+      if (complete) nextCompleted.add(id);
+      else nextCompleted.delete(id);
+      if (hasProgressToday) nextProgress.add(id);
+      else nextProgress.delete(id);
+      return { day, completedIds: nextCompleted, progressTodayIds: nextProgress };
     });
-    setProgressTodayIds((prev) => {
-      const next = new Set(prev);
-      if (hasProgressToday) next.add(id);
-      else next.delete(id);
-      return next;
-    });
-  }, []);
+  }, [selectedDayISO]);
 
   const handleAddHabit = async (
     name: string,
