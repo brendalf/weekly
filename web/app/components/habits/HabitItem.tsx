@@ -118,9 +118,10 @@ export function HabitItem({
       referenceDate,
       (s) => setStreak(s),
       skippedPeriods,
+      activeDays,
     );
     return () => unsub();
-  }, [repos, id, period, createdAt, referenceDate, skippedPeriods]);
+  }, [repos, id, period, createdAt, referenceDate, skippedPeriods, activeDays]);
 
   const { progress, complete } = habitProgress(value, target);
 

@@ -37,6 +37,7 @@ export function computeStreak(
   createdAt: Date,
   period: Period,
   skippedPeriods?: string[],
+  activeDays?: number[],
 ): { currentStrikeLength: number; openSincePeriodKey: string | null } {
   const createdPeriodKey = periodKeyOf(createdAt, period);
   let streakCount = 0;
@@ -50,6 +51,13 @@ export function computeStreak(
     if (skippedPeriods?.includes(key)) {
       current = prevPeriodDate(current, period);
       continue;
+    }
+
+    if (period === Period.DAY && activeDays && activeDays.length > 0) {
+      if (!activeDays.includes(current.getDay())) {
+        current = prevPeriodDate(current, period);
+        continue;
+      }
     }
 
     const succeeded = summaryMap.get(key) ?? false;

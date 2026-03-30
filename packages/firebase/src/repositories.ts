@@ -509,6 +509,7 @@ export function createHabitProgressRepository(
         openSincePeriodKey: string | null;
       }) => void,
       skippedPeriods?: string[],
+      activeDays?: number[],
     ) {
       const createdPeriodKey = periodKeyOf(createdAt, period);
       const q = query(
@@ -526,6 +527,7 @@ export function createHabitProgressRepository(
             createdAt,
             period,
             skippedPeriods,
+            activeDays,
           ),
         );
       });
