@@ -26,6 +26,7 @@ import { HabitDetailsModal } from "./HabitDetailsModal";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { workspaceRepository } from "../../repositories";
 import { auth } from "../../config/firebase";
+import { toast } from "sonner";
 
 export interface HabitItemProps {
   id: string;
@@ -67,6 +68,8 @@ export function HabitItem({
 
   const [value, setValue] = useState(0);
   const [dayCounts, setDayCounts] = useState<Record<string, number>>({});
+  const [optimisticCount, setOptimisticCount] = useState<number | null>(null);
+  const [optimisticProgressToday, setOptimisticProgressToday] = useState<boolean | null>(null);
   const [streak, setStreak] = useState<{
     currentStrikeLength: number;
     openSincePeriodKey: string | null;
@@ -123,11 +126,13 @@ export function HabitItem({
     return () => unsub();
   }, [repos, id, period, createdAt, referenceDate, skippedPeriods, activeDays]);
 
-  const { progress, complete } = habitProgress(value, target);
+  const displayValue = optimisticCount ?? value;
+  const { progress, complete } = habitProgress(displayValue, target);
 
   const hasProgressToday =
-    (period === Period.WEEK || period === Period.MONTH) &&
-    (dayCounts[dayKeyOf(referenceDate)] ?? 0) > 0;
+    optimisticProgressToday ??
+    ((period === Period.WEEK || period === Period.MONTH) &&
+      (dayCounts[dayKeyOf(referenceDate)] ?? 0) > 0);
 
   useEffect(() => {
     if (!isSkipped) onCompleteChange?.(id, complete, hasProgressToday);
@@ -150,27 +155,44 @@ export function HabitItem({
     setMenuView("main");
   }
 
-  async function handleIncrement() {
+  function handleIncrement() {
     if (!repos || isSkipped) return;
-    await repos.habitProgress.incrementHabit(id, period, target, referenceDate);
-    // Log activity when this increment completes the habit
-    if (value + 1 >= target) {
-      const projectId = getHabitProjectId(id);
-      const user = auth.currentUser;
-      if (projectId && user) {
-        try {
-          await workspaceRepository.logActivity(projectId, {
-            type: "habit_completed",
-            actorUid: user.uid,
-            actorDisplayName: user.displayName ?? "User",
-            itemId: id,
-            itemName: name,
-          });
-        } catch {
-          // non-critical, ignore
-        }
-      }
+
+    const prevCount = optimisticCount ?? value;
+    const nextCount = Math.min(prevCount + 1, Math.max(1, target));
+    setOptimisticCount(nextCount);
+    if (period === Period.WEEK || period === Period.MONTH) {
+      setOptimisticProgressToday(true);
     }
+
+    repos.habitProgress
+      .incrementHabit(id, period, target, referenceDate)
+      .then(() => {
+        setOptimisticCount(null);
+        setOptimisticProgressToday(null);
+        if (nextCount >= target) {
+          const projectId = getHabitProjectId(id);
+          const user = auth.currentUser;
+          if (projectId && user) {
+            workspaceRepository
+              .logActivity(projectId, {
+                type: "habit_completed",
+                actorUid: user.uid,
+                actorDisplayName: user.displayName ?? "User",
+                itemId: id,
+                itemName: name,
+              })
+              .catch(() => {
+                // non-critical, ignore
+              });
+          }
+        }
+      })
+      .catch(() => {
+        setOptimisticCount(null);
+        setOptimisticProgressToday(null);
+        toast.error("Failed to update habit. Please try again.");
+      });
   }
 
   const size = 28;
@@ -224,7 +246,7 @@ export function HabitItem({
             )}
             {!isSkipped && (
               <span className="text-xs text-foreground/60">
-                {value}/{target}
+                {displayValue}/{target}
               </span>
             )}
             {!isSkipped && streak && streak.currentStrikeLength > 0 && (

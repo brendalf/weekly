@@ -450,15 +450,27 @@ async function fillSummaryGaps(
   }
   if (gapKeys.length === 0) return;
 
-  const existingQ = query(
-    habitProgressCol(db, projectId),
-    where("habitId", "==", habitId),
-    where("period", "==", period),
-    where("periodKey", "in", gapKeys),
+  const CHUNK_SIZE = 30;
+  const chunks: string[][] = [];
+  for (let i = 0; i < gapKeys.length; i += CHUNK_SIZE) {
+    chunks.push(gapKeys.slice(i, i + CHUNK_SIZE));
+  }
+  const snaps = await Promise.all(
+    chunks.map((chunk) =>
+      getDocs(
+        query(
+          habitProgressCol(db, projectId),
+          where("habitId", "==", habitId),
+          where("period", "==", period),
+          where("periodKey", "in", chunk),
+        ),
+      ),
+    ),
   );
-  const existingSnap = await getDocs(existingQ);
   const existingKeys = new Set(
-    existingSnap.docs.map((d) => (d.data() as HabitProgressDoc).periodKey),
+    snaps.flatMap((s) =>
+      s.docs.map((d) => (d.data() as HabitProgressDoc).periodKey),
+    ),
   );
 
   const batch = writeBatch(db);
