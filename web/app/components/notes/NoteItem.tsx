@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button, Input, TextField, Surface } from "@heroui/react";
 import { Pencil, TrashBin, Xmark, Check } from "@gravity-ui/icons";
 import type { Note } from "@weekly/domain";
@@ -10,7 +11,7 @@ interface NoteItemProps {
   weekKey: string;
   workspaceName?: string;
   onUpdate: (weekKey: string, noteId: string, title: string, body: string) => Promise<void>;
-  onDelete: (weekKey: string, noteId: string) => Promise<void>;
+  onDelete: (weekKey: string, noteId: string) => void;
 }
 
 export function NoteItem({ note, weekKey, workspaceName, onUpdate, onDelete }: NoteItemProps) {
@@ -26,11 +27,14 @@ export function NoteItem({ note, weekKey, workspaceName, onUpdate, onDelete }: N
     setCollapsed(false);
   }
 
-  async function handleSave() {
+  function handleSave() {
     const trimmedTitle = editTitle.trim();
     if (!trimmedTitle) return;
-    await onUpdate(weekKey, note.id, trimmedTitle, editBody.trim());
     setEditing(false);
+    onUpdate(weekKey, note.id, trimmedTitle, editBody.trim()).catch(() => {
+      setEditing(true);
+      toast.error("Failed to save note. Please try again.");
+    });
   }
 
   function handleCancel() {

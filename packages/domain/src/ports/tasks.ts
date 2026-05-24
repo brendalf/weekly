@@ -8,5 +8,5 @@ export interface TaskRepository {
   toggleTask(task: Task): Promise<void>;
   deleteTask(taskId: string): Promise<void>;
   updateTaskTitle(taskId: string, title: string): Promise<void>;
-  updateTask(taskId: string, updates: { title?: string; scope?: Period }): Promise<void>;
+  updateTask(taskId: string, updates: { title?: string; scope?: Period; schedule?: Date | null }): Promise<void>;
 }

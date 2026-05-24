@@ -7,4 +7,6 @@ export interface Task {
   completed: boolean;
   /** Scope for which the task is relevant. Absent → treat as 'week'. */
   scope?: Period;
+  /** Optional override date (ISO string) for which period this task belongs to. Leaves createdAt unchanged. */
+  schedule?: string;
 }

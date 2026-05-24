@@ -43,7 +43,7 @@ interface HabitsTasksViewProps {
   innerLayout: InnerLayoutPreference;
   showCompletedTasks: boolean;
   showSkippedHabits: boolean;
-  onToggleTaskCompleted: (taskId: string) => void;
+  onToggleTaskCompleted: (taskId: string) => Promise<void>;
   onLayoutChange: (layout: LayoutPreference) => void;
   onInnerLayoutChange: (il: InnerLayoutPreference) => void;
   onShowCompletedTasksChange: (show: boolean) => void;

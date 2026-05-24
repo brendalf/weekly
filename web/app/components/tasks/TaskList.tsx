@@ -21,7 +21,7 @@ import { auth } from "../../config/firebase";
 
 interface TaskListProps {
   tasks: Task[];
-  onToggleCompleted: (taskId: string) => void;
+  onToggleCompleted: (taskId: string) => Promise<void>;
   workspaces?: Workspace[];
   hideHeader?: boolean;
   scopeFilter?: Period;

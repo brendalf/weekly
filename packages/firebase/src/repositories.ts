@@ -11,6 +11,7 @@ import {
   arrayRemove,
   arrayUnion,
   collection,
+  deleteField,
   doc,
   getDocs,
   limit,
@@ -51,6 +52,7 @@ type TaskDoc = {
   createdAt?: Timestamp;
   completed?: unknown;
   scope?: unknown;
+  schedule?: Timestamp;
 };
 
 type HabitDoc = {
@@ -118,6 +120,7 @@ function mapTaskDoc(id: string, data: TaskDoc): Task {
       data.scope === Period.DAY || data.scope === Period.MONTH
         ? (data.scope as Period)
         : Period.WEEK,
+    schedule: data.schedule?.toDate().toISOString(),
   };
 }
 
@@ -201,8 +204,14 @@ export function createTaskRepository(
         title,
       });
     },
-    async updateTask(taskId: string, updates: { title?: string; scope?: Period }) {
-      await updateDoc(doc(db, "workspaces", projectId, "tasks", taskId), updates);
+    async updateTask(taskId: string, updates: { title?: string; scope?: Period; schedule?: Date | null }) {
+      const payload: Record<string, unknown> = {};
+      if (updates.title !== undefined) payload.title = updates.title;
+      if (updates.scope !== undefined) payload.scope = updates.scope;
+      if (updates.schedule !== undefined) {
+        payload.schedule = updates.schedule === null ? deleteField() : updates.schedule;
+      }
+      await updateDoc(doc(db, "workspaces", projectId, "tasks", taskId), payload);
     },
   };
 }

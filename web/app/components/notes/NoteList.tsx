@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { toast } from "sonner";
 import type { Note } from "@weekly/domain";
 import { weekKeyOf } from "@weekly/domain";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
@@ -105,13 +106,19 @@ export function NoteList() {
     tryLogActivity("note_edited", entry.workspaceId, noteId, title);
   }
 
-  async function handleDelete(wk: string, noteId: string) {
+  function handleDelete(wk: string, noteId: string) {
     const entry = notes.find((n) => n.id === noteId);
     if (!entry) return;
+    setNotes((prev) => prev.filter((n) => n.id !== noteId));
     const repos = getRepos(entry.workspaceId);
-    if (!repos) return;
-    await repos.note.deleteNote(wk, noteId);
-    tryLogActivity("note_deleted", entry.workspaceId, noteId, entry.title);
+    repos?.note.deleteNote(wk, noteId)
+      .then(() => tryLogActivity("note_deleted", entry.workspaceId, noteId, entry.title))
+      .catch(() => {
+        setNotes((prev) =>
+          [...prev, entry].sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
+        );
+        toast.error("Failed to delete note. Please try again.");
+      });
   }
 
   if (notes.length === 0) return null;

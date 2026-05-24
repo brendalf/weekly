@@ -16,7 +16,7 @@ interface PeriodPanelProps {
   showTaskScopeLabel?: boolean;
   showCompletedTasks?: boolean;
   showSkippedHabits?: boolean;
-  onToggleTaskCompleted: (taskId: string) => void;
+  onToggleTaskCompleted: (taskId: string) => Promise<void>;
   onHabitsCompleted?: (completions: Record<string, boolean>) => void;
 }
 

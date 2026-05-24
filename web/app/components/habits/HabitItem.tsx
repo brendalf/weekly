@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import {
   Period,
   HabitTimeOfDay,
@@ -10,17 +9,11 @@ import {
   periodKeyOf,
   dayKeyOf,
 } from "@weekly/domain";
-import {
-  Flame,
-  Ellipsis,
-  CirclePause,
-  CirclePlay,
-  ArrowChevronLeft,
-} from "@gravity-ui/icons";
+import { Flame, Ellipsis } from "@gravity-ui/icons";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
 import { Badge } from "../general/Badge";
 import { PeriodBadge } from "../general/PeriodBadge";
-import { SkipMenu } from "./SkipMenu";
+import { HabitActionMenu } from "./HabitActionMenu";
 import { useCalendarStore } from "../../stores/calendar";
 import { HabitDetailsModal } from "./HabitDetailsModal";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
@@ -46,8 +39,6 @@ export interface HabitItemProps {
   ) => void;
   projectName?: string;
 }
-
-type MenuView = "main" | "options";
 
 export function HabitItem({
   id,
@@ -77,10 +68,6 @@ export function HabitItem({
   const [today] = useState(() => new Date());
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [menuView, setMenuView] = useState<MenuView>("main");
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(
-    null,
-  );
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
@@ -138,23 +125,6 @@ export function HabitItem({
     if (!isSkipped) onCompleteChange?.(id, complete, hasProgressToday);
   }, [id, complete, hasProgressToday, onCompleteChange, isSkipped]);
 
-  function openMenu() {
-    if (menuButtonRef.current) {
-      const rect = menuButtonRef.current.getBoundingClientRect();
-      setMenuPos({
-        top: rect.bottom + 4,
-        right: window.innerWidth - rect.right,
-      });
-    }
-    setMenuView("main");
-    setMenuOpen(true);
-  }
-
-  function closeMenu() {
-    setMenuOpen(false);
-    setMenuView("main");
-  }
-
   function handleIncrement() {
     if (!repos || isSkipped) return;
 
@@ -197,9 +167,6 @@ export function HabitItem({
 
   const size = 28;
   const stroke = 4;
-
-  const menuItemClass =
-    "flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-foreground hover:bg-foreground/6 transition-colors";
 
   return (
     <>
@@ -270,83 +237,23 @@ export function HabitItem({
               ref={menuButtonRef}
               onClick={(e) => {
                 e.stopPropagation();
-                if (menuOpen) closeMenu();
-                else openMenu();
+                setMenuOpen((v) => !v);
               }}
               className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-foreground/40 hover:text-foreground/70 transition-colors"
               aria-label="More options"
             >
               <Ellipsis width={14} height={14} />
             </button>
-
-            {menuOpen &&
-              menuPos &&
-              createPortal(
-                <>
-                  <div className="fixed inset-0 z-40" onClick={closeMenu} />
-                  <div
-                    className="fixed z-50 w-52 overflow-hidden rounded-xl border border-foreground/15 bg-background shadow-xl"
-                    style={{ top: menuPos.top, right: menuPos.right }}
-                  >
-                    {/* ── Level 1: main ── */}
-                    {menuView === "main" && (
-                      <div className="p-1">
-                        {isSkipped ? (
-                          <button onClick={closeMenu} className={menuItemClass}>
-                            <CirclePlay
-                              width={14}
-                              height={14}
-                              className="shrink-0 text-foreground/60"
-                            />
-                            Unskip
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => setMenuView("options")}
-                            className={menuItemClass}
-                          >
-                            <CirclePause
-                              width={14}
-                              height={14}
-                              className="shrink-0 text-foreground/60"
-                            />
-                            Skip
-                            <ArrowChevronLeft
-                              width={12}
-                              height={12}
-                              className="ml-auto rotate-180 text-foreground/30"
-                            />
-                          </button>
-                        )}
-                      </div>
-                    )}
-
-                    {/* ── Level 2: skip options (via SkipMenu) ── */}
-                    {menuView === "options" && (
-                      <div className="p-1">
-                        <button
-                          onClick={() => setMenuView("main")}
-                          className="flex w-full cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-foreground/50 hover:text-foreground transition-colors"
-                        >
-                          <ArrowChevronLeft width={12} height={12} />
-                          Skip
-                        </button>
-                        <div className="my-1 mx-2 border-t border-foreground/10" />
-                        <SkipMenu
-                          habitId={id}
-                          referenceDate={referenceDate}
-                          period={period}
-                          currentPeriodKey={currentPeriodKey}
-                          isSkipped={isSkipped}
-                          onClose={closeMenu}
-                          buttonClassName={menuItemClass}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </>,
-                document.body,
-              )}
+            <HabitActionMenu
+              habitId={id}
+              referenceDate={referenceDate}
+              period={period}
+              currentPeriodKey={currentPeriodKey}
+              isSkipped={isSkipped}
+              triggerRef={menuButtonRef}
+              isOpen={menuOpen}
+              onOpenChange={setMenuOpen}
+            />
           </div>
         )}
       </div>
@@ -362,6 +269,7 @@ export function HabitItem({
         skippedPeriods={skippedPeriods}
         timeOfDay={timeOfDay}
         referenceDate={referenceDate}
+        createdAt={createdAt}
         streak={streak}
       />
     </>

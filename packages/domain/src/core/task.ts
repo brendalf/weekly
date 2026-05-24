@@ -27,9 +27,9 @@ export function toggleTaskCompleted(task: Task): Task {
   };
 }
 
-/** Returns the period key for the task's creation date under its scope. */
+/** Returns the period key for the task's scheduled (or creation) date under its scope. */
 export function taskPeriodKey(task: Task): string {
-  const date = new Date(task.createdAt);
+  const date = new Date(task.schedule ?? task.createdAt);
   const scope = task.scope ?? Period.WEEK;
   if (scope === Period.DAY) return dayKeyOf(date);
   if (scope === Period.MONTH) return monthKeyOf(date);
