@@ -27,5 +27,7 @@ export interface HabitProgressRepository {
     period: Period,
     target: number,
     referenceDate: Date,
+    currentCount: number,
+    currentDayCounts: Record<string, number>,
   ): Promise<void>;
 }

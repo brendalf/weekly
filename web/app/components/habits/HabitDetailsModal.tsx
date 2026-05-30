@@ -427,11 +427,20 @@ export function HabitDetailsModal({
   }
 
   async function handleIncrement() {
+    const currentDayCounts = periodLogs.reduce<Record<string, number>>(
+      (acc, l) => {
+        if (l.dayKey) acc[l.dayKey] = (acc[l.dayKey] ?? 0) + 1;
+        return acc;
+      },
+      {},
+    );
     await repos?.habitProgress.incrementHabit(
       habitId,
       period,
       times,
       referenceDate,
+      displayCount,
+      currentDayCounts,
     );
   }
 

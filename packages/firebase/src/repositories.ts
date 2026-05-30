@@ -493,47 +493,47 @@ export function createHabitProgressRepository(
       period: Period,
       target: number,
       referenceDate: Date,
+      currentCount: number,
+      currentDayCounts: Record<string, number>,
     ) {
       const dayKey = dayKeyOf(referenceDate);
       const weekKey = weekKeyOf(referenceDate);
       const monthKey = monthKeyOf(referenceDate);
       const periodKey = periodKeyOf(referenceDate, period);
 
+      const nextCount = Math.min(currentCount + 1, Math.max(1, target));
+      const nextForDay = Math.min(
+        (currentDayCounts[dayKey] ?? 0) + 1,
+        Math.max(1, target),
+      );
+
       const ref = periodDocRef(db, projectId, habitId, periodKey);
-      await runTransaction(db, async (tx: Transaction) => {
-        const snap = await tx.get(ref);
-        const existing = snap.data() as HabitProgressDoc | undefined;
-        const prevCount = existing?.count ?? 0;
-        const nextCount = Math.min(prevCount + 1, Math.max(1, target));
-        const prevDayCounts = existing?.dayCounts ?? {};
-        const nextForDay = Math.min(
-          (prevDayCounts[dayKey] ?? 0) + 1,
-          Math.max(1, target),
-        );
+      const batch = writeBatch(db);
 
-        tx.set(
-          ref,
-          {
-            habitId,
-            period,
-            periodKey,
-            count: nextCount,
-            succeeded: nextCount >= target,
-            dayCounts: { ...prevDayCounts, [dayKey]: nextForDay },
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true },
-        );
-
-        const logRef = doc(completionsCol(db, projectId, habitId));
-        tx.set(logRef, {
-          occurredAt: referenceDate,
-          dayKey,
-          weekKey,
-          monthKey,
+      batch.set(
+        ref,
+        {
+          habitId,
+          period,
           periodKey,
-        });
+          count: nextCount,
+          succeeded: nextCount >= target,
+          dayCounts: { ...currentDayCounts, [dayKey]: nextForDay },
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
+
+      const logRef = doc(completionsCol(db, projectId, habitId));
+      batch.set(logRef, {
+        occurredAt: referenceDate,
+        dayKey,
+        weekKey,
+        monthKey,
+        periodKey,
       });
+
+      await batch.commit();
     },
   };
 }

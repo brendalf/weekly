@@ -156,7 +156,7 @@ export function HabitItem({
     }
 
     repos.habitProgress
-      .incrementHabit(id, period, target, referenceDate)
+      .incrementHabit(id, period, target, referenceDate, value, dayCounts)
       .then(() => {
         setOptimisticCount(null);
         setOptimisticProgressToday(null);
