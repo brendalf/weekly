@@ -430,71 +430,6 @@ function buildSummaryMap(
   return map;
 }
 
-async function fillSummaryGaps(
-  db: Firestore,
-  projectId: string,
-  habitId: string,
-  period: Period,
-  referenceDate: Date,
-): Promise<void> {
-  const currentPeriodKey = periodKeyOf(referenceDate, period);
-  const latestQ = query(
-    habitProgressCol(db, projectId),
-    where("habitId", "==", habitId),
-    where("period", "==", period),
-    orderBy("periodKey", "desc"),
-    limit(1),
-  );
-  const latestSnap = await getDocs(latestQ);
-  if (latestSnap.empty) return;
-
-  const lastKey = (latestSnap.docs[0].data() as HabitProgressDoc).periodKey;
-  if (lastKey >= currentPeriodKey) return;
-
-  const gapKeys: string[] = [];
-  let d = prevPeriodDate(referenceDate, period);
-  while (periodKeyOf(d, period) > lastKey) {
-    gapKeys.push(periodKeyOf(d, period));
-    d = prevPeriodDate(d, period);
-  }
-  if (gapKeys.length === 0) return;
-
-  const CHUNK_SIZE = 30;
-  const chunks: string[][] = [];
-  for (let i = 0; i < gapKeys.length; i += CHUNK_SIZE) {
-    chunks.push(gapKeys.slice(i, i + CHUNK_SIZE));
-  }
-  const snaps = await Promise.all(
-    chunks.map((chunk) =>
-      getDocs(
-        query(
-          habitProgressCol(db, projectId),
-          where("habitId", "==", habitId),
-          where("period", "==", period),
-          where("periodKey", "in", chunk),
-        ),
-      ),
-    ),
-  );
-  const existingKeys = new Set(
-    snaps.flatMap((s) =>
-      s.docs.map((d) => (d.data() as HabitProgressDoc).periodKey),
-    ),
-  );
-
-  const batch = writeBatch(db);
-  let wrote = false;
-  for (const gapKey of gapKeys) {
-    if (!existingKeys.has(gapKey)) {
-      batch.set(
-        doc(db, "workspaces", projectId, "habitProgress", `${habitId}_${gapKey}`),
-        { habitId, period, periodKey: gapKey, count: 0, succeeded: false },
-      );
-      wrote = true;
-    }
-  }
-  if (wrote) await batch.commit();
-}
 
 export function createHabitProgressRepository(
   db: Firestore,
@@ -563,8 +498,6 @@ export function createHabitProgressRepository(
       const weekKey = weekKeyOf(referenceDate);
       const monthKey = monthKeyOf(referenceDate);
       const periodKey = periodKeyOf(referenceDate, period);
-
-      await fillSummaryGaps(db, projectId, habitId, period, referenceDate);
 
       const ref = periodDocRef(db, projectId, habitId, periodKey);
       await runTransaction(db, async (tx: Transaction) => {
