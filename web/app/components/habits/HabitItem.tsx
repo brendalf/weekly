@@ -113,6 +113,11 @@ export function HabitItem({
     return () => unsub();
   }, [repos, id, period, referenceDate]);
 
+  // Serialize arrays to primitives so the effect only re-fires when contents change,
+  // not when Firestore creates new array objects on each snapshot.
+  const skippedPeriodsKey = skippedPeriods?.join('\0') ?? '';
+  const activeDaysKey = activeDays?.join(',') ?? '';
+
   useEffect(() => {
     if (!repos) return;
     const unsub = repos.habitProgress.subscribeHabitStreak(
@@ -125,7 +130,8 @@ export function HabitItem({
       activeDays,
     );
     return () => unsub();
-  }, [repos, id, period, createdAt, referenceDate, skippedPeriods, activeDays]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [repos, id, period, createdAt, referenceDate, skippedPeriodsKey, activeDaysKey]);
 
   const displayValue = optimisticCount ?? value;
   const { progress, complete } = habitProgress(displayValue, target);
