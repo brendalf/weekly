@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   computeStreak,
   filterHabitsByDay,
+  getActiveSkipKey,
   getISOWeek,
   getSkipPeriodKeys,
   isDateInWeek,
@@ -337,6 +338,58 @@ test("computeStreak with activeDays: missed last Friday sets openSince to that F
   assert.equal(result.openSincePeriodKey, "2026-03-27");
 });
 
+test("computeStreak: week key skip makes that week transparent in streak", () => {
+  const map = new Map<string, boolean>([
+    ["2026-W09", true],
+    // W10 has a week key in skippedPeriods → should be skipped, not count as failure
+    ["2026-W11", true],
+  ]);
+  const result = computeStreak(
+    map,
+    new Date(2026, 2, 16), // week 12 reference
+    new Date(2026, 1, 23), // created week 9
+    'week',
+    ["2026-W10"],
+  );
+  assert.equal(result.currentStrikeLength, 2); // W9 + W11 both succeeded, W10 skipped
+  assert.equal(result.openSincePeriodKey, null);
+});
+
+test("computeStreak: month key skip makes all weeks in that month transparent", () => {
+  // W10 (Mar 2-8) and W11 (Mar 9-15) succeeded. February is skipped.
+  // W5 (Jan 26) is not in the map → failure. Streak should be 2 (W10 + W11).
+  const map = new Map<string, boolean>([
+    ["2026-W10", true],
+    ["2026-W11", true],
+  ]);
+  const result = computeStreak(
+    map,
+    new Date(2026, 2, 16), // week 12 reference (Mar 16)
+    new Date(2026, 0, 19), // created week 4 (Jan 19)
+    'week',
+    ["2026-02"], // skip all of February
+  );
+  // W11 succeeded, W10 succeeded, Feb weeks (W6-W9) skipped, W5 fails → streak = 2
+  assert.equal(result.currentStrikeLength, 2);
+  assert.equal(result.openSincePeriodKey, null);
+});
+
+test("computeStreak: day key skip does NOT make the whole week transparent (UI-only)", () => {
+  const map = new Map<string, boolean>([
+    ["2026-W09", true],
+    // W10 missing (failure) — a day key skip should not save it
+  ]);
+  const result = computeStreak(
+    map,
+    new Date(2026, 2, 16), // week 12
+    new Date(2026, 1, 23), // created week 9
+    'week',
+    ["2026-03-09"], // skip Monday of W10 only — day key, should NOT affect streak
+  );
+  assert.equal(result.currentStrikeLength, 0); // W10 still a failure
+  assert.equal(result.openSincePeriodKey, "2026-W10");
+});
+
 test("computeStreak activeDays is ignored for non-Day periods", () => {
   // activeDays only applies to Day period; for Week it should have no effect.
   const map = new Map<string, boolean>([["2026-W11", true]]);
@@ -421,69 +474,115 @@ test("isHabitSkipped returns false when day key is not in skippedPeriods", () =>
   assert.equal(isHabitSkipped(habit, new Date(2026, 2, 30)), false);
 });
 
-test("isHabitSkipped uses week key for week-period habits", () => {
+test("isHabitSkipped returns true when week key is in skippedPeriods (week-period habit)", () => {
   const habit = makeHabit({ period: "week", skippedPeriods: ["2026-W13"] });
-  // 2026-03-30 is a Monday in week 14, not week 13
+  // 2026-03-30 is week 14, not week 13
   assert.equal(isHabitSkipped(habit, new Date(2026, 2, 30)), false);
-  // 2026-03-23 is a Monday in week 13
+  // 2026-03-23 is week 13
   assert.equal(isHabitSkipped(habit, new Date(2026, 2, 23)), true);
+});
+
+test("isHabitSkipped returns true when day key is in skippedPeriods (week-period habit)", () => {
+  // 'skip today' stores a day key regardless of habit period
+  const habit = makeHabit({ period: "week", skippedPeriods: ["2026-03-30"] });
+  assert.equal(isHabitSkipped(habit, new Date(2026, 2, 30)), true);
+  // Other days in the same week are NOT skipped
+  assert.equal(isHabitSkipped(habit, new Date(2026, 2, 31)), false);
+});
+
+test("isHabitSkipped returns true when month key is in skippedPeriods (any period)", () => {
+  const weekHabit = makeHabit({ period: "week", skippedPeriods: ["2026-03"] });
+  assert.equal(isHabitSkipped(weekHabit, new Date(2026, 2, 15)), true);
+  assert.equal(isHabitSkipped(weekHabit, new Date(2026, 3, 1)), false); // April not skipped
+
+  const dayHabit = makeHabit({ period: "day", skippedPeriods: ["2026-03"] });
+  assert.equal(isHabitSkipped(dayHabit, new Date(2026, 2, 1)), true);
+  assert.equal(isHabitSkipped(dayHabit, new Date(2026, 2, 31)), true);
+  assert.equal(isHabitSkipped(dayHabit, new Date(2026, 3, 1)), false);
 });
 
 // ---------------------------------------------------------------------------
 // getSkipPeriodKeys
 // ---------------------------------------------------------------------------
 
-test("getSkipPeriodKeys 'today' returns the current day key for Day period", () => {
-  const keys = getSkipPeriodKeys(new Date(2026, 2, 30), 'day', 'today');
-  assert.deepEqual(keys, ["2026-03-30"]);
+test("getSkipPeriodKeys 'today' always returns the day key (regardless of habit period)", () => {
+  // Day habit
+  assert.deepEqual(getSkipPeriodKeys(new Date(2026, 2, 30), 'today'), ["2026-03-30"]);
+  // Week habit — same result: day key, not week key
+  assert.deepEqual(getSkipPeriodKeys(new Date(2026, 2, 30), 'today'), ["2026-03-30"]);
 });
 
-test("getSkipPeriodKeys 'today' returns the current week key for Week period", () => {
-  const keys = getSkipPeriodKeys(new Date(2026, 2, 30), 'week', 'today');
-  assert.deepEqual(keys, ["2026-W14"]);
+test("getSkipPeriodKeys 'week' returns the week key", () => {
+  assert.deepEqual(getSkipPeriodKeys(new Date(2026, 2, 30), 'week'), ["2026-W14"]);
 });
 
-test("getSkipPeriodKeys 'week' for Day period returns all 7 days of that week", () => {
-  // 2026-03-30 is Monday of week 14
-  const keys = getSkipPeriodKeys(new Date(2026, 2, 30), 'day', 'week');
-  assert.equal(keys.length, 7);
-  assert.equal(keys[0], "2026-03-30"); // Monday
-  assert.equal(keys[6], "2026-04-05"); // Sunday
+test("getSkipPeriodKeys 'month' returns the month key", () => {
+  assert.deepEqual(getSkipPeriodKeys(new Date(2026, 2, 30), 'month'), ["2026-03"]);
 });
 
-test("getSkipPeriodKeys 'month' for Day period returns all days of that month", () => {
-  const keys = getSkipPeriodKeys(new Date(2026, 2, 15), 'day', 'month'); // March
-  assert.equal(keys.length, 31);
-  assert.equal(keys[0], "2026-03-01");
-  assert.equal(keys[30], "2026-03-31");
-});
-
-test("getSkipPeriodKeys 'until' for Day period returns days from start to untilDate inclusive", () => {
+test("getSkipPeriodKeys 'until' with no period (defaults to DAY) returns day keys", () => {
   const keys = getSkipPeriodKeys(
     new Date(2026, 2, 30),
-    'day',
     'until',
     new Date(2026, 3, 1), // until Apr 1
   );
   assert.deepEqual(keys, ["2026-03-30", "2026-03-31", "2026-04-01"]);
 });
 
-test("getSkipPeriodKeys 'week' for Week period returns just the week key", () => {
-  const keys = getSkipPeriodKeys(new Date(2026, 2, 30), 'week', 'week');
-  assert.deepEqual(keys, ["2026-W14"]);
+test("getSkipPeriodKeys 'until' with DAY period returns day keys from start to untilDate inclusive", () => {
+  const keys = getSkipPeriodKeys(
+    new Date(2026, 2, 30),
+    'until',
+    new Date(2026, 3, 1),
+    'day',
+  );
+  assert.deepEqual(keys, ["2026-03-30", "2026-03-31", "2026-04-01"]);
 });
 
-test("getSkipPeriodKeys 'month' for Month period returns just the month key", () => {
-  const keys = getSkipPeriodKeys(new Date(2026, 2, 30), 'month', 'month');
-  assert.deepEqual(keys, ["2026-03"]);
-});
-
-test("getSkipPeriodKeys 'until' for Week period returns distinct week keys in range", () => {
+test("getSkipPeriodKeys 'until' with WEEK period returns distinct week keys in range", () => {
   const keys = getSkipPeriodKeys(
     new Date(2026, 2, 30), // week 14
-    'week',
     'until',
     new Date(2026, 3, 13), // week 16
+    'week',
   );
   assert.deepEqual(keys, ["2026-W14", "2026-W15", "2026-W16"]);
+});
+
+test("getSkipPeriodKeys 'until' with MONTH period returns distinct month keys in range", () => {
+  const keys = getSkipPeriodKeys(
+    new Date(2026, 2, 1), // March
+    'until',
+    new Date(2026, 4, 15), // May
+    'month',
+  );
+  assert.deepEqual(keys, ["2026-03", "2026-04", "2026-05"]);
+});
+
+// ---------------------------------------------------------------------------
+// getActiveSkipKey
+// ---------------------------------------------------------------------------
+
+test("getActiveSkipKey returns null for empty skippedPeriods", () => {
+  assert.equal(getActiveSkipKey([], new Date(2026, 2, 30)), null);
+});
+
+test("getActiveSkipKey returns day key when day key is present (most specific)", () => {
+  const key = getActiveSkipKey(["2026-03-30", "2026-W14", "2026-03"], new Date(2026, 2, 30));
+  assert.equal(key, "2026-03-30");
+});
+
+test("getActiveSkipKey returns week key when only week key is present", () => {
+  const key = getActiveSkipKey(["2026-W14"], new Date(2026, 2, 30));
+  assert.equal(key, "2026-W14");
+});
+
+test("getActiveSkipKey returns month key when only month key is present", () => {
+  const key = getActiveSkipKey(["2026-03"], new Date(2026, 2, 30));
+  assert.equal(key, "2026-03");
+});
+
+test("getActiveSkipKey returns null when no key covers the given day", () => {
+  const key = getActiveSkipKey(["2026-03-29", "2026-W13", "2026-02"], new Date(2026, 2, 30));
+  assert.equal(key, null);
 });

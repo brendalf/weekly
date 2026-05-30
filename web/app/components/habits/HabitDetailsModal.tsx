@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Modal,
   Button,
@@ -15,7 +15,6 @@ import {
   Pencil,
   Xmark,
   Check,
-  Ellipsis,
   Plus,
   Minus,
 } from "@gravity-ui/icons";
@@ -37,7 +36,6 @@ import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
 import { ActiveDaysSelector } from "./ActiveDaysSelector";
 import { TimeOfDaySelector } from "./TimeOfDaySelector";
 import { HabitPeriodSelect } from "./HabitPeriodSelect";
-import { HabitActionMenu } from "./HabitActionMenu";
 
 interface HabitDetailsModalProps {
   open: boolean;
@@ -57,7 +55,13 @@ interface HabitDetailsModalProps {
   } | null;
 }
 
-type SlotStatus = "completed" | "partial" | "missed" | "skipped" | "inactive" | "future";
+type SlotStatus =
+  | "completed"
+  | "partial"
+  | "missed"
+  | "skipped"
+  | "inactive"
+  | "future";
 
 interface CalendarSlot {
   key: string;
@@ -100,7 +104,9 @@ function buildSlots(
     // Walk day by day from createdDate up to today, cap at 84 days (12 weeks)
     const startDate = new Date(createdDate);
     const endDate = new Date(today);
-    const diffDays = Math.round((endDate.getTime() - startDate.getTime()) / 86400000);
+    const diffDays = Math.round(
+      (endDate.getTime() - startDate.getTime()) / 86400000,
+    );
     const maxDays = Math.min(diffDays, 83);
     const windowStart = new Date(endDate.getTime() - maxDays * 86400000);
 
@@ -108,7 +114,7 @@ function buildSlots(
     while (dayKeyOf(d) <= dayKeyOf(today)) {
       const key = dayKeyOf(d);
       // ISO day: 0=Mon..6=Sun
-      const dow = ((d.getDay() + 6) % 7);
+      const dow = (d.getDay() + 6) % 7;
       // activeDays uses 0=Sun..6=Sat
       const sundayDow = d.getDay();
 
@@ -117,11 +123,16 @@ function buildSlots(
         status = "future";
       } else if (skippedPeriods?.includes(key)) {
         status = "skipped";
-      } else if (activeDays && activeDays.length > 0 && !activeDays.includes(sundayDow)) {
+      } else if (
+        activeDays &&
+        activeDays.length > 0 &&
+        !activeDays.includes(sundayDow)
+      ) {
         status = "inactive";
       } else {
         const count = countMap.get(key) ?? 0;
-        status = count >= times ? "completed" : count > 0 ? "partial" : "missed";
+        status =
+          count >= times ? "completed" : count > 0 ? "partial" : "missed";
       }
 
       slots.push({
@@ -149,7 +160,12 @@ function buildSlots(
       } else if (skippedPeriods?.includes(key)) {
         status = "skipped";
       } else {
-        status = completions >= times ? "completed" : completions > 0 ? "partial" : "missed";
+        status =
+          completions >= times
+            ? "completed"
+            : completions > 0
+              ? "partial"
+              : "missed";
       }
       weekSlots.unshift({ key, label: `W${key.split("-W")[1]}`, status });
       d = prevPeriodDate(d, period);
@@ -171,10 +187,19 @@ function buildSlots(
       } else if (skippedPeriods?.includes(key)) {
         status = "skipped";
       } else {
-        status = completions >= times ? "completed" : completions > 0 ? "partial" : "missed";
+        status =
+          completions >= times
+            ? "completed"
+            : completions > 0
+              ? "partial"
+              : "missed";
       }
       const [year, month] = key.split("-");
-      const monthName = new Date(Number(year), Number(month) - 1, 1).toLocaleString("en-US", {
+      const monthName = new Date(
+        Number(year),
+        Number(month) - 1,
+        1,
+      ).toLocaleString("en-US", {
         month: "short",
       });
       monthSlots.unshift({ key, label: `${monthName} ${year}`, status });
@@ -188,10 +213,13 @@ function buildSlots(
 }
 
 const STATUS_CLASSES: Record<SlotStatus, string> = {
-  completed: "bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/20",
-  partial: "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  completed:
+    "bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/20",
+  partial:
+    "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/20",
   missed: "bg-foreground/5 text-foreground/30 border-foreground/10",
-  skipped: "bg-foreground/10 text-foreground/40 border-foreground/10 line-through",
+  skipped:
+    "bg-foreground/10 text-foreground/40 border-foreground/10 line-through",
   inactive: "bg-transparent text-foreground/15 border-transparent",
   future: "bg-transparent text-foreground/10 border-transparent",
 };
@@ -214,7 +242,12 @@ function DayCalendar({ slots }: { slots: CalendarSlot[] }) {
     // Pad if first row doesn't start on Monday
     if (currentRow.length === 0 && dow > 0 && rows.length === 0) {
       for (let i = 0; i < dow; i++) {
-        currentRow.push({ key: `pad-${i}`, label: "", status: "future", dayOfWeek: i });
+        currentRow.push({
+          key: `pad-${i}`,
+          label: "",
+          status: "future",
+          dayOfWeek: i,
+        });
       }
     }
     currentRow.push(slot);
@@ -228,7 +261,10 @@ function DayCalendar({ slots }: { slots: CalendarSlot[] }) {
         {/* Day headers */}
         <div className="mb-1 grid grid-cols-7 gap-0.5">
           {DAY_LABELS.map((l, i) => (
-            <div key={i} className="text-center text-[10px] font-medium text-foreground/40">
+            <div
+              key={i}
+              className="text-center text-[10px] font-medium text-foreground/40"
+            >
               {l}
             </div>
           ))}
@@ -310,15 +346,12 @@ export function HabitDetailsModal({
   >(timeOfDay);
 
   const [showLogs, setShowLogs] = useState(false);
-  const [actionMenuOpen, setActionMenuOpen] = useState(false);
-  const actionMenuBtnRef = useRef<HTMLButtonElement>(null);
 
   const state = useOverlayState({
     isOpen: open,
     onOpenChange: (isOpen) => {
       if (!isOpen) {
         setEditing(false);
-        setActionMenuOpen(false);
         setShowLogs(false);
       }
       onOpenChange(isOpen);
@@ -327,8 +360,6 @@ export function HabitDetailsModal({
 
   const currentPeriodKey = periodKeyOf(referenceDate, period);
   const periodLogs = logs.filter((l) => l.periodKey === currentPeriodKey);
-  const isCurrentPeriodSkipped =
-    skippedPeriods?.includes(currentPeriodKey) ?? false;
 
   const isCurrentPeriod = periodKeyOf(new Date(), period) === currentPeriodKey;
   const periodLabel = isCurrentPeriod
@@ -342,7 +373,16 @@ export function HabitDetailsModal({
   }, [open, repos, habitId]);
 
   const calendarSlots = useMemo(
-    () => buildSlots(period, createdAt, referenceDate, logs, times, skippedPeriods, activeDays),
+    () =>
+      buildSlots(
+        period,
+        createdAt,
+        referenceDate,
+        logs,
+        times,
+        skippedPeriods,
+        activeDays,
+      ),
     [period, createdAt, referenceDate, logs, times, skippedPeriods, activeDays],
   );
 
@@ -407,7 +447,6 @@ export function HabitDetailsModal({
   const displayCount = periodLogs.length;
   const { progress, complete } = habitProgress(displayCount, times);
   const isEditValid = Boolean(editName.trim()) && Number(editTimes) > 0;
-
 
   return (
     <>
@@ -522,7 +561,10 @@ export function HabitDetailsModal({
                           {streak.openSincePeriodKey && (
                             <span className="rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs text-foreground/50">
                               since{" "}
-                              {formatPeriodKey(streak.openSincePeriodKey, period)}
+                              {formatPeriodKey(
+                                streak.openSincePeriodKey,
+                                period,
+                              )}
                             </span>
                           )}
                         </div>
@@ -535,7 +577,9 @@ export function HabitDetailsModal({
                 {!editing && calendarSlots.length > 0 && (
                   <Surface variant="default" className="mb-3">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-semibold text-foreground">History</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        History
+                      </p>
                       <button
                         onClick={() => setShowLogs((v) => !v)}
                         className="text-xs text-foreground/40 hover:text-foreground/70 transition-colors"
@@ -573,7 +617,9 @@ export function HabitDetailsModal({
                     {showLogs && (
                       <div className="mt-3 flex flex-col gap-1 border-t border-foreground/10 pt-3">
                         {periodLogs.length === 0 ? (
-                          <p className="text-xs text-foreground/50">No completions this period.</p>
+                          <p className="text-xs text-foreground/50">
+                            No completions this period.
+                          </p>
                         ) : (
                           <div className="flex max-h-40 flex-col gap-1 overflow-y-auto">
                             {periodLogs.map((l) => (
@@ -582,7 +628,9 @@ export function HabitDetailsModal({
                                 className="flex items-center justify-between rounded-lg border border-foreground/10 bg-background px-3 py-2"
                               >
                                 <span className="text-xs text-foreground/60">
-                                  {l.occurredAt ? new Date(l.occurredAt).toLocaleString() : ""}
+                                  {l.occurredAt
+                                    ? new Date(l.occurredAt).toLocaleString()
+                                    : ""}
                                 </span>
                                 <Button
                                   onPress={() => handleDeleteLog(l)}
@@ -600,7 +648,6 @@ export function HabitDetailsModal({
                     )}
                   </Surface>
                 )}
-
               </Modal.Body>
 
               <Modal.Footer>
@@ -615,14 +662,6 @@ export function HabitDetailsModal({
                   </>
                 ) : (
                   <>
-                    <button
-                      ref={actionMenuBtnRef}
-                      onClick={() => setActionMenuOpen((v) => !v)}
-                      className="shrink-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground/40 hover:text-foreground/70 transition-colors"
-                      aria-label="More options"
-                    >
-                      <Ellipsis width={14} height={14} />
-                    </button>
                     <Button variant="ghost" onPress={startEditing}>
                       <Pencil />
                     </Button>
@@ -636,17 +675,6 @@ export function HabitDetailsModal({
           </Modal.Container>
         </Modal.Backdrop>
       </Modal>
-
-      <HabitActionMenu
-        habitId={habitId}
-        referenceDate={referenceDate}
-        period={period}
-        currentPeriodKey={currentPeriodKey}
-        isSkipped={isCurrentPeriodSkipped}
-        triggerRef={actionMenuBtnRef}
-        isOpen={actionMenuOpen}
-        onOpenChange={setActionMenuOpen}
-      />
     </>
   );
 }

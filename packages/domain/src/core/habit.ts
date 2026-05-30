@@ -17,10 +17,13 @@ export function filterHabitsByDay(habits: Habit[], day: Date): Habit[] {
   });
 }
 
-/** Returns true if the habit is skipped for the given day's period. */
+/** Returns true if the habit is skipped for the given day (checks day, week, and month keys). */
 export function isHabitSkipped(habit: Habit, day: Date): boolean {
   if (!habit.skippedPeriods || habit.skippedPeriods.length === 0) return false;
-  return habit.skippedPeriods.includes(periodKeyOf(day, habit.period));
+  const dayKey = dayKeyOf(day);
+  const weekKey = weekKeyOf(day);
+  const monthKey = monthKeyOf(day);
+  return habit.skippedPeriods.some((k) => k === dayKey || k === weekKey || k === monthKey);
 }
 
 export function prevPeriodDate(date: Date, period: Period): Date {
@@ -48,7 +51,12 @@ export function computeStreak(
     const key = periodKeyOf(current, period);
     if (key < createdPeriodKey) break;
 
-    if (skippedPeriods?.includes(key)) {
+    // Check period key, week key, and month key (but NOT day keys — "skip today" is UI-only)
+    if (skippedPeriods && (
+      skippedPeriods.includes(key) ||
+      skippedPeriods.includes(weekKeyOf(current)) ||
+      skippedPeriods.includes(monthKeyOf(current))
+    )) {
       current = prevPeriodDate(current, period);
       continue;
     }
@@ -91,77 +99,60 @@ export function isDateInWeek(dateISO: string, week: WeekId): boolean {
 }
 
 
-function getMondayOfWeek(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay(); // 0=Sun, 1=Mon, …, 6=Sat
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  return d;
-}
-
 /**
-  * Returns period keys that should be skipped based on the skip type.
-  */
+ * Returns period keys that should be skipped based on the skip type.
+ * Key granularity is determined by the skip type, not the habit period:
+ * - 'today'  → single day key (visual-only hide; does not affect streak)
+ * - 'week'   → single week key
+ * - 'month'  → single month key
+ * - 'until'  → period-appropriate keys from date to untilDate (pass `period` arg)
+ */
 export function getSkipPeriodKeys(
   date: Date,
-  period: Period,
   skipType: 'today' | 'week' | 'month' | 'until',
   untilDate?: Date,
+  period?: Period,
 ): string[] {
-  if (skipType === 'today') {
-    return [periodKeyOf(date, period)];
-  }
-
-  if (period !== Period.DAY) {
-    if (skipType === 'week') return [weekKeyOf(date)];
-    if (skipType === 'month') return [monthKeyOf(date)];
-    if (skipType === 'until' && untilDate) {
-      const keys: string[] = [];
-      const d = new Date(date);
-      while (d <= untilDate) {
-        const key = periodKeyOf(d, period);
-        if (!keys.includes(key)) keys.push(key);
-        if (period === Period.WEEK) d.setDate(d.getDate() + 7);
-        else d.setMonth(d.getMonth() + 1);
-      }
-      return keys;
-    }
-    return [periodKeyOf(date, period)];
-  }
-
-  // Day period
-  if (skipType === 'week') {
-    const monday = getMondayOfWeek(date);
-    const keys: string[] = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(d.getDate() + i);
-      keys.push(dayKeyOf(d));
-    }
-    return keys;
-  }
-
-  if (skipType === 'month') {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const keys: string[] = [];
-    const d = new Date(year, month, 1);
-    while (d.getMonth() === month) {
-      keys.push(dayKeyOf(d));
-      d.setDate(d.getDate() + 1);
-    }
-    return keys;
-  }
+  if (skipType === 'today') return [dayKeyOf(date)];
+  if (skipType === 'week') return [weekKeyOf(date)];
+  if (skipType === 'month') return [monthKeyOf(date)];
 
   if (skipType === 'until' && untilDate) {
+    const effectivePeriod = period ?? Period.DAY;
     const keys: string[] = [];
     const d = new Date(date);
-    while (d <= untilDate) {
-      keys.push(dayKeyOf(d));
-      d.setDate(d.getDate() + 1);
+    if (effectivePeriod === Period.WEEK) {
+      while (d <= untilDate) {
+        const key = weekKeyOf(d);
+        if (!keys.includes(key)) keys.push(key);
+        d.setDate(d.getDate() + 7);
+      }
+    } else if (effectivePeriod === Period.MONTH) {
+      while (d <= untilDate) {
+        const key = monthKeyOf(d);
+        if (!keys.includes(key)) keys.push(key);
+        d.setMonth(d.getMonth() + 1);
+      }
+    } else {
+      while (d <= untilDate) {
+        keys.push(dayKeyOf(d));
+        d.setDate(d.getDate() + 1);
+      }
     }
     return keys;
   }
 
-  return [periodKeyOf(date, period)];
+  return [dayKeyOf(date)];
+}
+
+/** Returns the key in skippedPeriods that covers the given day (most specific first). */
+export function getActiveSkipKey(skippedPeriods: string[], day: Date): string | null {
+  if (!skippedPeriods.length) return null;
+  const dayKey = dayKeyOf(day);
+  const weekKey = weekKeyOf(day);
+  const monthKey = monthKeyOf(day);
+  if (skippedPeriods.includes(dayKey)) return dayKey;
+  if (skippedPeriods.includes(weekKey)) return weekKey;
+  if (skippedPeriods.includes(monthKey)) return monthKey;
+  return null;
 }

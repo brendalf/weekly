@@ -54,7 +54,7 @@ export function SkipMenu({
 
   async function handleSkip(type: "today" | "week" | "month") {
     if (!repos) return;
-    await repos.habit.skipHabit(habitId, getSkipPeriodKeys(referenceDate, period, type));
+    await repos.habit.skipHabit(habitId, getSkipPeriodKeys(referenceDate, type));
     reset();
     onClose?.();
   }
@@ -64,7 +64,7 @@ export function SkipMenu({
     const until = skipUntilDate.toDate(getLocalTimeZone());
     await repos.habit.skipHabit(
       habitId,
-      getSkipPeriodKeys(referenceDate, period, "until", until),
+      getSkipPeriodKeys(referenceDate, "until", until, period),
     );
     reset();
     onClose?.();

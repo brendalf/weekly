@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Period,
   HabitTimeOfDay,
   formatPeriodKey,
+  getActiveSkipKey,
   habitProgress,
   periodKeyOf,
   dayKeyOf,
@@ -77,7 +78,20 @@ export function HabitItem({
     [selectedDayISO, today],
   );
 
-  const currentPeriodKey = periodKeyOf(referenceDate, period);
+  const currentPeriodKey = useMemo(
+    () => periodKeyOf(referenceDate, period),
+    [referenceDate, period],
+  );
+
+  const activeSkipKey = useMemo(
+    () => getActiveSkipKey(skippedPeriods ?? [], referenceDate),
+    [skippedPeriods, referenceDate],
+  );
+
+  const handleUnskip = useCallback(async () => {
+    if (!repos || !activeSkipKey) return;
+    await repos.habit.unskipHabit(id, activeSkipKey);
+  }, [repos, id, activeSkipKey]);
 
   useEffect(() => {
     if (!repos) return;
@@ -250,6 +264,7 @@ export function HabitItem({
               period={period}
               currentPeriodKey={currentPeriodKey}
               isSkipped={isSkipped}
+              onUnskip={handleUnskip}
               triggerRef={menuButtonRef}
               isOpen={menuOpen}
               onOpenChange={setMenuOpen}

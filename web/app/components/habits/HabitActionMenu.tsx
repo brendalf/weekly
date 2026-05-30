@@ -12,6 +12,7 @@ interface HabitActionMenuProps {
   period: Period;
   currentPeriodKey: string;
   isSkipped: boolean;
+  onUnskip?: () => Promise<void>;
   triggerRef: React.RefObject<HTMLButtonElement | null>;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -28,17 +29,23 @@ export function HabitActionMenu({
   period,
   currentPeriodKey,
   isSkipped,
+  onUnskip,
   triggerRef,
   isOpen,
   onOpenChange,
 }: HabitActionMenuProps) {
   const [menuView, setMenuView] = useState<MenuView>("main");
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (isOpen && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+      setMenuPos({
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      });
       setMenuView("main");
     }
   }, [isOpen, triggerRef]);
@@ -53,24 +60,41 @@ export function HabitActionMenu({
   return createPortal(
     <>
       <div
-        className="fixed inset-0 z-[200]"
-        onClick={(e) => { e.stopPropagation(); close(); }}
+        className="fixed inset-0 z-200"
+        onClick={(e) => {
+          e.stopPropagation();
+          close();
+        }}
       />
       <div
-        className="fixed z-[210] w-52 overflow-hidden rounded-xl border border-foreground/15 bg-background shadow-xl"
+        className="fixed z-210 w-52 overflow-hidden rounded-xl border border-foreground/15 bg-background shadow-xl"
         style={{ top: menuPos.top, right: menuPos.right }}
       >
         {/* ── Level 1: main ── */}
         {menuView === "main" && (
           <div className="p-1">
             {isSkipped ? (
-              <button onClick={close} className={menuItemClass}>
-                <CirclePlay width={14} height={14} className="shrink-0 text-foreground/60" />
+              <button
+                onClick={() => { onUnskip?.(); close(); }}
+                className={menuItemClass}
+              >
+                <CirclePlay
+                  width={14}
+                  height={14}
+                  className="shrink-0 text-foreground/60"
+                />
                 Unskip
               </button>
             ) : (
-              <button onClick={() => setMenuView("options")} className={menuItemClass}>
-                <CirclePause width={14} height={14} className="shrink-0 text-foreground/60" />
+              <button
+                onClick={() => setMenuView("options")}
+                className={menuItemClass}
+              >
+                <CirclePause
+                  width={14}
+                  height={14}
+                  className="shrink-0 text-foreground/60"
+                />
                 Skip
                 <ArrowChevronLeft
                   width={12}
