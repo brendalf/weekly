@@ -29,6 +29,8 @@ import { TaskAddModal } from "./tasks/TaskAddModal";
 import { NoteAddModal } from "./notes/NoteAddModal";
 import { NoteList } from "./notes/NoteList";
 import { PeriodPanel } from "./PeriodPanel";
+import { SearchBox } from "./general/SearchBox";
+import { useHabitTaskSearch } from "../hooks/useHabitTaskSearch";
 import { useRepositoryContext } from "../contexts/RepositoryContext";
 import { useCalendarStore } from "../stores/calendar";
 import { useWorkspaceStore } from "../stores/workspace";
@@ -49,6 +51,9 @@ interface HabitsTasksViewProps {
   onShowCompletedTasksChange: (show: boolean) => void;
   onShowSkippedHabitsChange: (show: boolean) => void;
 }
+
+const noHabitMatchesMessage = "No habits match your filter.";
+const noTaskMatchesMessage = "No tasks match your filter.";
 
 /** Tiny read-only ring showing done/total progress. */
 function PeriodProgress({ done, total }: { done: number; total: number }) {
@@ -285,8 +290,8 @@ function UnifiedAddButton({
 }
 
 export function HabitsTasksView({
-  habits,
-  tasks,
+  habits: allHabits,
+  tasks: allTasks,
   workspaces,
   layout,
   innerLayout,
@@ -300,6 +305,16 @@ export function HabitsTasksView({
 }: HabitsTasksViewProps) {
   const [activePeriodTab, setActivePeriodTab] = useState<Period>(Period.DAY);
   const [habitCompletions, setHabitCompletions] = useState<Record<string, boolean>>({});
+
+  // Everything below renders the searched lists; with no query they are the full ones.
+  const {
+    query: searchQuery,
+    setQuery: setSearchQuery,
+    isActive: isSearchActive,
+    isSearching,
+    habits,
+    tasks,
+  } = useHabitTaskSearch(allHabits, allTasks);
   const { activeRepos, getWorkspaceRepos } = useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const selectedDay = useMemo(
@@ -470,6 +485,15 @@ export function HabitsTasksView({
 
         <div className="flex-1" />
 
+        <SearchBox
+          label="Filter habits and tasks"
+          placeholder="Filter…"
+          value={searchQuery}
+          onChange={setSearchQuery}
+          isSearching={isSearching}
+          className="w-32 sm:w-56"
+        />
+
         {(activeRepos || workspaces) && (
           <UnifiedAddButton
             workspaces={workspaces}
@@ -506,6 +530,8 @@ export function HabitsTasksView({
                 showTaskScopeLabel={false}
                 showCompletedTasks={showCompletedTasks}
                 showSkippedHabits={showSkippedHabits}
+                habitsEmptyMessage={isSearchActive ? noHabitMatchesMessage : undefined}
+                tasksEmptyMessage={isSearchActive ? noTaskMatchesMessage : undefined}
                 onToggleTaskCompleted={onToggleTaskCompleted}
                 onHabitsCompleted={handleHabitsCompleted}
               />
@@ -536,6 +562,7 @@ export function HabitsTasksView({
                   showPeriodLabel={true}
                   showSkipped={showSkippedHabits}
                   showCompleted={showCompletedTasks}
+                  emptyMessage={isSearchActive ? noHabitMatchesMessage : undefined}
                   onHabitsCompleted={handleHabitsCompleted}
                 />
               </div>
@@ -565,6 +592,7 @@ export function HabitsTasksView({
                   workspaces={workspaces}
                   showScopeLabel={true}
                   showCompleted={showCompletedTasks}
+                  emptyMessage={isSearchActive ? noTaskMatchesMessage : undefined}
                 />
               </div>
             </div>

@@ -3,3 +3,4 @@ export * from "./habit";
 export * from "./date";
 export * from "./period";
 export * from "./display";
+export * from "./search";
