@@ -27,6 +27,7 @@ interface TaskListProps {
   scopeFilter?: Period;
   showScopeLabel?: boolean;
   showCompleted?: boolean;
+  emptyMessage?: string;
 }
 
 export function TaskList({
@@ -37,6 +38,7 @@ export function TaskList({
   scopeFilter,
   showScopeLabel,
   showCompleted = true,
+  emptyMessage = "No tasks yet.",
 }: TaskListProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { activeRepos, getWorkspaceRepos, getTaskProjectId } =
@@ -126,7 +128,7 @@ export function TaskList({
       <div className={`collapsible${collapsed ? " collapsed" : ""}`}>
         <div>
           {visibleTasks.length === 0 && (
-            <p className="text-xs text-foreground/60 pt-2">No tasks yet.</p>
+            <p className="text-xs text-foreground/60 pt-2">{emptyMessage}</p>
           )}
           <div className="flex flex-col gap-0.5 pt-1">
             {[...visibleTasks]
