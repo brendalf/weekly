@@ -11,6 +11,7 @@ export interface UserPreferencesRepository {
       showCompletedTasks: boolean;
       showSkippedHabits: boolean;
       lastNotificationReadAt: string | null;
+      selectedWorkspaceIds: string[];
     }) => void
   ): Unsubscribe;
   updateTheme(userId: string, theme: ThemePreference): Promise<void>;
@@ -19,4 +20,5 @@ export interface UserPreferencesRepository {
   updateShowCompletedTasks(userId: string, show: boolean): Promise<void>;
   updateShowSkippedHabits(userId: string, show: boolean): Promise<void>;
   updateLastNotificationReadAt(userId: string, ts: string): Promise<void>;
+  updateSelectedWorkspaceIds(userId: string, ids: string[]): Promise<void>;
 }

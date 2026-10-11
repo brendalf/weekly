@@ -40,7 +40,7 @@ export function CreateWorkspaceModal({
       user.uid,
       name.trim(),
     );
-    workspaceStore.setActiveWorkspace(workspaceId);
+    workspaceStore.selectOnlyWorkspace(workspaceId);
     state.close();
   }
 

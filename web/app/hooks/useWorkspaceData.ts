@@ -8,13 +8,14 @@ import {
   createHabitRepository,
   createHabitProgressRepository,
   createNoteRepository,
+  createCommentRepository,
 } from "@weekly/firebase";
-import { useWorkspaceStore } from "../stores/workspace";
+import { useWorkspaceStore, useWorkspaceSelection } from "../stores/workspace";
 import type { RepoSet } from "../contexts/RepositoryContext";
 
 export function useWorkspaceData(db: Firestore) {
   const workspaces = useWorkspaceStore((s) => s.workspaces);
-  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+  const selection = useWorkspaceSelection();
 
   const workspaceReposRef = useRef<Map<string, RepoSet>>(new Map());
   const habitWorkspaceMapRef = useRef<Map<string, string>>(new Map());
@@ -31,6 +32,7 @@ export function useWorkspaceData(db: Firestore) {
           habit: createHabitRepository(db, workspaceId),
           habitProgress: createHabitProgressRepository(db, workspaceId),
           note: createNoteRepository(db, workspaceId),
+          comment: createCommentRepository(db, workspaceId),
         });
       }
       return workspaceReposRef.current.get(workspaceId)!;
@@ -45,77 +47,81 @@ export function useWorkspaceData(db: Firestore) {
     }
   }, [workspaces, getOrCreateRepos]);
 
+  // Stable key: Firestore snapshots hand us a fresh `workspaces` array on every
+  // update, and depending on the array identity would tear down and rebuild
+  // every subscription each time (see commit d4f24b1).
+  const workspaceIdsKey = selection.workspaceIds.join(",");
+  const singleId = selection.singleId;
+
   // workspaceReposRef is a mutable cache (not render state) — ref access here is intentional
   const activeRepos = useMemo(() => {
-    if (!activeWorkspaceId) return null;
+    if (!singleId) return null;
     // eslint-disable-next-line react-hooks/refs
-    return getOrCreateRepos(activeWorkspaceId);
-  }, [activeWorkspaceId, getOrCreateRepos]);
+    return getOrCreateRepos(singleId);
+  }, [singleId, getOrCreateRepos]);
 
-  // Subscribe to tasks/habits for single workspace view
+  // Subscribe to habits/tasks for every workspace in view and merge the results.
+  // Single-workspace mode is just the one-id case of this path, so the
+  // habit/task -> workspace maps are always populated.
   useEffect(() => {
-    if (activeWorkspaceId === null || !activeRepos) return;
-    return activeRepos.habit.subscribeHabits(setHabits);
-  }, [activeWorkspaceId, activeRepos]);
+    const workspaceIds = workspaceIdsKey ? workspaceIdsKey.split(",") : [];
+    if (workspaceIds.length === 0) {
+      setHabits([]);
+      setTasks([]);
+      return;
+    }
 
-  useEffect(() => {
-    if (activeWorkspaceId === null || !activeRepos) return;
-    return activeRepos.task.subscribeTasks(setTasks);
-  }, [activeWorkspaceId, activeRepos]);
-
-  // Subscribe to all workspaces in base view
-  useEffect(() => {
-    if (activeWorkspaceId !== null || workspaces.length === 0) return;
-
-    const allHabitsPerWorkspace = new Map<string, Habit[]>();
-    const allTasksPerWorkspace = new Map<string, Task[]>();
+    const habitsPerWorkspace = new Map<string, Habit[]>();
+    const tasksPerWorkspace = new Map<string, Task[]>();
     const unsubs: (() => void)[] = [];
 
-    for (const workspace of workspaces) {
-      const repos = getOrCreateRepos(workspace.id);
+    for (const workspaceId of workspaceIds) {
+      const repos = getOrCreateRepos(workspaceId);
 
       unsubs.push(
         repos.habit.subscribeHabits((workspaceHabits) => {
-          allHabitsPerWorkspace.set(workspace.id, workspaceHabits);
+          habitsPerWorkspace.set(workspaceId, workspaceHabits);
           for (const h of workspaceHabits) {
-            habitWorkspaceMapRef.current.set(h.id, workspace.id);
+            habitWorkspaceMapRef.current.set(h.id, workspaceId);
           }
-          setHabits([...allHabitsPerWorkspace.values()].flat());
+          setHabits([...habitsPerWorkspace.values()].flat());
         }),
       );
 
       unsubs.push(
         repos.task.subscribeTasks((workspaceTasks) => {
-          allTasksPerWorkspace.set(workspace.id, workspaceTasks);
+          tasksPerWorkspace.set(workspaceId, workspaceTasks);
           for (const t of workspaceTasks) {
-            taskWorkspaceMapRef.current.set(t.id, workspace.id);
+            taskWorkspaceMapRef.current.set(t.id, workspaceId);
           }
-          setTasks([...allTasksPerWorkspace.values()].flat());
+          setTasks([...tasksPerWorkspace.values()].flat());
         }),
       );
     }
 
     return () => unsubs.forEach((u) => u());
-  }, [activeWorkspaceId, workspaces, getOrCreateRepos]);
+  }, [workspaceIdsKey, getOrCreateRepos]);
 
   const getHabitRepos = useCallback(
     (habitId: string): RepoSet | null => {
-      if (activeWorkspaceId && activeRepos) return activeRepos;
       const workspaceId = habitWorkspaceMapRef.current.get(habitId);
-      if (!workspaceId) return null;
-      return workspaceReposRef.current.get(workspaceId) ?? null;
+      if (workspaceId) {
+        return workspaceReposRef.current.get(workspaceId) ?? activeRepos;
+      }
+      return activeRepos;
     },
-    [activeWorkspaceId, activeRepos],
+    [activeRepos],
   );
 
   const getTaskRepos = useCallback(
     (taskId: string): RepoSet | null => {
-      if (activeWorkspaceId && activeRepos) return activeRepos;
       const workspaceId = taskWorkspaceMapRef.current.get(taskId);
-      if (!workspaceId) return null;
-      return workspaceReposRef.current.get(workspaceId) ?? null;
+      if (workspaceId) {
+        return workspaceReposRef.current.get(workspaceId) ?? activeRepos;
+      }
+      return activeRepos;
     },
-    [activeWorkspaceId, activeRepos],
+    [activeRepos],
   );
 
   const getWorkspaceRepos = useCallback(

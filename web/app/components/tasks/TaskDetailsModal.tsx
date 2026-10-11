@@ -14,6 +14,7 @@ import { Task, Period, weekKeyOf } from "@weekly/domain";
 import { toast } from "sonner";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useWorkspaceStore } from "../../stores/workspace";
+import { CommentSection } from "../comments/CommentSection";
 import { ScopeSelector, SCOPE_OPTIONS } from "./ScopeSelector";
 import { PERIOD_COLORS } from "../general/PeriodBadge";
 
@@ -213,6 +214,18 @@ export function TaskDetailsModal({
                   </div>
                 </div>
               </Surface>
+
+              {!editing && (
+                <div className="mt-3">
+                  <CommentSection
+                    target="task"
+                    itemId={task.id}
+                    itemName={task.title}
+                    workspaceId={currentWorkspaceId}
+                    isOpen={open}
+                  />
+                </div>
+              )}
             </Modal.Body>
 
             <Modal.Footer>

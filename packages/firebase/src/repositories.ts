@@ -372,6 +372,7 @@ export function createUserPreferencesRepository(
         showCompletedTasks: boolean;
         showSkippedHabits: boolean;
         lastNotificationReadAt: string | null;
+        selectedWorkspaceIds: string[];
       }) => void,
     ) {
       const ref = doc(db, "preferences", userId);
@@ -395,7 +396,10 @@ export function createUserPreferencesRepository(
           typeof data?.lastNotificationReadAt === "string"
             ? data.lastNotificationReadAt
             : null;
-        onPreferences({ theme, layout, innerLayout, showCompletedTasks, showSkippedHabits, lastNotificationReadAt });
+        const selectedWorkspaceIds: string[] = Array.isArray(data?.selectedWorkspaceIds)
+          ? data.selectedWorkspaceIds.filter((v: unknown) => typeof v === "string")
+          : [];
+        onPreferences({ theme, layout, innerLayout, showCompletedTasks, showSkippedHabits, lastNotificationReadAt, selectedWorkspaceIds });
       });
     },
     async updateTheme(userId: string, theme: ThemePreference) {
@@ -415,6 +419,9 @@ export function createUserPreferencesRepository(
     },
     async updateLastNotificationReadAt(userId: string, ts: string) {
       await setDoc(doc(db, "preferences", userId), { lastNotificationReadAt: ts }, { merge: true });
+    },
+    async updateSelectedWorkspaceIds(userId: string, ids: string[]) {
+      await setDoc(doc(db, "preferences", userId), { selectedWorkspaceIds: ids }, { merge: true });
     },
   };
 }

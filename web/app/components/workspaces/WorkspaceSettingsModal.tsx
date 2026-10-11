@@ -72,14 +72,14 @@ export function WorkspaceSettingsModal({
 
   async function handleDelete() {
     await workspaceRepository.deleteWorkspace(workspace.id);
-    workspaceStore.setActiveWorkspace(null);
+    workspaceStore.selectAllWorkspaces();
     state.close();
   }
 
   async function handleLeave() {
     if (!currentUser) return;
     await workspaceRepository.removeMember(workspace.id, currentUser.uid);
-    workspaceStore.setActiveWorkspace(null);
+    workspaceStore.selectAllWorkspaces();
     state.close();
   }
 

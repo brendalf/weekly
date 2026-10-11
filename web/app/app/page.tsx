@@ -13,11 +13,16 @@ import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { formatDayLabel } from "@weekly/domain";
 import { ArrowRightFromSquare } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
+import { toast } from "sonner";
 import { HabitsTasksView } from "../components/HabitsTasksView";
 import { WeekPicker } from "../components/calendar/WeekPicker";
 import { WeekdaysCarousel } from "../components/calendar/WeekdaysCarousel";
 import { useCalendarStore } from "../stores/calendar";
-import { useWorkspaceStore, workspaceStore } from "../stores/workspace";
+import {
+  useWorkspaceSelection,
+  useWorkspaceStore,
+  workspaceStore,
+} from "../stores/workspace";
 import { RepositoryContext } from "../contexts/RepositoryContext";
 import { workspaceRepository, userPreferencesRepository, db } from "../repositories";
 import { auth } from "../config/firebase";
@@ -34,6 +39,9 @@ export default function AppPage() {
 
 
   const personalWorkspaceCreatedRef = useRef(false);
+  const [workspacesLoaded, setWorkspacesLoaded] = useState(false);
+  const selectionHydratedRef = useRef(false);
+  const lastPersistedSelectionRef = useRef<string | null>(null);
   const { setTheme } = useContext(ThemeContext);
   const [layout, setLayout] = useState<LayoutPreference>("period-tabs");
   const [innerLayout, setInnerLayout] = useState<InnerLayoutPreference>("sequential");
@@ -46,7 +54,13 @@ export default function AppPage() {
   );
 
   const workspaces = useWorkspaceStore((s) => s.workspaces);
-  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+  const selectedWorkspaceIds = useWorkspaceStore((s) => s.selectedWorkspaceIds);
+  const selection = useWorkspaceSelection();
+
+  const workspacesInView = useMemo(
+    () => workspaces.filter((w) => selection.workspaceIds.includes(w.id)),
+    [workspaces, selection.workspaceIds],
+  );
 
   const { tasks, habits, activeRepos, getHabitRepos, getTaskRepos, getWorkspaceRepos, getHabitProjectId, getTaskProjectId } =
     useWorkspaceData(db);
@@ -75,7 +89,7 @@ export default function AppPage() {
     if (!userId) return;
     return userPreferencesRepository.subscribeUserPreferences(
       userId,
-      ({ theme, layout, innerLayout, showCompletedTasks, showSkippedHabits, lastNotificationReadAt }) => {
+      ({ theme, layout, innerLayout, showCompletedTasks, showSkippedHabits, lastNotificationReadAt, selectedWorkspaceIds: persistedSelection }) => {
         setTheme(theme);
         setLayout(layout);
         setInnerLayout(innerLayout);
@@ -84,23 +98,55 @@ export default function AppPage() {
         if (lastNotificationReadAt) {
           workspaceStore.setLastNotificationReadAt(lastNotificationReadAt);
         }
+        // Hydrate the selection from the first payload only, so a later
+        // preference write does not stomp an in-session change.
+        if (!selectionHydratedRef.current) {
+          selectionHydratedRef.current = true;
+          workspaceStore.setSelectedWorkspaceIds(persistedSelection);
+          lastPersistedSelectionRef.current = workspaceStore
+            .getState()
+            .selectedWorkspaceIds.join(",");
+        }
       },
     );
   }, [userId, setTheme]);
 
-  // Subscribe to workspaces; create Personal workspace on first login
+  // Persist selection changes
+  useEffect(() => {
+    if (!userId || !selectionHydratedRef.current) return;
+    const key = selectedWorkspaceIds.join(",");
+    if (lastPersistedSelectionRef.current === key) return;
+    lastPersistedSelectionRef.current = key;
+    userPreferencesRepository
+      .updateSelectedWorkspaceIds(userId, selectedWorkspaceIds)
+      .catch(() => {
+        toast.error("Failed to save workspace selection.");
+      });
+  }, [userId, selectedWorkspaceIds]);
+
+  // Subscribe to workspaces
   useEffect(() => {
     if (!userId || !user) return;
     return workspaceRepository.subscribeUserWorkspaces(userId, (userWorkspaces) => {
       workspaceStore.setWorkspaces(userWorkspaces);
-      if (userWorkspaces.length === 0 && !personalWorkspaceCreatedRef.current) {
-        personalWorkspaceCreatedRef.current = true;
-        workspaceRepository.createPersonalWorkspace(userId);
-      } else if (userWorkspaces.length === 1) {
-        workspaceStore.setActiveWorkspace(userWorkspaces[0].id);
-      }
+      setWorkspacesLoaded(true);
     });
   }, [userId, user]);
+
+  // Create the Personal workspace on first login, once we know the user really
+  // has none (a brand-new user must not race the initial empty snapshot).
+  useEffect(() => {
+    if (!userId || !workspacesLoaded) return;
+    if (workspaces.length > 0 || personalWorkspaceCreatedRef.current) return;
+    personalWorkspaceCreatedRef.current = true;
+    (async () => {
+      try {
+        await workspaceRepository.createPersonalWorkspace(userId);
+      } catch {
+        toast.error("Could not set up your workspace. Please reload the page.");
+      }
+    })();
+  }, [userId, workspacesLoaded, workspaces.length]);
 
   // Subscribe to pending invites
   useEffect(() => {
@@ -247,7 +293,7 @@ export default function AppPage() {
           <HabitsTasksView
             habits={habits}
             tasks={tasks}
-            workspaces={activeWorkspaceId === null ? workspaces : undefined}
+            workspaces={workspacesInView.length > 1 ? workspacesInView : undefined}
             layout={layout}
             innerLayout={innerLayout}
             showCompletedTasks={showCompletedTasks}

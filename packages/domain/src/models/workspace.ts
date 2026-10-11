@@ -27,12 +27,16 @@ export interface ActivityNotification {
     | 'task_added'
     | 'note_added'
     | 'note_edited'
-    | 'note_deleted';
+    | 'note_deleted'
+    | 'comment_added';
   actorUid: string;
   actorDisplayName: string;
   itemId: string;
   itemName: string;
-  /** Present for note activities — the ISO week key (e.g. "2025-W13"). */
+  /**
+   * Legacy — the ISO week key (e.g. "2025-W13") carried by note activity docs
+   * written before notes were unbound from weeks. No longer written.
+   */
   weekKey?: string;
   createdAt: string;
 }

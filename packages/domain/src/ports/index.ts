@@ -5,3 +5,4 @@ export * from "./habitProgress";
 export * from "./userPreferences";
 export * from "./workspaces";
 export * from "./notes";
+export * from "./comments";

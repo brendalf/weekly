@@ -20,6 +20,7 @@ type NoteDoc = {
   body?: unknown;
   authorId?: unknown;
   authorDisplayName?: unknown;
+  pinned?: unknown;
   createdAt?: { toDate?: () => Date };
   updatedAt?: { toDate?: () => Date };
 };
@@ -32,6 +33,7 @@ function toNote(id: string, data: NoteDoc): Note {
     authorId: typeof data.authorId === "string" ? data.authorId : "",
     authorDisplayName:
       typeof data.authorDisplayName === "string" ? data.authorDisplayName : "",
+    pinned: typeof data.pinned === "boolean" ? data.pinned : undefined,
     createdAt:
       data.createdAt?.toDate?.().toISOString() ?? new Date().toISOString(),
     updatedAt:
@@ -43,20 +45,13 @@ export function createNoteRepository(
   db: Firestore,
   workspaceId: string,
 ): NoteRepository {
-  function itemsCol(weekKey: string) {
-    return collection(
-      db,
-      "workspaces",
-      workspaceId,
-      "weekNotes",
-      weekKey,
-      "items",
-    );
+  function notesCol() {
+    return collection(db, "workspaces", workspaceId, "notes");
   }
 
   return {
-    subscribeNotes(weekKey: string, onNotes: (notes: Note[]) => void) {
-      const q = query(itemsCol(weekKey), orderBy("createdAt", "asc"));
+    subscribeNotes(onNotes: (notes: Note[]) => void) {
+      const q = query(notesCol(), orderBy("createdAt", "desc"));
       return onSnapshot(q, (snap) => {
         const notes = snap.docs.map((d: QueryDocumentSnapshot<DocumentData>) =>
           toNote(d.id, d.data() as NoteDoc),
@@ -65,8 +60,8 @@ export function createNoteRepository(
       });
     },
 
-    async addNote(weekKey: string, note: Omit<Note, "id" | "createdAt" | "updatedAt">) {
-      const ref = await addDoc(itemsCol(weekKey), {
+    async addNote(note: Omit<Note, "id" | "createdAt" | "updatedAt">) {
+      const ref = await addDoc(notesCol(), {
         ...note,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -74,16 +69,20 @@ export function createNoteRepository(
       return ref.id;
     },
 
-    async updateNote(weekKey: string, noteId: string, title: string, body: string) {
-      await updateDoc(doc(itemsCol(weekKey), noteId), {
-        title,
-        body,
-        updatedAt: serverTimestamp(),
-      });
+    async updateNote(
+      noteId: string,
+      updates: { title?: string; body?: string; pinned?: boolean },
+    ) {
+      const payload: Record<string, unknown> = {};
+      if (updates.title !== undefined) payload.title = updates.title;
+      if (updates.body !== undefined) payload.body = updates.body;
+      if (updates.pinned !== undefined) payload.pinned = updates.pinned;
+      payload.updatedAt = serverTimestamp();
+      await updateDoc(doc(notesCol(), noteId), payload);
     },
 
-    async deleteNote(weekKey: string, noteId: string) {
-      await deleteDoc(doc(itemsCol(weekKey), noteId));
+    async deleteNote(noteId: string) {
+      await deleteDoc(doc(notesCol(), noteId));
     },
   };
 }

@@ -2,136 +2,98 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button, Input, TextField, Surface } from "@heroui/react";
-import { Pencil, TrashBin, Xmark, Check } from "@gravity-ui/icons";
+import { Pin, PinFill } from "@gravity-ui/icons";
 import type { Note } from "@weekly/domain";
+import { Badge } from "../general/Badge";
+import { NoteDetailsModal } from "./NoteDetailsModal";
+import type { NoteUpdates } from "./NoteDetailsModal";
 
 interface NoteItemProps {
   note: Note;
-  weekKey: string;
   workspaceName?: string;
-  onUpdate: (weekKey: string, noteId: string, title: string, body: string) => Promise<void>;
-  onDelete: (weekKey: string, noteId: string) => void;
+  onUpdate: (noteId: string, updates: NoteUpdates) => Promise<void>;
+  onDelete: (noteId: string) => void;
 }
 
-export function NoteItem({ note, weekKey, workspaceName, onUpdate, onDelete }: NoteItemProps) {
-  const [collapsed, setCollapsed] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(note.title);
-  const [editBody, setEditBody] = useState(note.body);
+function formatShortDate(iso: string) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: sameYear ? undefined : "numeric",
+  });
+}
 
-  function startEditing() {
-    setEditTitle(note.title);
-    setEditBody(note.body);
-    setEditing(true);
-    setCollapsed(false);
-  }
+export function NoteItem({ note, workspaceName, onUpdate, onDelete }: NoteItemProps) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
-  function handleSave() {
-    const trimmedTitle = editTitle.trim();
-    if (!trimmedTitle) return;
-    setEditing(false);
-    onUpdate(weekKey, note.id, trimmedTitle, editBody.trim()).catch(() => {
-      setEditing(true);
-      toast.error("Failed to save note. Please try again.");
+  function handleTogglePin() {
+    onUpdate(note.id, { pinned: !note.pinned }).catch(() => {
+      toast.error("Failed to update note. Please try again.");
     });
   }
 
-  function handleCancel() {
-    setEditing(false);
-    setEditTitle(note.title);
-    setEditBody(note.body);
-  }
-
-  const formattedDate = note.createdAt
-    ? new Date(note.createdAt).toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-      })
-    : "";
-
-  if (editing) {
-    return (
-      <Surface variant="default" className="flex flex-col gap-2">
-        <TextField name="noteTitle">
-          <Input
-            value={editTitle}
-            variant="secondary"
-            placeholder="Title"
-            autoFocus
-            onChange={(e) => setEditTitle(e.target.value)}
-          />
-        </TextField>
-        <textarea
-          value={editBody}
-          onChange={(e) => setEditBody(e.target.value)}
-          placeholder="Write something…"
-          rows={4}
-          className="w-full resize-none rounded-lg border border-foreground/10 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-foreground/30"
-        />
-        <div className="flex justify-end gap-2">
-          <Button size="sm" variant="ghost" isIconOnly onPress={handleCancel}>
-            <Xmark />
-          </Button>
-          <Button size="sm" isDisabled={!editTitle.trim()} isIconOnly onPress={handleSave}>
-            <Check />
-          </Button>
-        </div>
-      </Surface>
-    );
-  }
+  const formattedDate = formatShortDate(note.createdAt);
 
   return (
-    <div className="rounded-lg border border-foreground/10 bg-background">
-      <button
-        onClick={() => setCollapsed((v) => !v)}
-        className="flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left"
-      >
-        {workspaceName && (
-          <span className="shrink-0 rounded-md bg-foreground/10 px-1.5 py-0.5 text-xs text-foreground/60">
-            {workspaceName}
+    <>
+      <div className="flex items-stretch rounded-lg border border-foreground/10 bg-background transition-colors hover:border-foreground/20">
+        <button
+          type="button"
+          onClick={() => setDetailsOpen(true)}
+          className="flex min-h-11 min-w-0 flex-1 cursor-pointer flex-col justify-center gap-0.5 px-3 py-2 text-left"
+        >
+          <span className="flex min-w-0 items-center gap-1.5">
+            {note.pinned && (
+              <PinFill
+                width={12}
+                height={12}
+                className="shrink-0 text-amber-500"
+                aria-label="Pinned"
+              />
+            )}
+            <span className="truncate text-sm font-medium text-foreground">
+              {note.title}
+            </span>
           </span>
-        )}
-        <span className="flex-1 truncate text-sm font-medium text-foreground">
-          {note.title}
-        </span>
-        <span className="shrink-0 text-xs text-foreground/40">
-          {note.authorDisplayName}
-        </span>
-        <span className="shrink-0 text-xs text-foreground/30">{formattedDate}</span>
-      </button>
-
-      <div className={`collapsible${collapsed ? " collapsed" : ""}`}>
-        <div className="px-3 pb-3 flex flex-col gap-2">
           {note.body && (
-            <p className="whitespace-pre-wrap text-sm text-foreground/80">
+            <span className="line-clamp-1 text-xs break-words whitespace-pre-wrap text-foreground/50">
               {note.body}
-            </p>
+            </span>
           )}
-          <div className="flex justify-end gap-1">
-            <Button
-              size="sm"
-              variant="ghost"
-              isIconOnly
-              aria-label="Edit note"
-              onPress={startEditing}
-              className="text-foreground/40 hover:text-foreground/70"
-            >
-              <Pencil />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              isIconOnly
-              aria-label="Delete note"
-              onPress={() => onDelete(weekKey, note.id)}
-              className="text-foreground/30 hover:text-red-500"
-            >
-              <TrashBin />
-            </Button>
-          </div>
-        </div>
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-foreground/40">
+            {workspaceName && (
+              <Badge className="bg-foreground/10 text-foreground/50">{workspaceName}</Badge>
+            )}
+            <span className="hidden sm:inline">{note.authorDisplayName}</span>
+            {formattedDate && <span className="text-foreground/30">{formattedDate}</span>}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={handleTogglePin}
+          aria-label={note.pinned ? "Unpin note" : "Pin note"}
+          className={`flex w-11 shrink-0 cursor-pointer items-center justify-center ${
+            note.pinned
+              ? "text-amber-500"
+              : "text-foreground/25 hover:text-foreground/60"
+          }`}
+        >
+          {note.pinned ? <PinFill width={16} height={16} /> : <Pin width={16} height={16} />}
+        </button>
       </div>
-    </div>
+
+      <NoteDetailsModal
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        note={note}
+        workspaceName={workspaceName}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+      />
+    </>
   );
 }

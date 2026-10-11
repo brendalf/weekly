@@ -32,6 +32,7 @@ import {
   prevPeriodDate,
 } from "@weekly/domain";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
+import { CommentSection } from "../comments/CommentSection";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
 import { ActiveDaysSelector } from "./ActiveDaysSelector";
 import { TimeOfDaySelector } from "./TimeOfDaySelector";
@@ -330,8 +331,9 @@ export function HabitDetailsModal({
   createdAt,
   streak,
 }: HabitDetailsModalProps) {
-  const { getHabitRepos } = useRepositoryContext();
+  const { getHabitRepos, getHabitProjectId } = useRepositoryContext();
   const repos = getHabitRepos(habitId);
+  const workspaceId = getHabitProjectId(habitId);
 
   const [logs, setLogs] = useState<HabitCompletionLog[]>([]);
   const [editing, setEditing] = useState(false);
@@ -656,6 +658,16 @@ export function HabitDetailsModal({
                       </div>
                     )}
                   </Surface>
+                )}
+
+                {!editing && (
+                  <CommentSection
+                    target="habit"
+                    itemId={habitId}
+                    itemName={name}
+                    workspaceId={workspaceId}
+                    isOpen={open}
+                  />
                 )}
               </Modal.Body>
 

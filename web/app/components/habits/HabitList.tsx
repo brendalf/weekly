@@ -8,7 +8,7 @@ import { HabitItem } from "./HabitItem";
 import { HabitAddModal } from "./HabitAddModal";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useCalendarStore } from "../../stores/calendar";
-import { useWorkspaceStore } from "../../stores/workspace";
+import { useWorkspaceSelection, useWorkspaceStore } from "../../stores/workspace";
 import { workspaceRepository } from "../../repositories";
 import { auth } from "../../config/firebase";
 
@@ -29,7 +29,7 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
     useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const storeWorkspaces = useWorkspaceStore((s) => s.workspaces);
-  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+  const selection = useWorkspaceSelection();
   const [completions, setCompletions] = useState<{ day: string; completedIds: Set<string>; progressTodayIds: Set<string> }>(
     { day: "", completedIds: new Set(), progressTodayIds: new Set() },
   );
@@ -98,7 +98,7 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
     const date = selectedDayISO ? new Date(selectedDayISO) : new Date();
     const habitId = await repos?.habit.addHabit(name, times, period, date, activeDays, timeOfDay);
     if (!habitId) return;
-    const targetWorkspaceId = workspaceId ?? activeWorkspaceId;
+    const targetWorkspaceId = workspaceId ?? selection.singleId;
     if (!targetWorkspaceId) return;
     const workspace = storeWorkspaces.find((w) => w.id === targetWorkspaceId);
     const user = auth.currentUser;
@@ -182,9 +182,9 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
           )}
           <div className="flex flex-col gap-0.5 pt-1">
             {sorted.map((habit) => {
-              const projectName = workspaces
-                ? workspaces.find((w) => w.id === getHabitProjectId(habit.id))?.name
-                : undefined;
+              const projectName = selection.isSingle
+                ? undefined
+                : storeWorkspaces.find((w) => w.id === getHabitProjectId(habit.id))?.name;
               return (
                 <HabitItem
                   key={habit.id}

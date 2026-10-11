@@ -6,4 +6,6 @@ export interface Note {
   authorDisplayName: string;
   createdAt: string;
   updatedAt: string;
+  /** Pinned notes sort above the rest. */
+  pinned?: boolean;
 }

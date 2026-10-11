@@ -11,4 +11,6 @@ export interface UserPreferences {
   showCompletedTasks: boolean;
   showSkippedHabits: boolean;
   lastNotificationReadAt: string | null;
+  /** Workspaces the user has selected. Empty array = all workspaces. */
+  selectedWorkspaceIds: string[];
 }

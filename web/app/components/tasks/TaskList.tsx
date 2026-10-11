@@ -15,7 +15,7 @@ import { TaskAddModal } from "./TaskAddModal";
 import { TaskItem } from "./TaskItem";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useCalendarStore } from "../../stores/calendar";
-import { useWorkspaceStore } from "../../stores/workspace";
+import { useWorkspaceSelection, useWorkspaceStore } from "../../stores/workspace";
 import { workspaceRepository } from "../../repositories";
 import { auth } from "../../config/firebase";
 
@@ -44,7 +44,7 @@ export function TaskList({
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const selectedDay = selectedDayISO ? new Date(selectedDayISO) : new Date();
   const storeWorkspaces = useWorkspaceStore((s) => s.workspaces);
-  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+  const selection = useWorkspaceSelection();
 
   const handleAddTask = async (
     title: string,
@@ -54,7 +54,7 @@ export function TaskList({
     const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
     const taskId = await repos?.task.addTask(title, scope, selectedDay);
     if (!taskId) return;
-    const targetWorkspaceId = workspaceId ?? activeWorkspaceId;
+    const targetWorkspaceId = workspaceId ?? selection.singleId;
     if (!targetWorkspaceId) return;
     const workspace = storeWorkspaces.find((w) => w.id === targetWorkspaceId);
     const user = auth.currentUser;
@@ -134,10 +134,11 @@ export function TaskList({
                 (a, b) => Number(a.task.completed) - Number(b.task.completed),
               )
               .map(({ task, visibility }) => {
-                const projectName = workspaces
-                  ? workspaces.find((w) => w.id === getTaskProjectId(task.id))
-                      ?.name
-                  : undefined;
+                const projectName = selection.isSingle
+                  ? undefined
+                  : storeWorkspaces.find(
+                      (w) => w.id === getTaskProjectId(task.id),
+                    )?.name;
                 const openSinceLabel =
                   visibility === "past_open"
                     ? formatPeriodKey(

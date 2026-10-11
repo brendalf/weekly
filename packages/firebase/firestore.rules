@@ -39,11 +39,17 @@ service cloud.firestore {
 
       match /tasks/{taskId} {
         allow read, write: if isMember(workspaceId);
+        match /comments/{commentId} {
+          allow read, write: if isMember(workspaceId);
+        }
       }
       match /habits/{habitId} {
         allow read, write: if isMember(workspaceId);
         match /completions/{logId} {
           allow read, write, delete: if isMember(workspaceId);
+        }
+        match /comments/{commentId} {
+          allow read, write: if isMember(workspaceId);
         }
       }
       match /habitProgress/{progressId} {
@@ -52,6 +58,10 @@ service cloud.firestore {
       match /activities/{actId} {
         allow read, write: if isMember(workspaceId);
       }
+      match /notes/{noteId} {
+        allow read, write: if isMember(workspaceId);
+      }
+      // Legacy week-scoped notes — still readable until the notes migration runs.
       match /weekNotes/{weekKey}/items/{noteId} {
         allow read, write: if isMember(workspaceId);
       }

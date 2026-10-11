@@ -44,6 +44,7 @@ const KNOWN_ACTIVITY_TYPES = new Set([
   "note_added",
   "note_edited",
   "note_deleted",
+  "comment_added",
 ] as const);
 
 type ActivityDoc = {

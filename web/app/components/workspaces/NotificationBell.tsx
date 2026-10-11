@@ -178,6 +178,7 @@ export function NotificationBell() {
                         {activity.type === "note_added" && <>added a note <span className="font-medium">{activity.itemName}</span>{activity.weekKey ? <> for {activity.weekKey}</> : null}</>}
                         {activity.type === "note_edited" && <>edited note <span className="font-medium">{activity.itemName}</span></>}
                         {activity.type === "note_deleted" && <>deleted note <span className="font-medium">{activity.itemName}</span></>}
+                        {activity.type === "comment_added" && <>commented on <span className="font-medium">{activity.itemName}</span></>}
                       </p>
                     </div>
                     <span className="shrink-0 text-[10px] text-foreground/40">

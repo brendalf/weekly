@@ -6,6 +6,7 @@ import type {
   HabitRepository,
   HabitProgressRepository,
   NoteRepository,
+  CommentRepository,
 } from "@weekly/domain";
 
 export interface RepoSet {
@@ -13,6 +14,7 @@ export interface RepoSet {
   habit: HabitRepository;
   habitProgress: HabitProgressRepository;
   note: NoteRepository;
+  comment: CommentRepository;
 }
 
 interface RepositoryContextValue {

@@ -3,3 +3,4 @@ export * from "./habit";
 export * from "./userPreferences";
 export * from "./workspace";
 export * from "./note";
+export * from "./comment";

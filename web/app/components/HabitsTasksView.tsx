@@ -21,7 +21,6 @@ import {
 } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import type { LayoutPreference, InnerLayoutPreference } from "@weekly/domain";
-import { weekKeyOf } from "@weekly/domain";
 import { HabitList } from "./habits/HabitList";
 import { TaskList } from "./tasks/TaskList";
 import { HabitAddModal } from "./habits/HabitAddModal";
@@ -31,7 +30,7 @@ import { NoteList } from "./notes/NoteList";
 import { PeriodPanel } from "./PeriodPanel";
 import { useRepositoryContext } from "../contexts/RepositoryContext";
 import { useCalendarStore } from "../stores/calendar";
-import { useWorkspaceStore } from "../stores/workspace";
+import { useWorkspaceSelection, useWorkspaceStore } from "../stores/workspace";
 import { workspaceRepository } from "../repositories";
 import { auth } from "../config/firebase";
 
@@ -307,12 +306,13 @@ export function HabitsTasksView({
     [selectedDayISO],
   );
   const storeWorkspaces = useWorkspaceStore((s) => s.workspaces);
-  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+  const selection = useWorkspaceSelection();
+  const singleWorkspaceId = selection.singleId;
 
   const noteWorkspaceId = useMemo(() => {
-    if (activeWorkspaceId) return activeWorkspaceId;
+    if (singleWorkspaceId) return singleWorkspaceId;
     return workspaces?.[0]?.id ?? storeWorkspaces[0]?.id ?? null;
-  }, [activeWorkspaceId, workspaces, storeWorkspaces]);
+  }, [singleWorkspaceId, workspaces, storeWorkspaces]);
 
   const handleHabitsCompleted = useCallback((completions: Record<string, boolean>) => {
     setHabitCompletions((prev) => ({ ...prev, ...completions }));
@@ -323,7 +323,7 @@ export function HabitsTasksView({
       const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
       const habitId = await repos?.habit.addHabit(name, times, period, selectedDay, activeDays, timeOfDay);
       if (!habitId) return;
-      const targetWorkspaceId = workspaceId ?? activeWorkspaceId;
+      const targetWorkspaceId = workspaceId ?? singleWorkspaceId;
       if (!targetWorkspaceId) return;
       const workspace = storeWorkspaces.find((w) => w.id === targetWorkspaceId);
       const user = auth.currentUser;
@@ -338,7 +338,7 @@ export function HabitsTasksView({
         })
         .catch(() => {/* non-critical */});
     },
-    [activeRepos, getWorkspaceRepos, selectedDay, storeWorkspaces, activeWorkspaceId],
+    [activeRepos, getWorkspaceRepos, selectedDay, storeWorkspaces, singleWorkspaceId],
   );
 
   const handleAddTask = useCallback(
@@ -346,7 +346,7 @@ export function HabitsTasksView({
       const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
       const taskId = await repos?.task.addTask(title, scope, selectedDay);
       if (!taskId) return;
-      const targetWorkspaceId = workspaceId ?? activeWorkspaceId;
+      const targetWorkspaceId = workspaceId ?? singleWorkspaceId;
       if (!targetWorkspaceId) return;
       const workspace = storeWorkspaces.find((w) => w.id === targetWorkspaceId);
       const user = auth.currentUser;
@@ -361,7 +361,7 @@ export function HabitsTasksView({
         })
         .catch(() => {/* non-critical */});
     },
-    [activeRepos, getWorkspaceRepos, selectedDay, storeWorkspaces, activeWorkspaceId],
+    [activeRepos, getWorkspaceRepos, selectedDay, storeWorkspaces, singleWorkspaceId],
   );
 
   const handleAddNote = useCallback(
@@ -370,12 +370,11 @@ export function HabitsTasksView({
       if (!user) return;
       const targetId = workspaceId ?? noteWorkspaceId;
       if (!targetId) return;
-      const repos = targetId === activeWorkspaceId
+      const repos = targetId === singleWorkspaceId
         ? activeRepos
         : getWorkspaceRepos(targetId);
       if (!repos) return;
-      const weekKey = weekKeyOf(selectedDay);
-      const noteId = await repos.note.addNote(weekKey, {
+      const noteId = await repos.note.addNote({
         title,
         body,
         authorId: user.uid,
@@ -390,11 +389,10 @@ export function HabitsTasksView({
           actorDisplayName: user.displayName ?? "User",
           itemId: noteId,
           itemName: title,
-          weekKey,
         })
         .catch(() => {/* non-critical */});
     },
-    [noteWorkspaceId, activeWorkspaceId, activeRepos, getWorkspaceRepos, storeWorkspaces, selectedDay],
+    [noteWorkspaceId, singleWorkspaceId, activeRepos, getWorkspaceRepos, storeWorkspaces],
   );
 
   const periodProgress = useMemo(() => {
