@@ -1,4 +1,7 @@
 {
+  "firestore": {
+    "rules": "packages/firebase/firestore.rules"
+  },
   "emulators": {
     "auth": {
       "port": 9099

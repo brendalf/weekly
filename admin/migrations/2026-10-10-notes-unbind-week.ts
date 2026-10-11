@@ -58,8 +58,12 @@ async function copyWorkspaceNotes(
 }
 
 async function migrate(): Promise<void> {
-  admin.initializeApp();
+  const app = admin.initializeApp();
   const db = admin.firestore();
+
+  // The project comes from the credential, so print it before writing anything —
+  // this script is run once per environment and a wrong key must be obvious.
+  console.log(`Project: ${app.options.projectId ?? "unknown"}\n`);
 
   const workspacesSnap = await db.collection("workspaces").get();
 
