@@ -1,8 +1,15 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { Bell, BellDot } from "@gravity-ui/icons";
 import { toast } from "sonner";
+import {
+  buildActivityFeed,
+  formatHabitMarkDetail,
+  isHabitMarkActivity,
+  type ActivityFeedEntry,
+  type ActivityNotification,
+} from "@weekly/domain";
 import { useWorkspaceStore, workspaceStore } from "../../stores/workspace";
 import { workspaceRepository, userPreferencesRepository } from "../../repositories";
 import { auth } from "../../config/firebase";
@@ -17,6 +24,87 @@ function relativeTime(isoString: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+function ActivityText({ activity }: { activity: ActivityNotification }) {
+  const name = <span className="font-medium">{activity.itemName}</span>;
+  switch (activity.type) {
+    case "habit_completed":
+      return <>completed habit {name}</>;
+    case "habit_progress":
+      return <>marked habit {name}</>;
+    case "task_completed":
+      return <>finished task {name}</>;
+    case "habit_added":
+      return <>added habit {name}</>;
+    case "task_added":
+      return <>added task {name}</>;
+    case "note_added":
+      return (
+        <>
+          added a note {name}
+          {activity.weekKey ? <> for {activity.weekKey}</> : null}
+        </>
+      );
+    case "note_edited":
+      return <>edited note {name}</>;
+    case "note_deleted":
+      return <>deleted note {name}</>;
+    case "comment_added":
+      return (
+        <>
+          commented on {activity.commentTarget ?? "item"} {name}
+        </>
+      );
+  }
+}
+
+function ActivityRow({
+  entry,
+  workspaceName,
+  unread,
+}: {
+  entry: ActivityFeedEntry;
+  workspaceName?: string;
+  unread: boolean;
+}) {
+  const { activity } = entry;
+  const detail = isHabitMarkActivity(activity.type)
+    ? formatHabitMarkDetail(entry)
+    : null;
+
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-foreground/10 bg-background p-3">
+      {unread && (
+        <span
+          aria-hidden
+          className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-purple-500"
+        />
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-foreground">
+          <span className="font-medium">{activity.actorDisplayName}</span>{" "}
+          <ActivityText activity={activity} />
+        </p>
+        {detail && (
+          <p className="mt-0.5 text-[10px] text-foreground/50">{detail}</p>
+        )}
+        {activity.type === "comment_added" && activity.commentBody && (
+          <p className="mt-1 border-l-2 border-foreground/15 pl-2 text-[11px] break-words text-foreground/60">
+            {activity.commentBody}
+          </p>
+        )}
+        {workspaceName && (
+          <p className="mt-0.5 text-[10px] text-foreground/40">
+            {workspaceName}
+          </p>
+        )}
+      </div>
+      <span className="shrink-0 text-[10px] text-foreground/40">
+        {relativeTime(activity.createdAt)}
+      </span>
+    </div>
+  );
+}
+
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -24,12 +112,27 @@ export function NotificationBell() {
   const pendingInvites = useWorkspaceStore((s) => s.pendingInvites);
   const activityNotifications = useWorkspaceStore((s) => s.activityNotifications);
   const lastReadAt = useWorkspaceStore((s) => s.lastNotificationReadAt);
+  const workspaces = useWorkspaceStore((s) => s.workspaces);
+  // Opening marks everything read, so keep the pre-open cutoff to still mark
+  // which rows are new in the panel the user is looking at.
+  const [readCutoff, setReadCutoff] = useState<string | null>(null);
 
   const unreadCount =
     pendingInvites.length +
     activityNotifications.filter(
       (a) => !lastReadAt || a.createdAt > lastReadAt,
     ).length;
+
+  const feed = useMemo(
+    () => buildActivityFeed(activityNotifications),
+    [activityNotifications],
+  );
+
+  // Workspace names only disambiguate when the feed can mix workspaces.
+  const workspaceNames = useMemo(() => {
+    if (workspaces.length < 2) return null;
+    return new Map(workspaces.map((w) => [w.id, w.name]));
+  }, [workspaces]);
 
   function handleOpen() {
     if (buttonRef.current) {
@@ -52,6 +155,7 @@ export function NotificationBell() {
       setDropdownStyle(style);
     }
     setOpen(true);
+    setReadCutoff(lastReadAt);
     const ts = new Date().toISOString();
     workspaceStore.setLastNotificationReadAt(ts);
     const user = auth.currentUser;
@@ -154,37 +258,25 @@ export function NotificationBell() {
               </div>
             )}
 
-            {activityNotifications.length > 0 && (
-              <div className="flex flex-col gap-1">
+            {feed.length > 0 && (
+              <div className="flex max-h-[60vh] flex-col gap-1 overflow-y-auto">
                 {pendingInvites.length > 0 && (
                   <p className="px-2 text-[10px] font-semibold uppercase tracking-wide text-foreground/40">
                     Activity
                   </p>
                 )}
-                {activityNotifications.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-2 rounded-lg border border-foreground/10 bg-background p-3"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-foreground">
-                        <span className="font-medium">
-                          {activity.actorDisplayName}
-                        </span>{" "}
-                        {activity.type === "habit_completed" && <>completed habit <span className="font-medium">{activity.itemName}</span></>}
-                        {activity.type === "task_completed" && <>finished task <span className="font-medium">{activity.itemName}</span></>}
-                        {activity.type === "habit_added" && <>added habit <span className="font-medium">{activity.itemName}</span></>}
-                        {activity.type === "task_added" && <>added task <span className="font-medium">{activity.itemName}</span></>}
-                        {activity.type === "note_added" && <>added a note <span className="font-medium">{activity.itemName}</span>{activity.weekKey ? <> for {activity.weekKey}</> : null}</>}
-                        {activity.type === "note_edited" && <>edited note <span className="font-medium">{activity.itemName}</span></>}
-                        {activity.type === "note_deleted" && <>deleted note <span className="font-medium">{activity.itemName}</span></>}
-                        {activity.type === "comment_added" && <>commented on <span className="font-medium">{activity.itemName}</span></>}
-                      </p>
-                    </div>
-                    <span className="shrink-0 text-[10px] text-foreground/40">
-                      {relativeTime(activity.createdAt)}
-                    </span>
-                  </div>
+                {feed.map((entry) => (
+                  <ActivityRow
+                    key={entry.key}
+                    entry={entry}
+                    workspaceName={
+                      workspaceNames?.get(entry.activity.workspaceId) ??
+                      undefined
+                    }
+                    unread={
+                      !readCutoff || entry.activity.createdAt > readCutoff
+                    }
+                  />
                 ))}
               </div>
             )}

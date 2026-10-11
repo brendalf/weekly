@@ -32,6 +32,14 @@ export interface CommentSectionProps {
 
 const MAX_TEXTAREA_HEIGHT = 200;
 
+/** How much of a comment travels with its activity notification. */
+const COMMENT_PREVIEW_LENGTH = 140;
+
+function truncate(text: string, max: number): string {
+  const collapsed = text.replace(/\s+/g, " ").trim();
+  return collapsed.length > max ? `${collapsed.slice(0, max - 1)}…` : collapsed;
+}
+
 function formatCommentDate(isoString: string): string {
   const date = new Date(isoString);
   const diffMs = Date.now() - date.getTime();
@@ -141,23 +149,28 @@ export function CommentSection({
     setEditDraft("");
   }, [isOpen]);
 
-  const logCommentActivity = useCallback(() => {
-    if (!workspaceId) return;
-    const workspace = workspaces.find((w) => w.id === workspaceId);
-    const user = auth.currentUser;
-    if (!user || !workspace || workspace.members.length < 2) return;
-    workspaceRepository
-      .logActivity(workspaceId, {
-        type: "comment_added",
-        actorUid: user.uid,
-        actorDisplayName: user.displayName ?? "User",
-        itemId,
-        itemName,
-      })
-      .catch(() => {
-        /* non-critical */
-      });
-  }, [workspaceId, workspaces, itemId, itemName]);
+  const logCommentActivity = useCallback(
+    (body: string) => {
+      if (!workspaceId) return;
+      const workspace = workspaces.find((w) => w.id === workspaceId);
+      const user = auth.currentUser;
+      if (!user || !workspace || workspace.members.length < 2) return;
+      workspaceRepository
+        .logActivity(workspaceId, {
+          type: "comment_added",
+          actorUid: user.uid,
+          actorDisplayName: user.displayName ?? "User",
+          itemId,
+          itemName,
+          commentTarget: target,
+          commentBody: truncate(body, COMMENT_PREVIEW_LENGTH),
+        })
+        .catch(() => {
+          /* non-critical */
+        });
+    },
+    [workspaceId, workspaces, itemId, itemName, target],
+  );
 
   async function handleAdd() {
     const body = draft.trim();
@@ -185,7 +198,7 @@ export function CommentSection({
         authorId: user.uid,
         authorDisplayName,
       });
-      logCommentActivity();
+      logCommentActivity(body);
     } catch {
       setComments((prev) => prev.filter((c) => c.id !== optimisticId));
       setDraft(body);

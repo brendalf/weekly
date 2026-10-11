@@ -16,6 +16,7 @@ import { Badge } from "../general/Badge";
 import { PeriodBadge } from "../general/PeriodBadge";
 import { HabitActionMenu } from "./HabitActionMenu";
 import { useCalendarStore } from "../../stores/calendar";
+import { useWorkspaceStore } from "../../stores/workspace";
 import { HabitDetailsModal } from "./HabitDetailsModal";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { workspaceRepository } from "../../repositories";
@@ -72,6 +73,7 @@ export function HabitItem({
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
+  const workspaces = useWorkspaceStore((s) => s.workspaces);
 
   const referenceDate = useMemo(
     () => (selectedDayISO ? new Date(selectedDayISO) : today),
@@ -145,6 +147,36 @@ export function HabitItem({
     if (!isSkipped) onCompleteChange?.(id, complete, hasProgressToday);
   }, [id, complete, hasProgressToday, onCompleteChange, isSkipped]);
 
+  /**
+   * Announces a mark to the workspace feed. Recurring habits get one entry per
+   * mark so members can see which day each mark landed on, and whether that
+   * mark closed the period.
+   */
+  function logMark(countAfterMark: number) {
+    const workspaceId = getHabitProjectId(id);
+    const user = auth.currentUser;
+    if (!workspaceId || !user) return;
+    const workspace = workspaces.find((w) => w.id === workspaceId);
+    if (!workspace || workspace.members.length < 2) return;
+
+    workspaceRepository
+      .logActivity(workspaceId, {
+        type: countAfterMark >= target ? "habit_completed" : "habit_progress",
+        actorUid: user.uid,
+        actorDisplayName: user.displayName ?? "User",
+        itemId: id,
+        itemName: name,
+        habitPeriod: period,
+        periodKey: currentPeriodKey,
+        dayKey: dayKeyOf(referenceDate),
+        progressCount: countAfterMark,
+        progressTarget: target,
+      })
+      .catch(() => {
+        // non-critical, ignore
+      });
+  }
+
   function handleIncrement() {
     if (!repos || isSkipped) return;
 
@@ -160,23 +192,7 @@ export function HabitItem({
       .then(() => {
         setOptimisticCount(null);
         setOptimisticProgressToday(null);
-        if (nextCount >= target) {
-          const projectId = getHabitProjectId(id);
-          const user = auth.currentUser;
-          if (projectId && user) {
-            workspaceRepository
-              .logActivity(projectId, {
-                type: "habit_completed",
-                actorUid: user.uid,
-                actorDisplayName: user.displayName ?? "User",
-                itemId: id,
-                itemName: name,
-              })
-              .catch(() => {
-                // non-critical, ignore
-              });
-          }
-        }
+        logMark(nextCount);
       })
       .catch(() => {
         setOptimisticCount(null);

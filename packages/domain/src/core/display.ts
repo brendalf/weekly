@@ -47,6 +47,20 @@ export function formatPeriodKeyFull(periodKey: string, period: Period): string {
 }
 
 /**
+ * Formats a day key ("2026-03-15") as a short weekday label, e.g. "Sun, Mar 15".
+ * Returns the raw key when it is not a parseable day key.
+ */
+export function formatDayKey(dayKey: string): string {
+  const [y, m, d] = dayKey.split("-").map(Number);
+  if (!y || !m || !d) return dayKey;
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+/**
  * Computes normalized progress (0–1) and completion flag for a habit.
  */
 export function habitProgress(

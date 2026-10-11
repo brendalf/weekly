@@ -38,6 +38,7 @@ type WorkspaceDoc = {
 
 const KNOWN_ACTIVITY_TYPES = new Set([
   "habit_completed",
+  "habit_progress",
   "task_completed",
   "habit_added",
   "task_added",
@@ -47,12 +48,22 @@ const KNOWN_ACTIVITY_TYPES = new Set([
   "comment_added",
 ] as const);
 
+const HABIT_PERIODS = new Set(["day", "week", "month"]);
+const COMMENT_TARGETS = new Set(["habit", "task"]);
+
 type ActivityDoc = {
   type?: unknown;
   actorUid?: unknown;
   actorDisplayName?: unknown;
   itemId?: unknown;
   itemName?: unknown;
+  habitPeriod?: unknown;
+  periodKey?: unknown;
+  dayKey?: unknown;
+  progressCount?: unknown;
+  progressTarget?: unknown;
+  commentTarget?: unknown;
+  commentBody?: unknown;
   weekKey?: unknown;
   createdAt?: { toDate?: () => Date };
 };
@@ -73,6 +84,30 @@ function toActivity(
       typeof data.actorDisplayName === "string" ? data.actorDisplayName : "",
     itemId: typeof data.itemId === "string" ? data.itemId : "",
     itemName: typeof data.itemName === "string" ? data.itemName : "",
+    ...(HABIT_PERIODS.has(data.habitPeriod as string)
+      ? { habitPeriod: data.habitPeriod as ActivityNotification["habitPeriod"] }
+      : {}),
+    ...(typeof data.periodKey === "string"
+      ? { periodKey: data.periodKey }
+      : {}),
+    ...(typeof data.dayKey === "string" ? { dayKey: data.dayKey } : {}),
+    ...(typeof data.progressCount === "number" &&
+    Number.isFinite(data.progressCount)
+      ? { progressCount: data.progressCount }
+      : {}),
+    ...(typeof data.progressTarget === "number" &&
+    Number.isFinite(data.progressTarget)
+      ? { progressTarget: data.progressTarget }
+      : {}),
+    ...(COMMENT_TARGETS.has(data.commentTarget as string)
+      ? {
+          commentTarget:
+            data.commentTarget as ActivityNotification["commentTarget"],
+        }
+      : {}),
+    ...(typeof data.commentBody === "string"
+      ? { commentBody: data.commentBody }
+      : {}),
     ...(typeof data.weekKey === "string" ? { weekKey: data.weekKey } : {}),
     createdAt:
       data.createdAt?.toDate?.().toISOString() ?? new Date().toISOString(),
@@ -308,8 +343,12 @@ export function createWorkspaceRepository(db: Firestore): WorkspaceRepository {
       workspaceId: string,
       activity: Omit<ActivityNotification, "id" | "createdAt" | "workspaceId">,
     ) {
+      // Drop undefined optionals — Firestore rejects them.
+      const payload = Object.fromEntries(
+        Object.entries(activity).filter(([, v]) => v !== undefined),
+      );
       await addDoc(collection(db, "workspaces", workspaceId, "activities"), {
-        ...activity,
+        ...payload,
         createdAt: serverTimestamp(),
       });
     },
