@@ -18,15 +18,42 @@
  */
 
 import * as admin from "firebase-admin";
+import { readFileSync } from "node:fs";
 
 const DRY_RUN = process.argv.includes("--dry-run");
+
+/**
+ * The target project comes from the credential, not a flag. `initializeApp()`
+ * resolves it lazily and leaves `options.projectId` unset, so read it straight
+ * from the service-account file the SDK will use.
+ */
+function resolveProjectId(): string {
+  const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (keyPath) {
+    try {
+      const parsed = JSON.parse(readFileSync(keyPath, "utf8")) as {
+        project_id?: string;
+      };
+      if (parsed.project_id) return parsed.project_id;
+    } catch {
+      /* fall through to the env vars below */
+    }
+  }
+  return (
+    process.env.GOOGLE_CLOUD_PROJECT ?? process.env.GCLOUD_PROJECT ?? "unknown"
+  );
+}
 
 async function copyWorkspaceNotes(
   workspaceRef: admin.firestore.DocumentReference,
   db: admin.firestore.Firestore,
 ): Promise<number> {
-  const weekSnap = await workspaceRef.collection("weekNotes").get();
-  if (weekSnap.empty) return 0;
+  // The old repository wrote notes with addDoc straight into
+  // weekNotes/{weekKey}/items, which never created the weekNotes/{weekKey}
+  // parent document. Those ancestors exist only implicitly, so a .get() on the
+  // collection returns nothing — listDocuments() is the only way to reach them.
+  const weekRefs = await workspaceRef.collection("weekNotes").listDocuments();
+  if (weekRefs.length === 0) return 0;
 
   const notesCol = workspaceRef.collection("notes");
 
@@ -34,8 +61,8 @@ async function copyWorkspaceNotes(
   let batchCount = 0;
   let total = 0;
 
-  for (const weekDoc of weekSnap.docs) {
-    const itemsSnap = await weekDoc.ref.collection("items").get();
+  for (const weekRef of weekRefs) {
+    const itemsSnap = await weekRef.collection("items").get();
     if (itemsSnap.empty) continue;
 
     for (const noteDoc of itemsSnap.docs) {
@@ -58,12 +85,12 @@ async function copyWorkspaceNotes(
 }
 
 async function migrate(): Promise<void> {
-  const app = admin.initializeApp();
+  admin.initializeApp();
   const db = admin.firestore();
 
-  // The project comes from the credential, so print it before writing anything —
-  // this script is run once per environment and a wrong key must be obvious.
-  console.log(`Project: ${app.options.projectId ?? "unknown"}\n`);
+  // Print the target before writing anything — this script is run once per
+  // environment and a wrong key must be obvious.
+  console.log(`Project: ${resolveProjectId()}\n`);
 
   const workspacesSnap = await db.collection("workspaces").get();
 
