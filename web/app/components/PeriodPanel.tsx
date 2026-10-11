@@ -16,6 +16,8 @@ interface PeriodPanelProps {
   showTaskScopeLabel?: boolean;
   showCompletedTasks?: boolean;
   showSkippedHabits?: boolean;
+  habitsEmptyMessage?: string;
+  tasksEmptyMessage?: string;
   onToggleTaskCompleted: (taskId: string) => Promise<void>;
   onHabitsCompleted?: (completions: Record<string, boolean>) => void;
 }
@@ -30,6 +32,8 @@ export function PeriodPanel({
   showTaskScopeLabel = true,
   showCompletedTasks = true,
   showSkippedHabits = true,
+  habitsEmptyMessage,
+  tasksEmptyMessage,
   onToggleTaskCompleted,
   onHabitsCompleted,
 }: PeriodPanelProps) {
@@ -79,6 +83,7 @@ export function PeriodPanel({
             showPeriodLabel={showHabitPeriodLabel}
             showSkipped={showSkippedHabits}
             showCompleted={showCompletedTasks}
+            emptyMessage={habitsEmptyMessage}
             onHabitsCompleted={wrappedOnHabitsCompleted}
           />
         </div>
@@ -105,6 +110,7 @@ export function PeriodPanel({
             scopeFilter={period}
             showScopeLabel={showTaskScopeLabel}
             showCompleted={showCompletedTasks}
+            emptyMessage={tasksEmptyMessage}
           />
         </div>
       </div>

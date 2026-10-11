@@ -21,10 +21,11 @@ interface HabitListProps {
   showPeriodLabel?: boolean;
   showSkipped?: boolean;
   showCompleted?: boolean;
+  emptyMessage?: string;
   onHabitsCompleted?: (completions: Record<string, boolean>) => void;
 }
 
-export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPeriodLabel, showSkipped = true, showCompleted = true, onHabitsCompleted }: HabitListProps) {
+export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPeriodLabel, showSkipped = true, showCompleted = true, emptyMessage = "No habits yet.", onHabitsCompleted }: HabitListProps) {
   const { activeRepos, getWorkspaceRepos, getHabitProjectId } =
     useRepositoryContext();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
@@ -178,7 +179,7 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
       <div className={`collapsible${collapsed ? " collapsed" : ""}`}>
         <div>
           {visibleHabits.length === 0 && (
-            <p className="text-xs text-foreground/60 pt-2">No habits yet.</p>
+            <p className="text-xs text-foreground/60 pt-2">{emptyMessage}</p>
           )}
           <div className="flex flex-col gap-0.5 pt-1">
             {sorted.map((habit) => {
