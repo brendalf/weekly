@@ -16,6 +16,7 @@ import { Pencil, TrashBin, Xmark, Check, Pin, PinFill } from "@gravity-ui/icons"
 import type { Note } from "@weekly/domain";
 import { Badge } from "../general/Badge";
 import { useIsTouch } from "../../hooks/useIsTouch";
+import { useNoteDelete } from "./useNoteDelete";
 
 /** Partial note mutation, mirroring `NoteRepository.updateNote`. */
 export interface NoteUpdates {
@@ -29,8 +30,16 @@ interface NoteDetailsModalProps {
   onOpenChange: (open: boolean) => void;
   note: Note;
   workspaceName?: string;
+  /** Workspace to restore into if the delete is undone. */
+  workspaceId?: string;
   onUpdate: (noteId: string, updates: NoteUpdates) => Promise<void>;
-  onDelete: (noteId: string) => void;
+  onDelete: (noteId: string) => void | Promise<void>;
+  /**
+   * Open straight into the edit form — the row's `⋯` → Edit. Read once, as
+   * initial state: `NoteItem` remounts the modal when the flag changes rather
+   * than syncing a prop into state from an effect.
+   */
+  defaultEditing?: boolean;
 }
 
 function formatTimestamp(iso: string) {
@@ -46,29 +55,36 @@ function formatTimestamp(iso: string) {
   });
 }
 
+/**
+ * The legacy note detail (WS7 is moving this into `/app/notes/:id`).
+ *
+ * WS12 inverted its delete. Notes were the one object that asked twice before
+ * deleting — while habits, which lose their entire history, asked nothing at
+ * all. Confirmation moved to habits; the note deletes immediately and the
+ * toast offers `Undo` (DIRECTION §7).
+ */
 export function NoteDetailsModal({
   open,
   onOpenChange,
   note,
   workspaceName,
+  workspaceId,
   onUpdate,
   onDelete,
+  defaultEditing = false,
 }: NoteDetailsModalProps) {
   const isTouch = useIsTouch();
-  const [editing, setEditing] = useState(false);
+  const deleteNoteWithUndo = useNoteDelete();
+  const [editing, setEditing] = useState(defaultEditing);
   const [editTitle, setEditTitle] = useState(note.title);
   const [editBody, setEditBody] = useState(note.body);
   const [saving, setSaving] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
 
   const state = useOverlayState({
     isOpen: open,
     onOpenChange: (isOpen) => {
-      if (!isOpen) {
-        setEditing(false);
-        setConfirmingDelete(false);
-      }
+      if (!isOpen) setEditing(false);
       onOpenChange(isOpen);
     },
   });
@@ -84,7 +100,6 @@ export function NoteDetailsModal({
   function startEditing() {
     setEditTitle(note.title);
     setEditBody(note.body);
-    setConfirmingDelete(false);
     setEditing(true);
   }
 
@@ -120,12 +135,8 @@ export function NoteDetailsModal({
   }
 
   function handleDelete() {
-    if (!confirmingDelete) {
-      setConfirmingDelete(true);
-      return;
-    }
-    onDelete(note.id);
     state.close();
+    deleteNoteWithUndo({ note, workspaceId, onDelete, onUpdate });
   }
 
   function handleEditKeyDown(e: KeyboardEvent<HTMLDivElement>) {
@@ -263,19 +274,6 @@ export function NoteDetailsModal({
                     <Check />
                   </Button>
                 </>
-              ) : confirmingDelete ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    className="min-h-11"
-                    onPress={() => setConfirmingDelete(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button variant="danger" className="min-h-11" onPress={handleDelete}>
-                    Delete note
-                  </Button>
-                </>
               ) : (
                 <>
                   <Button
@@ -289,18 +287,18 @@ export function NoteDetailsModal({
                   <Button
                     variant="ghost"
                     className="min-h-11"
-                    aria-label="Edit note"
                     onPress={startEditing}
                   >
                     <Pencil />
+                    Edit
                   </Button>
                   <Button
                     variant="danger"
                     className="min-h-11"
-                    aria-label="Delete note"
                     onPress={handleDelete}
                   >
                     <TrashBin />
+                    Delete note
                   </Button>
                 </>
               )}

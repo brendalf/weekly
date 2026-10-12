@@ -13,8 +13,6 @@ import {
   Flame,
   TrashBin,
   Pencil,
-  Xmark,
-  Check,
   Plus,
   Minus,
 } from "@gravity-ui/icons";
@@ -31,6 +29,8 @@ import {
   habitProgress,
   prevPeriodDate,
 } from "@weekly/domain";
+import { toast } from "sonner";
+import { ConfirmButton } from "../ui";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { CommentSection } from "../comments/CommentSection";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
@@ -54,6 +54,12 @@ interface HabitDetailsModalProps {
     currentStrikeLength: number;
     openSincePeriodKey: string | null;
   } | null;
+  /**
+   * Open straight into the edit form — the row's `⋯` → Edit. Read once, as
+   * initial state: `HabitItem` remounts the modal when the flag changes
+   * rather than syncing a prop into state from an effect.
+   */
+  defaultEditing?: boolean;
 }
 
 type SlotStatus =
@@ -330,13 +336,14 @@ export function HabitDetailsModal({
   referenceDate,
   createdAt,
   streak,
+  defaultEditing = false,
 }: HabitDetailsModalProps) {
   const { getHabitRepos, getHabitProjectId } = useRepositoryContext();
   const repos = getHabitRepos(habitId);
   const workspaceId = getHabitProjectId(habitId);
 
   const [logs, setLogs] = useState<HabitCompletionLog[]>([]);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(defaultEditing);
   const [editName, setEditName] = useState(name);
   const [editTimes, setEditTimes] = useState(String(times));
   const [editPeriod, setEditPeriod] = useState<Period>(period);
@@ -388,10 +395,12 @@ export function HabitDetailsModal({
     [period, createdAt, referenceDate, logs, times, skippedPeriods, activeDays],
   );
 
-  async function handleDeleteHabit() {
+  function handleDeleteHabit() {
     if (!repos) return;
-    await repos.habit.deleteHabit(habitId);
     state.close();
+    repos.habit
+      .deleteHabit(habitId)
+      .catch(() => toast.error("Failed to delete habit. Please try again."));
   }
 
   async function handleDeleteLog(log: HabitCompletionLog) {
@@ -674,21 +683,42 @@ export function HabitDetailsModal({
               <Modal.Footer>
                 {editing ? (
                   <>
-                    <Button variant="ghost" onPress={() => setEditing(false)}>
-                      <Xmark />
+                    <Button
+                      variant="ghost"
+                      className="min-h-11"
+                      onPress={() => setEditing(false)}
+                    >
+                      Cancel
                     </Button>
-                    <Button isDisabled={!isEditValid} onPress={handleSave}>
-                      <Check />
+                    <Button
+                      className="min-h-11"
+                      isDisabled={!isEditValid}
+                      onPress={handleSave}
+                    >
+                      Save
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Button variant="ghost" onPress={startEditing}>
+                    <Button
+                      variant="ghost"
+                      className="min-h-11"
+                      onPress={startEditing}
+                    >
                       <Pencil />
+                      Edit
                     </Button>
-                    <Button variant="danger" onPress={handleDeleteHabit}>
-                      <TrashBin />
-                    </Button>
+                    {/* Two-step, inline — never a modal inside a modal
+                        (DIRECTION §5). A habit's history is the one thing in
+                        this app an undo toast cannot bring back, so this is
+                        the object that confirms. */}
+                    <ConfirmButton
+                      label="Delete habit"
+                      confirmLabel="Delete habit"
+                      hint="This also deletes every check-in and the streak built from them."
+                      icon={<TrashBin />}
+                      onConfirm={handleDeleteHabit}
+                    />
                   </>
                 )}
               </Modal.Footer>

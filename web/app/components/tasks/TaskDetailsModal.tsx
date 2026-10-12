@@ -9,10 +9,10 @@ import {
   Input,
   TextField,
 } from "@heroui/react";
-import { TrashBin, Pencil, Xmark, Check } from "@gravity-ui/icons";
+import { TrashBin, Pencil } from "@gravity-ui/icons";
 import { Task, Period, weekKeyOf } from "@weekly/domain";
-import { toast } from "sonner";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
+import { useUndoableDelete } from "../../hooks/useUndoableDelete";
 import { useWorkspaceStore } from "../../stores/workspace";
 import { CommentSection } from "../comments/CommentSection";
 import { ScopeSelector, SCOPE_OPTIONS } from "./ScopeSelector";
@@ -22,12 +22,28 @@ interface TaskDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task: Task;
+  /**
+   * Open straight into the edit form — the row's `⋯` → Edit. Read once, as
+   * initial state: `TaskItem` remounts the modal when the flag changes rather
+   * than syncing a prop into state from an effect.
+   */
+  defaultEditing?: boolean;
 }
 
+/**
+ * The legacy task detail (WS6 is moving this into `/app/tasks/:id`).
+ *
+ * WS12 changed two things here: **delete is reversible** rather than instant
+ * and silent (DIRECTION §7 — see `useUndoableDelete` for what "undo" can and
+ * cannot restore), and the footer's bare glyphs gained text labels, because a
+ * delete button that is only a trash icon looks exactly as safe as the save
+ * button beside it (DIRECTION §6.7).
+ */
 export function TaskDetailsModal({
   open,
   onOpenChange,
   task,
+  defaultEditing = false,
 }: TaskDetailsModalProps) {
   const { getTaskRepos, getWorkspaceRepos, getTaskProjectId } = useRepositoryContext();
   const repos = getTaskRepos(task.id);
@@ -36,7 +52,9 @@ export function TaskDetailsModal({
 
   const defaultSchedule = (task.schedule ?? task.createdAt).slice(0, 10);
 
-  const [editing, setEditing] = useState(false);
+  const deleteWithUndo = useUndoableDelete();
+
+  const [editing, setEditing] = useState(defaultEditing);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editScope, setEditScope] = useState<Period>(task.scope ?? Period.WEEK);
   const [editSchedule, setEditSchedule] = useState(defaultSchedule);
@@ -52,9 +70,27 @@ export function TaskDetailsModal({
 
   function handleDelete() {
     if (!repos) return;
+    const snapshot = task;
     state.close();
-    repos.task.deleteTask(task.id).catch(() => {
-      toast.error("Failed to delete task. Please try again.");
+    deleteWithUndo({
+      message: "Task deleted",
+      errorMessage: "Failed to delete task. Please try again.",
+      remove: () => repos.task.deleteTask(snapshot.id),
+      restore: async () => {
+        const newId = await repos.task.addTask(
+          snapshot.title,
+          snapshot.scope,
+          new Date(snapshot.createdAt),
+        );
+        if (snapshot.schedule) {
+          await repos.task.updateTask(newId, {
+            schedule: new Date(snapshot.schedule),
+          });
+        }
+        if (snapshot.completed) {
+          await repos.task.toggleTask({ ...snapshot, id: newId });
+        }
+      },
     });
   }
 
@@ -231,24 +267,38 @@ export function TaskDetailsModal({
             <Modal.Footer>
               {editing ? (
                 <>
-                  <Button variant="ghost" onPress={() => setEditing(false)}>
-                    <Xmark />
+                  <Button
+                    variant="ghost"
+                    className="min-h-11"
+                    onPress={() => setEditing(false)}
+                  >
+                    Cancel
                   </Button>
                   <Button
-                    className="bg-brand"
+                    className="min-h-11 bg-brand"
                     isDisabled={!isEditValid}
                     onPress={handleSave}
                   >
-                    <Check />
+                    Save
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button variant="ghost" onPress={startEditing}>
+                  <Button
+                    variant="ghost"
+                    className="min-h-11"
+                    onPress={startEditing}
+                  >
                     <Pencil />
+                    Edit
                   </Button>
-                  <Button variant="danger" onPress={handleDelete}>
+                  <Button
+                    variant="danger"
+                    className="min-h-11"
+                    onPress={handleDelete}
+                  >
                     <TrashBin />
+                    Delete task
                   </Button>
                 </>
               )}
