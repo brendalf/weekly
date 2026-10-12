@@ -144,7 +144,7 @@ export function TaskDetailsModal({
                 <div className="flex flex-col gap-3">
                   {/* Scope */}
                   <div className="flex flex-col gap-1.5">
-                    <p className="text-xs text-foreground/50">Scope</p>
+                    <p className="text-xs text-subtle">Scope</p>
                     {editing ? (
                       <ScopeSelector value={editScope} onChange={setEditScope} />
                     ) : (
@@ -161,19 +161,19 @@ export function TaskDetailsModal({
 
                   {/* Schedule */}
                   <div className="flex flex-col gap-1.5">
-                    <p className="text-xs text-foreground/50">Schedule</p>
+                    <p className="text-xs text-subtle">Schedule</p>
                     {editing ? (
                       <input
                         type="date"
                         value={editSchedule}
                         onChange={(e) => setEditSchedule(e.target.value)}
-                        className="w-full rounded-lg border border-foreground/15 bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-foreground/30"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-base text-foreground focus:outline-none focus:border-border-strong"
                       />
                     ) : (
                       <span className="text-sm text-foreground">
                         {scheduleLabel}
                         {hasScheduleOverride && (
-                          <span className="ml-1.5 text-xs text-foreground/40">(rescheduled)</span>
+                          <span className="ml-1.5 text-xs text-subtle">(rescheduled)</span>
                         )}
                       </span>
                     )}
@@ -182,11 +182,11 @@ export function TaskDetailsModal({
                   {/* Workspace selector — only in edit mode with multiple workspaces */}
                   {editing && workspaces.length > 1 && (
                     <div className="flex flex-col gap-1.5">
-                      <p className="text-xs text-foreground/50">Workspace</p>
+                      <p className="text-xs text-subtle">Workspace</p>
                       <select
                         value={editWorkspaceId ?? currentWorkspaceId ?? ""}
                         onChange={(e) => setEditWorkspaceId(e.target.value || null)}
-                        className="w-full rounded-lg border border-foreground/15 bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-foreground/30"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-base text-foreground focus:outline-none focus:border-border-strong"
                       >
                         {workspaces.map((ws) => (
                           <option key={ws.id} value={ws.id}>
@@ -199,7 +199,7 @@ export function TaskDetailsModal({
 
                   {/* Meta */}
                   <div className="flex flex-col gap-0.5">
-                    <p className="text-xs text-foreground/50">
+                    <p className="text-xs text-subtle">
                       Created{" "}
                       {new Date(task.createdAt).toLocaleDateString("en-US", {
                         weekday: "long",
@@ -208,7 +208,7 @@ export function TaskDetailsModal({
                         year: "numeric",
                       })}
                     </p>
-                    <p className="text-xs text-foreground/50">
+                    <p className="text-xs text-subtle">
                       Status: {task.completed ? "Completed" : "Pending"}
                     </p>
                   </div>
@@ -235,7 +235,7 @@ export function TaskDetailsModal({
                     <Xmark />
                   </Button>
                   <Button
-                    className="bg-purple-500"
+                    className="bg-brand"
                     isDisabled={!isEditValid}
                     onPress={handleSave}
                   >

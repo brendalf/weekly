@@ -206,7 +206,7 @@ export function HabitItem({
 
   return (
     <>
-      <div className="flex items-center gap-2 rounded-lg border border-foreground/10 bg-background p-2 hover:border-foreground/20 transition-colors">
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-2 hover:border-border-strong transition-colors">
         {/* Inner content that gets dimmed when skipped/complete */}
         <div
           className={[
@@ -224,7 +224,7 @@ export function HabitItem({
           />
 
           {projectName && !isSkipped && (
-            <Badge className="shrink-0 bg-foreground/10 text-foreground/50">
+            <Badge className="shrink-0 bg-fill-strong text-subtle">
               {projectName}
             </Badge>
           )}
@@ -243,23 +243,23 @@ export function HabitItem({
             </span>
             {showPeriodLabel && !isSkipped && <PeriodBadge period={period} />}
             {isSkipped && (
-              <Badge className="shrink-0 bg-foreground/10 text-foreground/50">
+              <Badge className="shrink-0 bg-fill-strong text-subtle">
                 Skipped
               </Badge>
             )}
             {!isSkipped && (
-              <span className="text-xs text-foreground/60">
+              <span className="text-xs text-muted">
                 {displayValue}/{target}
               </span>
             )}
             {!isSkipped && streak && streak.currentStrikeLength > 0 && (
-              <span className="flex items-center gap-0.5 rounded-full bg-orange-500/10 px-1.5 py-0.5 text-xs font-medium text-orange-500">
+              <span className="flex items-center gap-0.5 rounded-full bg-streak-soft px-1.5 py-0.5 text-xs font-medium text-streak">
                 <Flame className="h-3 w-3" />
                 {streak.currentStrikeLength}
               </span>
             )}
             {!isSkipped && streak?.openSincePeriodKey && (
-              <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400">
+              <Badge className="bg-warning-soft text-warning-muted">
                 {formatPeriodKey(streak.openSincePeriodKey, period)}
               </Badge>
             )}
@@ -275,7 +275,7 @@ export function HabitItem({
                 e.stopPropagation();
                 setMenuOpen((v) => !v);
               }}
-              className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-foreground/40 hover:text-foreground/70 transition-colors"
+              className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-subtle hover:text-muted transition-colors"
               aria-label="More options"
             >
               <Ellipsis width={14} height={14} />

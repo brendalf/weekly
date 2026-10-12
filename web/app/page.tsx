@@ -28,7 +28,7 @@ export default function Home() {
         className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full opacity-30 blur-3xl"
         style={{
           background:
-            "radial-gradient(ellipse, oklch(0.627 0.265 303.9 / 0.4) 0%, transparent 70%)",
+            "radial-gradient(ellipse, color-mix(in oklab, var(--brand) 40%, transparent) 0%, transparent 70%)",
         }}
       />
 
@@ -50,7 +50,7 @@ export default function Home() {
 
       <div className="relative mx-auto grid min-h-screen max-w-6xl grid-cols-1 gap-10 px-6 py-8 md:py-12 md:grid-cols-2 md:items-center">
         <section>
-          <div className="hidden md:inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+          <div className="hidden md:inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-soft px-3 py-1 text-xs font-medium text-brand-muted">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/weekly.png"
@@ -64,12 +64,12 @@ export default function Home() {
             </span>
           </div>
 
-          <h1 className="mt-6 text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
+          <h1 className="mt-6 text-4xl font-semibold tracking-tight text-foreground">
             Habits, tasks,
-            <span className="block text-primary">and weekly focus.</span>
+            <span className="block text-brand-muted">and weekly focus.</span>
           </h1>
 
-          <p className="mt-5 max-w-md text-base leading-relaxed text-foreground/60">
+          <p className="mt-5 max-w-md text-base leading-relaxed text-muted">
             Plan your week, build streaks, and keep tasks moving — all in one
             clean interface.
           </p>
@@ -78,14 +78,14 @@ export default function Home() {
             {features.map(({ title, desc }) => (
               <div
                 key={title}
-                className="flex items-start gap-3 rounded-xl border border-foreground/8 bg-surface p-4"
+                className="flex items-start gap-3 rounded-xl border border-border bg-surface p-4"
               >
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
                 <div>
                   <p className="text-sm font-semibold text-foreground">
                     {title}
                   </p>
-                  <p className="mt-0.5 text-xs text-foreground/50">{desc}</p>
+                  <p className="mt-0.5 text-xs text-subtle">{desc}</p>
                 </div>
               </div>
             ))}

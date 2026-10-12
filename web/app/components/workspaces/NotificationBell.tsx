@@ -72,11 +72,11 @@ function ActivityRow({
     : null;
 
   return (
-    <div className="flex items-start gap-2 rounded-lg border border-foreground/10 bg-background p-3">
+    <div className="flex items-start gap-2 rounded-lg border border-border bg-background p-3">
       {unread && (
         <span
           aria-hidden
-          className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-purple-500"
+          className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand"
         />
       )}
       <div className="min-w-0 flex-1">
@@ -85,20 +85,20 @@ function ActivityRow({
           <ActivityText activity={activity} />
         </p>
         {detail && (
-          <p className="mt-0.5 text-[10px] text-foreground/50">{detail}</p>
+          <p className="mt-0.5 text-xs text-subtle">{detail}</p>
         )}
         {activity.type === "comment_added" && activity.commentBody && (
-          <p className="mt-1 border-l-2 border-foreground/15 pl-2 text-[11px] break-words text-foreground/60">
+          <p className="mt-1 border-l-2 border-border pl-2 text-xs break-words text-muted">
             {activity.commentBody}
           </p>
         )}
         {workspaceName && (
-          <p className="mt-0.5 text-[10px] text-foreground/40">
+          <p className="mt-0.5 text-xs text-subtle">
             {workspaceName}
           </p>
         )}
       </div>
-      <span className="shrink-0 text-[10px] text-foreground/40">
+      <span className="shrink-0 text-xs text-subtle">
         {relativeTime(activity.createdAt)}
       </span>
     </div>
@@ -188,7 +188,7 @@ export function NotificationBell() {
       <button
         ref={buttonRef}
         onClick={() => (open ? setOpen(false) : handleOpen())}
-        className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-foreground/20 bg-surface hover:border-foreground/40 transition-colors"
+        className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-surface hover:border-border-strong transition-colors"
         aria-label={
           unreadCount > 0
             ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
@@ -201,7 +201,7 @@ export function NotificationBell() {
           <Bell width={16} height={16} />
         )}
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-purple-500 text-[10px] text-white font-bold">
+          <span className="absolute -right-1 -top-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-brand text-xs leading-none text-brand-foreground font-bold">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -210,45 +210,45 @@ export function NotificationBell() {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div style={dropdownStyle} className="z-20 rounded-xl border border-foreground/10 bg-surface p-2 shadow-lg">
-            <p className="mb-2 px-2 text-xs font-medium text-foreground/60">
+          <div style={dropdownStyle} className="z-20 rounded-xl border border-border bg-surface p-2 shadow-lg">
+            <p className="mb-2 px-2 text-xs font-medium text-muted">
               Notifications
             </p>
 
             {!hasNotifications && (
-              <p className="px-2 py-4 text-center text-xs text-foreground/40">
+              <p className="px-2 py-4 text-center text-xs text-subtle">
                 No notifications
               </p>
             )}
 
             {pendingInvites.length > 0 && (
               <div className="flex flex-col gap-1 mb-2">
-                <p className="px-2 text-[10px] font-semibold uppercase tracking-wide text-foreground/40">
+                <p className="px-2 text-xs font-semibold uppercase tracking-wide text-subtle">
                   Invites
                 </p>
                 {pendingInvites.map((invite) => (
                   <div
                     key={invite.id}
-                    className="flex cursor-pointer flex-col gap-2 rounded-lg border border-foreground/10 bg-background p-3"
+                    className="flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-background p-3"
                   >
                     <div>
                       <p className="text-sm font-medium text-foreground">
                         {invite.workspaceName}
                       </p>
-                      <p className="text-xs text-foreground/60">
+                      <p className="text-xs text-muted">
                         from {invite.invitedByDisplayName}
                       </p>
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleRespond(invite.id, true)}
-                        className="flex-1 cursor-pointer rounded-lg bg-purple-500 py-1 text-xs text-white hover:bg-purple-600 transition-colors"
+                        className="flex-1 cursor-pointer rounded-lg bg-brand py-1 text-xs text-brand-foreground hover:bg-brand-hover transition-colors"
                       >
                         Accept
                       </button>
                       <button
                         onClick={() => handleRespond(invite.id, false)}
-                        className="flex-1 cursor-pointer rounded-lg border border-foreground/20 py-1 text-xs text-foreground/60 hover:bg-foreground/5 transition-colors"
+                        className="flex-1 cursor-pointer rounded-lg border border-border-strong py-1 text-xs text-muted hover:bg-fill transition-colors"
                       >
                         Decline
                       </button>
@@ -261,7 +261,7 @@ export function NotificationBell() {
             {feed.length > 0 && (
               <div className="flex max-h-[60vh] flex-col gap-1 overflow-y-auto">
                 {pendingInvites.length > 0 && (
-                  <p className="px-2 text-[10px] font-semibold uppercase tracking-wide text-foreground/40">
+                  <p className="px-2 text-xs font-semibold uppercase tracking-wide text-subtle">
                     Activity
                   </p>
                 )}

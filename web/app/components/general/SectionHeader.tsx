@@ -23,11 +23,11 @@ export function SectionHeader({
       onClick={onToggle}
     >
       {collapsed && (
-        <ChevronsUp width={12} height={12} className="text-foreground/40 shrink-0" />
+        <ChevronsUp width={12} height={12} className="text-subtle shrink-0" />
       )}
-      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/40">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-subtle">{label}</p>
       {collapsed && total > 0 && (
-        <p className="text-xs text-foreground/30">{done}/{total}</p>
+        <p className="text-xs text-subtle">{done}/{total}</p>
       )}
     </div>
   );

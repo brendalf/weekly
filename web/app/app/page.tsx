@@ -241,7 +241,7 @@ export default function AppPage() {
   if (!authReady) {
     return (
       <main className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-foreground/60">Loading…</p>
+        <p className="text-sm text-muted">Loading…</p>
       </main>
     );
   }
@@ -263,7 +263,7 @@ export default function AppPage() {
                   </Button>
                 </div>
               </div>
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
                 {selectedDayLabel}
               </h1>
             </div>
@@ -273,7 +273,7 @@ export default function AppPage() {
                 <p className="text-sm font-medium text-foreground">
                   {user?.displayName ?? "Signed in"}
                 </p>
-                <p className="text-xs text-foreground/60">
+                <p className="text-xs text-muted">
                   {user?.email ?? ""}
                 </p>
               </div>

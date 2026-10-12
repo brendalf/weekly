@@ -72,18 +72,18 @@ function PeriodProgress({ done, total }: { done: number; total: number }) {
       style={{ transform: "rotate(-90deg)" }}
       aria-hidden
     >
-      <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={stroke} stroke="currentColor" strokeOpacity={0.15} fill="none" />
+      <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={stroke} stroke="var(--fill-strong)" fill="none" />
       <circle
         cx={size / 2}
         cy={size / 2}
         r={r}
         strokeWidth={stroke}
-        stroke={complete ? "var(--color-purple-500)" : "rgba(168,85,247,0.55)"}
+        stroke={complete ? "var(--brand)" : "var(--brand-border)"}
         fill="none"
         strokeDasharray={circ}
         strokeDashoffset={offset}
         strokeLinecap="round"
-        style={{ transition: "stroke-dashoffset 0.3s ease" }}
+        style={{ transition: "stroke-dashoffset 250ms var(--ease-standard)" }}
       />
     </svg>
   );
@@ -128,8 +128,8 @@ function LayoutSettingsButton({
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-20 mt-1 min-w-44 rounded-xl border border-foreground/10 bg-surface p-1 shadow-lg">
-            <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-foreground/40">
+          <div className="absolute right-0 top-full z-20 mt-1 min-w-44 rounded-xl border border-border bg-surface p-1 shadow-lg">
+            <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-subtle">
               Navigation
             </p>
             {([
@@ -140,8 +140,8 @@ function LayoutSettingsButton({
                 key={key}
                 onClick={() => { onLayoutChange(key); setOpen(false); }}
                 className={[
-                  "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-foreground/5 transition-colors",
-                  layout === key ? "text-primary font-medium" : "text-foreground",
+                  "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-fill transition-colors",
+                  layout === key ? "text-brand-muted font-medium" : "text-foreground",
                 ].join(" ")}
               >
                 <Icon width={12} height={12} />
@@ -149,9 +149,9 @@ function LayoutSettingsButton({
               </button>
             ))}
 
-            <div className="my-1 mx-2 border-t border-foreground/10" />
+            <div className="my-1 mx-2 border-t border-border" />
 
-            <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-foreground/40">
+            <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-subtle">
               Period layout
             </p>
             {([
@@ -162,8 +162,8 @@ function LayoutSettingsButton({
                 key={key}
                 onClick={() => { onInnerLayoutChange(key); setOpen(false); }}
                 className={[
-                  "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-foreground/5 transition-colors",
-                  innerLayout === key ? "text-primary font-medium" : "text-foreground",
+                  "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-fill transition-colors",
+                  innerLayout === key ? "text-brand-muted font-medium" : "text-foreground",
                 ].join(" ")}
               >
                 <Icon width={12} height={12} />
@@ -171,32 +171,32 @@ function LayoutSettingsButton({
               </button>
             ))}
 
-            <div className="my-1 mx-2 border-t border-foreground/10" />
+            <div className="my-1 mx-2 border-t border-border" />
 
-            <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-foreground/40">
+            <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-subtle">
               Display
             </p>
             <button
               onClick={() => onShowCompletedTasksChange(!showCompletedTasks)}
-              className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-foreground/5 transition-colors text-foreground"
+              className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-fill transition-colors text-foreground"
             >
               <span className={[
-                "flex h-3 w-3 shrink-0 items-center justify-center rounded border",
-                showCompletedTasks ? "border-primary bg-primary text-white" : "border-foreground/30",
+                "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+                showCompletedTasks ? "border-brand bg-brand text-brand-foreground" : "border-border-strong",
               ].join(" ")}>
-                {showCompletedTasks && <span className="text-[8px] leading-none">✓</span>}
+                {showCompletedTasks && <span className="text-xs leading-none">✓</span>}
               </span>
               Show completed
             </button>
             <button
               onClick={() => onShowSkippedHabitsChange(!showSkippedHabits)}
-              className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-foreground/5 transition-colors text-foreground"
+              className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-fill transition-colors text-foreground"
             >
               <span className={[
-                "flex h-3 w-3 shrink-0 items-center justify-center rounded border",
-                showSkippedHabits ? "border-primary bg-primary text-white" : "border-foreground/30",
+                "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+                showSkippedHabits ? "border-brand bg-brand text-brand-foreground" : "border-border-strong",
               ].join(" ")}>
-                {showSkippedHabits && <span className="text-[8px] leading-none">✓</span>}
+                {showSkippedHabits && <span className="text-xs leading-none">✓</span>}
               </span>
               Show skipped
             </button>
@@ -224,7 +224,7 @@ function UnifiedAddButton({
   const [noteModalOpen, setNoteModalOpen] = useState(false);
 
   const itemClass =
-    "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs text-foreground hover:bg-foreground/5 transition-colors";
+    "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs text-foreground hover:bg-fill transition-colors";
 
   return (
     <div className="relative">
@@ -241,7 +241,7 @@ function UnifiedAddButton({
       {dropdownOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
-          <div className="absolute right-0 top-full z-20 mt-1 min-w-36 rounded-xl border border-foreground/10 bg-surface p-1 shadow-lg">
+          <div className="absolute right-0 top-full z-20 mt-1 min-w-36 rounded-xl border border-border bg-surface p-1 shadow-lg">
             <button
               className={itemClass}
               onClick={() => { setDropdownOpen(false); setHabitModalOpen(true); }}
@@ -461,8 +461,8 @@ export function HabitsTasksView({
                   className={[
                     "flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-foreground/8 text-foreground"
-                      : "text-foreground/50 hover:text-foreground/80",
+                      ? "bg-fill text-foreground"
+                      : "text-subtle hover:text-foreground",
                   ].join(" ")}
                 >
                   {label}
@@ -472,7 +472,7 @@ export function HabitsTasksView({
             })}
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium bg-foreground/8 text-foreground">
+          <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium bg-fill text-foreground">
             Overview
             <PeriodProgress
               done={periodProgress.reduce((s, p) => s + p.done, 0)}
@@ -544,11 +544,11 @@ export function HabitsTasksView({
               onClick={() => setCollapsedOverviewHabits((v) => !v)}
             >
               {collapsedOverviewHabits && (
-                <ChevronsUp width={12} height={12} className="text-foreground/40 shrink-0" />
+                <ChevronsUp width={12} height={12} className="text-subtle shrink-0" />
               )}
-              <p className="text-xs font-semibold uppercase tracking-wide text-foreground/40">Habits</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-subtle">Habits</p>
               {collapsedOverviewHabits && overviewHabitTotal > 0 && (
-                <p className="text-xs text-foreground/30">{overviewHabitDone}/{overviewHabitTotal}</p>
+                <p className="text-xs text-subtle">{overviewHabitDone}/{overviewHabitTotal}</p>
               )}
             </div>
             <div className={`collapsible${collapsedOverviewHabits ? " collapsed" : ""}`}>
@@ -574,11 +574,11 @@ export function HabitsTasksView({
               onClick={() => setCollapsedOverviewTasks((v) => !v)}
             >
               {collapsedOverviewTasks && (
-                <ChevronsUp width={12} height={12} className="text-foreground/40 shrink-0" />
+                <ChevronsUp width={12} height={12} className="text-subtle shrink-0" />
               )}
-              <p className="text-xs font-semibold uppercase tracking-wide text-foreground/40">Tasks</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-subtle">Tasks</p>
               {collapsedOverviewTasks && overviewTaskTotal > 0 && (
-                <p className="text-xs text-foreground/30">{overviewTaskDone}/{overviewTaskTotal}</p>
+                <p className="text-xs text-subtle">{overviewTaskDone}/{overviewTaskTotal}</p>
               )}
             </div>
             <div className={`collapsible${collapsedOverviewTasks ? " collapsed" : ""}`}>

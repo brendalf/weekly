@@ -42,8 +42,7 @@ export function CircularCheckboxProgress({
           cy={size / 2}
           r={radius}
           strokeWidth={stroke}
-          stroke="var(--color-foreground, currentColor)"
-          strokeOpacity={0.1}
+          stroke="var(--fill-strong)"
           fill="none"
         />
         {/* Progress arc */}
@@ -52,12 +51,12 @@ export function CircularCheckboxProgress({
           cy={size / 2}
           r={radius}
           strokeWidth={stroke}
-          stroke="var(--color-purple-500)"
+          stroke="var(--brand)"
           fill="none"
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
           strokeLinecap="round"
-          style={{ transition: "stroke-dashoffset 0.3s ease" }}
+          style={{ transition: "stroke-dashoffset 250ms var(--ease-standard)" }}
         />
       </svg>
 
@@ -71,8 +70,8 @@ export function CircularCheckboxProgress({
           "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full",
           "flex items-center justify-center transition-colors",
           complete
-            ? "bg-purple-500 cursor-default"
-            : "bg-background hover:bg-purple-500/20 cursor-pointer",
+            ? "bg-brand text-brand-foreground cursor-default"
+            : "bg-background text-subtle hover:bg-brand-soft hover:text-brand-muted cursor-pointer",
         ].join(" ")}
       >
         <Check width={inner * 0.8} height={inner * 0.8} />

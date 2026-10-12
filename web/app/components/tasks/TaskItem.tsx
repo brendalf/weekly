@@ -43,7 +43,7 @@ export function TaskItem({
       <div
         onClick={() => setDetailsOpen(true)}
         className={[
-          "flex items-center gap-2 rounded-lg border border-foreground/10 bg-background hover:border-foreground/20 p-2 cursor-pointer transition-opacity",
+          "flex items-center gap-2 rounded-lg border border-border bg-background hover:border-border-strong p-2 cursor-pointer transition-opacity",
           displayCompleted ? "opacity-50" : "",
         ].join(" ")}
       >
@@ -58,7 +58,7 @@ export function TaskItem({
           />
         </div>
         {projectName && (
-          <Badge className="bg-foreground/10 text-foreground/50">
+          <Badge className="bg-fill-strong text-subtle">
             {projectName}
           </Badge>
         )}
@@ -73,7 +73,7 @@ export function TaskItem({
         <div className="ml-auto flex shrink-0 items-center gap-1">
           {showScopeLabel !== false && <PeriodBadge period={scope} />}
           {openSinceLabel && (
-            <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400">
+            <Badge className="bg-warning-soft text-warning-muted">
               {openSinceLabel}
             </Badge>
           )}

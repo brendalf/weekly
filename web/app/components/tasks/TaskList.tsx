@@ -99,7 +99,7 @@ export function TaskList({
           <div className="flex items-center gap-2">
             <p className="text-sm font-bold text-foreground">Tasks</p>
             {collapsed && (
-              <p className="text-xs text-foreground/50">
+              <p className="text-xs text-subtle">
                 {completedCount}/{visibleTasks.length}
               </p>
             )}
@@ -128,7 +128,7 @@ export function TaskList({
       <div className={`collapsible${collapsed ? " collapsed" : ""}`}>
         <div>
           {visibleTasks.length === 0 && (
-            <p className="text-xs text-foreground/60 pt-2">{emptyMessage}</p>
+            <p className="text-xs text-muted pt-2">{emptyMessage}</p>
           )}
           <div className="flex flex-col gap-0.5 pt-1">
             {[...visibleTasks]

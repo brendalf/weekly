@@ -38,7 +38,7 @@ export function GoogleLoginCard({ compact }: GoogleLoginCardProps = {}) {
       <button
         onClick={handleGoogleLogin}
         disabled={loading}
-        className="rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors cursor-pointer disabled:opacity-50"
+        className="rounded-full border border-brand-border bg-brand-soft px-4 py-1.5 text-xs font-medium text-brand-muted hover:bg-brand-soft-hover transition-colors cursor-pointer disabled:opacity-50"
       >
         {loading ? "Signing in…" : "Log in"}
       </button>
@@ -46,10 +46,10 @@ export function GoogleLoginCard({ compact }: GoogleLoginCardProps = {}) {
   }
 
   return (
-    <div className="w-full max-w-md rounded-2xl border border-foreground/10 bg-surface p-6 shadow-sm">
+    <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight text-foreground">Log in</h2>
-        <p className="mt-1 text-sm text-foreground/60">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">Log in</h2>
+        <p className="mt-1 text-sm text-muted">
           Continue with Google to access your habits and tasks.
         </p>
       </div>
@@ -61,15 +61,15 @@ export function GoogleLoginCard({ compact }: GoogleLoginCardProps = {}) {
         isPending={loading}
         onPress={handleGoogleLogin}
       >
-        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-foreground/20 text-xs">
+        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border-strong text-xs">
           G
         </span>
         {loading ? "Signing in…" : "Continue with Google"}
       </Button>
 
-      {error && <p className="mt-4 text-sm text-error">{error}</p>}
+      {error && <p className="mt-4 text-sm text-danger-muted">{error}</p>}
 
-      <p className="mt-6 text-xs text-foreground/40">
+      <p className="mt-6 text-xs text-subtle">
         By continuing, you agree to our terms and acknowledge our privacy policy.
       </p>
     </div>

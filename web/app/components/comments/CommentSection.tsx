@@ -108,7 +108,7 @@ function AutoGrowTextarea({
           onCancel();
         }
       }}
-      className="min-h-11 w-full resize-none overflow-y-auto rounded-lg border border-foreground/15 bg-background px-3 py-2.5 text-base leading-snug text-foreground placeholder:text-foreground/40 focus:border-foreground/30 focus:outline-none"
+      className="min-h-11 w-full resize-none overflow-y-auto rounded-lg border border-border bg-background px-3 py-2.5 text-base leading-snug text-foreground placeholder:text-subtle focus:border-border-strong focus:outline-none"
     />
   );
 }
@@ -254,17 +254,17 @@ export function CommentSection({
   return (
     <Surface variant="default" className="mb-3">
       <div className="mb-2 flex items-center gap-2">
-        <CommentIcon className="h-4 w-4 text-foreground/40" />
+        <CommentIcon className="h-4 w-4 text-subtle" />
         <p className="text-sm font-semibold text-foreground">Comments</p>
         {comments.length > 0 && (
-          <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-xs text-foreground/50">
+          <span className="rounded-full bg-fill-strong px-2 py-0.5 text-xs text-subtle">
             {comments.length}
           </span>
         )}
       </div>
 
       {comments.length === 0 ? (
-        <p className="mb-3 text-xs text-foreground/40">No comments yet.</p>
+        <p className="mb-3 text-xs text-subtle">No comments yet.</p>
       ) : (
         <div className="mb-3 flex max-h-72 flex-col gap-2 overflow-y-auto">
           {comments.map((comment) => {
@@ -273,17 +273,17 @@ export function CommentSection({
             return (
               <div
                 key={comment.id}
-                className="rounded-lg border border-foreground/10 bg-background p-3"
+                className="rounded-lg border border-border bg-background p-3"
               >
                 <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                   <span className="text-xs font-medium text-foreground">
                     {comment.authorDisplayName || "User"}
                   </span>
-                  <span className="text-[10px] text-foreground/40">
+                  <span className="text-xs text-subtle">
                     {formatCommentDate(comment.createdAt)}
                   </span>
                   {wasEdited(comment) && (
-                    <span className="text-[10px] text-foreground/30">
+                    <span className="text-xs text-subtle">
                       edited
                     </span>
                   )}
@@ -292,7 +292,7 @@ export function CommentSection({
                       <Button
                         isIconOnly
                         variant="ghost"
-                        className="h-11 w-11 text-foreground/40"
+                        className="h-11 w-11 text-subtle"
                         aria-label="Edit comment"
                         onPress={() => startEditing(comment)}
                       >
@@ -301,7 +301,7 @@ export function CommentSection({
                       <Button
                         isIconOnly
                         variant="ghost"
-                        className="h-11 w-11 text-foreground/40 hover:text-red-500"
+                        className="h-11 w-11 text-subtle hover:text-danger-muted"
                         aria-label="Delete comment"
                         onPress={() => handleDelete(comment)}
                       >
@@ -344,7 +344,7 @@ export function CommentSection({
                     </div>
                   </div>
                 ) : (
-                  <p className="whitespace-pre-wrap break-words text-sm text-foreground/80">
+                  <p className="whitespace-pre-wrap break-words text-sm text-foreground">
                     {comment.body}
                   </p>
                 )}

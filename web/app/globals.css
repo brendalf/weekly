@@ -1,19 +1,153 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 
-/* Override HeroUI accent color from blue to purple-500 */
-:root {
-  /* Override default colors */
-  --accent: oklch(0.627 0.265 303.9);
+/* =========================================================================
+   Weekly design tokens — the single source of truth (DIRECTION.md §6).
+   -------------------------------------------------------------------------
+   Raw values live on :root / [data-theme="dark"] so they can be theme-aware.
+   They are exposed to Tailwind through `@theme inline` below, which keeps the
+   generated utilities pointing at the variable (not a snapshot of its value)
+   so a theme switch repaints without a rebuild.
+
+   Components must reference the semantic utilities only:
+   no raw `purple-500`, no `rgba()`, no inline `oklch()`, no `foreground/NN`.
+   ========================================================================= */
+
+:root,
+[data-theme="light"] {
+  /* --- Brand -------------------------------------------------------- */
+  /* purple-500 nudged one step darker so white text on a brand fill clears
+     4.5:1 in both themes; still the same hue. */
+  --brand: oklch(59% 0.27 303.9); /* solid brand fill */
+  --brand-hover: oklch(49.6% 0.265 301.924);
+  --brand-foreground: oklch(99.11% 0 0); /* text/icons on a brand fill */
+  --brand-muted: oklch(49.6% 0.265 301.924); /* legible brand text on page bg */
+  --brand-soft: color-mix(in oklab, var(--brand) 15%, transparent);
+  --brand-soft-hover: color-mix(in oklab, var(--brand) 24%, transparent);
+  --brand-border: color-mix(in oklab, var(--brand) 45%, transparent);
+
+  /* --- Neutral ladder (DIRECTION §6.4) ------------------------------ */
+  /* --background / --foreground / --surface / --muted / --border come from
+     HeroUI; the rungs below are the ones it does not provide.
+     §6.4 calls for ~45% on --subtle; the light theme needs 55% to stay
+     readable against white while staying a clear step below --muted. */
+  --subtle: color-mix(in oklab, var(--foreground) 55%, transparent);
+  --border-strong: color-mix(in oklab, var(--foreground) 22%, transparent);
+  /* Translucent fills: hover rows, chips, inactive segments. */
+  --fill: color-mix(in oklab, var(--foreground) 6%, transparent);
+  --fill-strong: color-mix(in oklab, var(--foreground) 12%, transparent);
+
+  /* --- Semantic status ---------------------------------------------- */
+  /* HeroUI ships --success/--warning/--danger (+ -soft, -foreground) for
+     fills; these are the legible on-background / on-soft-pill text variants.
+     Light values sit on the 700/800 ramp so 12px text clears 4.5:1 against
+     both white and the matching 15% soft pill; dark uses the 400 ramp. */
+  --success-muted: oklch(44.8% 0.119 151.328);
+  --warning-muted: oklch(47.3% 0.137 46.201);
+  --danger-muted: oklch(50.5% 0.213 27.518);
+
+  /* --- Product accents ----------------------------------------------- */
+  --streak: oklch(47% 0.157 37.304); /* habit streak flame */
+  --streak-soft: color-mix(in oklab, var(--streak) 12%, transparent);
+  --highlight: oklch(47.3% 0.137 46.201); /* pinned notes */
+
+  /* --- Period encoding (categorical, not status) ---------------------- */
+  --period-day: oklch(42.4% 0.199 265.638);
+  --period-week: var(--brand-muted);
+  --period-month: oklch(43.7% 0.078 188.216);
+  --period-day-soft: color-mix(in oklab, oklch(62.3% 0.214 259.815) 15%, transparent);
+  --period-week-soft: var(--brand-soft);
+  --period-month-soft: color-mix(in oklab, oklch(70.4% 0.14 182.503) 15%, transparent);
+
+  /* HeroUI's own accent follows the brand. */
+  --accent: var(--brand);
 }
 
-[data-theme="dark"] {
-  /* Override dark theme colors */
-  --accent: oklch(0.627 0.265 303.9);
+[data-theme="dark"],
+.dark {
+  --brand: oklch(59% 0.27 303.9);
+  --brand-hover: oklch(71.4% 0.203 305.504);
+  --brand-foreground: oklch(99.11% 0 0);
+  --brand-muted: oklch(71.4% 0.203 305.504);
+
+  --subtle: color-mix(in oklab, var(--foreground) 45%, transparent);
+
+  --success-muted: oklch(79.2% 0.209 151.711);
+  --warning-muted: oklch(82.8% 0.189 84.429);
+  --danger-muted: oklch(70.4% 0.191 22.216);
+
+  --streak: oklch(75% 0.183 55.934);
+  --highlight: oklch(82.8% 0.189 84.429);
+
+  --period-day: oklch(70.7% 0.165 254.624);
+  --period-month: oklch(77.7% 0.152 181.912);
+
+  --accent: var(--brand);
+}
+
+@theme {
+  /* --- Typography (DIRECTION §6.1) ---------------------------------- */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* --- Type scale (DIRECTION §6.3) ----------------------------------
+     The scale is *locked*: every other `text-*` size is removed so an
+     out-of-scale size fails at build time instead of in review.
+     12px is the floor; inputs must be text-base or iOS zooms on focus. */
+  --text-*: initial;
+  --text-xs: 0.75rem; /* 12px — metadata, badges, timestamps */
+  --text-xs--line-height: calc(1 / 0.75);
+  --text-sm: 0.875rem; /* 14px — body, list rows, labels */
+  --text-sm--line-height: calc(1.25 / 0.875);
+  --text-base: 1rem; /* 16px — all inputs */
+  --text-base--line-height: calc(1.5 / 1);
+  --text-lg: 1.125rem; /* 18px — panel/section headings */
+  --text-lg--line-height: calc(1.75 / 1.125);
+  --text-2xl: 1.5rem; /* 24px — page title */
+  --text-2xl--line-height: calc(2 / 1.5);
+  --text-4xl: 2.25rem; /* 36px — landing hero only */
+  --text-4xl--line-height: calc(2.5 / 2.25);
+
+  /* --- Motion (DIRECTION §6.10) -------------------------------------
+     One curve. 150ms for hover/color, 250ms for layout/collapse. */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  --default-transition-duration: 150ms;
+}
+
+@theme inline {
+  /* --- Color (DIRECTION §6.2, §6.4) --------------------------------- */
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-muted: var(--brand-muted);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-soft-hover: var(--brand-soft-hover);
+  --color-brand-border: var(--brand-border);
+
+  --color-subtle: var(--subtle);
+  --color-border-strong: var(--border-strong);
+  --color-fill: var(--fill);
+  --color-fill-strong: var(--fill-strong);
+
+  --color-success-muted: var(--success-muted);
+  --color-warning-muted: var(--warning-muted);
+  --color-danger-muted: var(--danger-muted);
+
+  --color-streak: var(--streak);
+  --color-streak-soft: var(--streak-soft);
+  --color-highlight: var(--highlight);
+
+  --color-period-day: var(--period-day);
+  --color-period-week: var(--period-week);
+  --color-period-month: var(--period-month);
+  --color-period-day-soft: var(--period-day-soft);
+  --color-period-week-soft: var(--period-week-soft);
+  --color-period-month-soft: var(--period-month-soft);
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
 
 @keyframes spin-once {
@@ -25,14 +159,14 @@ body {
   }
 }
 .animate-spin-once {
-  animation: spin-once 0.4s ease-in-out;
+  animation: spin-once 400ms var(--ease-standard);
 }
 
 .collapsible {
   display: grid;
   grid-template-rows: 1fr;
-  transition: grid-template-rows 350ms cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: grid-template-rows 250ms var(--ease-standard),
+              opacity 250ms var(--ease-standard);
   opacity: 1;
 }
 .collapsible.collapsed {
@@ -42,4 +176,16 @@ body {
 .collapsible > div {
   overflow: hidden;
   min-height: 0;
+}
+
+/* Honor the OS "reduce motion" setting everywhere (DIRECTION §6.10). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -21,7 +21,7 @@ interface HabitActionMenuProps {
 type MenuView = "main" | "options";
 
 const menuItemClass =
-  "flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-foreground hover:bg-foreground/6 transition-colors";
+  "flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-foreground hover:bg-fill transition-colors";
 
 export function HabitActionMenu({
   habitId,
@@ -67,7 +67,7 @@ export function HabitActionMenu({
         }}
       />
       <div
-        className="fixed z-210 w-52 overflow-hidden rounded-xl border border-foreground/15 bg-background shadow-xl"
+        className="fixed z-210 w-52 overflow-hidden rounded-xl border border-border bg-background shadow-xl"
         style={{ top: menuPos.top, right: menuPos.right }}
       >
         {/* ── Level 1: main ── */}
@@ -81,7 +81,7 @@ export function HabitActionMenu({
                 <CirclePlay
                   width={14}
                   height={14}
-                  className="shrink-0 text-foreground/60"
+                  className="shrink-0 text-muted"
                 />
                 Unskip
               </button>
@@ -93,13 +93,13 @@ export function HabitActionMenu({
                 <CirclePause
                   width={14}
                   height={14}
-                  className="shrink-0 text-foreground/60"
+                  className="shrink-0 text-muted"
                 />
                 Skip
                 <ArrowChevronLeft
                   width={12}
                   height={12}
-                  className="ml-auto rotate-180 text-foreground/30"
+                  className="ml-auto rotate-180 text-subtle"
                 />
               </button>
             )}
@@ -111,12 +111,12 @@ export function HabitActionMenu({
           <div className="p-1">
             <button
               onClick={() => setMenuView("main")}
-              className="flex w-full cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-foreground/50 hover:text-foreground transition-colors"
+              className="flex w-full cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-subtle hover:text-foreground transition-colors"
             >
               <ArrowChevronLeft width={12} height={12} />
               Skip
             </button>
-            <div className="my-1 mx-2 border-t border-foreground/10" />
+            <div className="my-1 mx-2 border-t border-border" />
             <SkipMenu
               habitId={habitId}
               referenceDate={referenceDate}

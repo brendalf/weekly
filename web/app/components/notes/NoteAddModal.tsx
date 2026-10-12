@@ -113,7 +113,7 @@ export function NoteAddModal({ open, onOpenChange, workspaces, onSubmit }: NoteA
                       onChange={(e) => setBody(e.target.value)}
                       placeholder="Write something… (optional)"
                       rows={4}
-                      className="max-h-[45vh] min-h-28 w-full resize-none overflow-y-auto rounded-lg border border-foreground/10 bg-background px-3 py-2 text-base text-foreground placeholder:text-foreground/30 focus:border-foreground/30 focus:outline-none"
+                      className="max-h-[45vh] min-h-28 w-full resize-none overflow-y-auto rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground placeholder:text-subtle focus:border-border-strong focus:outline-none"
                     />
                   </div>
                 </form>

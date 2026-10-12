@@ -80,7 +80,7 @@ export function SkipMenu({
   if (isSkipped) {
     return (
       <button onClick={handleUnskip} className={buttonClassName}>
-        <CirclePlay width={14} height={14} className="text-foreground/60" />
+        <CirclePlay width={14} height={14} className="text-muted" />
         Unskip this period
       </button>
     );
@@ -94,7 +94,7 @@ export function SkipMenu({
             setSkipView("buttons");
             setSkipUntilDate(null);
           }}
-          className="flex cursor-pointer items-center gap-1.5 self-start text-xs text-foreground/50 hover:text-foreground transition-colors"
+          className="flex cursor-pointer items-center gap-1.5 self-start text-xs text-subtle hover:text-foreground transition-colors"
         >
           <ArrowChevronLeft width={12} height={12} />
           Skip until
@@ -130,19 +130,19 @@ export function SkipMenu({
   return (
     <>
       <button onClick={() => handleSkip("today")} className={buttonClassName}>
-        <Clock width={14} height={14} className="text-foreground/60" />
+        <Clock width={14} height={14} className="text-muted" />
         Skip today
       </button>
       <button onClick={() => handleSkip("week")} className={buttonClassName}>
-        <Calendar width={14} height={14} className="text-foreground/60" />
+        <Calendar width={14} height={14} className="text-muted" />
         Skip this week
       </button>
       <button onClick={() => handleSkip("month")} className={buttonClassName}>
-        <Calendar width={14} height={14} className="text-foreground/60" />
+        <Calendar width={14} height={14} className="text-muted" />
         Skip this month
       </button>
       <button onClick={() => setSkipView("calendar")} className={buttonClassName}>
-        <ArrowRight width={14} height={14} className="text-foreground/60" />
+        <ArrowRight width={14} height={14} className="text-muted" />
         Skip until…
       </button>
     </>

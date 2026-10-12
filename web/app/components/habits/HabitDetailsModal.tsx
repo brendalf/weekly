@@ -215,14 +215,14 @@ function buildSlots(
 
 const STATUS_CLASSES: Record<SlotStatus, string> = {
   completed:
-    "bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/20",
+    "bg-success-soft text-success-muted border-success/20",
   partial:
-    "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  missed: "bg-foreground/5 text-foreground/30 border-foreground/10",
+    "bg-warning-soft text-warning-muted border-warning/20",
+  missed: "bg-fill text-subtle border-border",
   skipped:
-    "bg-foreground/10 text-foreground/40 border-foreground/10 line-through",
-  inactive: "bg-transparent text-foreground/15 border-transparent",
-  future: "bg-transparent text-foreground/10 border-transparent",
+    "bg-fill-strong text-subtle border-border line-through",
+  inactive: "bg-transparent text-subtle border-transparent",
+  future: "bg-transparent text-subtle border-transparent",
 };
 
 function DayCalendar({ slots }: { slots: CalendarSlot[] }) {
@@ -264,7 +264,7 @@ function DayCalendar({ slots }: { slots: CalendarSlot[] }) {
           {DAY_LABELS.map((l, i) => (
             <div
               key={i}
-              className="text-center text-[10px] font-medium text-foreground/40"
+              className="text-center text-xs font-medium text-subtle"
             >
               {l}
             </div>
@@ -279,7 +279,7 @@ function DayCalendar({ slots }: { slots: CalendarSlot[] }) {
                   key={slot.key || `${ri}-${ci}`}
                   title={slot.key}
                   className={[
-                    "flex h-7 items-center justify-center rounded border text-[11px] font-medium",
+                    "flex h-7 items-center justify-center rounded border text-xs font-medium",
                     STATUS_CLASSES[slot.status],
                   ].join(" ")}
                 >
@@ -306,7 +306,7 @@ function PeriodStrip({ slots }: { slots: CalendarSlot[] }) {
           key={slot.key}
           title={slot.key}
           className={[
-            "rounded border px-2 py-0.5 text-[11px] font-medium",
+            "rounded border px-2 py-0.5 text-xs font-medium",
             STATUS_CLASSES[slot.status],
           ].join(" ")}
         >
@@ -492,7 +492,7 @@ export function HabitDetailsModal({
                     </div>
                     {editPeriod === Period.DAY && (
                       <div className="mt-2">
-                        <p className="text-xs text-foreground/50 mb-1">
+                        <p className="text-xs text-subtle mb-1">
                           Active days
                         </p>
                         <ActiveDaysSelector
@@ -502,7 +502,7 @@ export function HabitDetailsModal({
                       </div>
                     )}
                     <div className="mt-2">
-                      <p className="text-xs text-foreground/50 mb-1">
+                      <p className="text-xs text-subtle mb-1">
                         Time of day
                       </p>
                       <TimeOfDaySelector
@@ -524,7 +524,7 @@ export function HabitDetailsModal({
                 {/* Progress + streak row */}
                 {!editing && (
                   <div className="mb-4 flex flex-col gap-2">
-                    <span className="whitespace-nowrap text-xs text-foreground/50">
+                    <span className="whitespace-nowrap text-xs text-subtle">
                       {periodLabel}
                     </span>
                     <div className="flex items-center gap-3">
@@ -564,13 +564,13 @@ export function HabitDetailsModal({
                       {streak && (
                         <div className="ml-auto shrink-0 flex flex-col items-end gap-1">
                           {streak.currentStrikeLength > 0 && (
-                            <span className="flex items-center gap-1 rounded-full bg-orange-500/10 px-2.5 py-0.5 text-xs font-medium text-orange-500">
+                            <span className="flex items-center gap-1 rounded-full bg-streak-soft px-2.5 py-0.5 text-xs font-medium text-streak">
                               <Flame className="h-3 w-3" />
                               {streak.currentStrikeLength} streak
                             </span>
                           )}
                           {streak.openSincePeriodKey && (
-                            <span className="rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs text-foreground/50">
+                            <span className="rounded-full bg-fill-strong px-2.5 py-0.5 text-xs text-subtle">
                               since{" "}
                               {formatPeriodKey(
                                 streak.openSincePeriodKey,
@@ -593,29 +593,29 @@ export function HabitDetailsModal({
                       </p>
                       <button
                         onClick={() => setShowLogs((v) => !v)}
-                        className="text-xs text-foreground/40 hover:text-foreground/70 transition-colors"
+                        className="text-xs text-subtle hover:text-muted transition-colors"
                       >
                         {showLogs ? "Hide logs" : "Show logs"}
                       </button>
                     </div>
                     {/* Legend */}
-                    <div className="mb-2 flex flex-wrap gap-2 text-[10px] text-foreground/50">
+                    <div className="mb-2 flex flex-wrap gap-2 text-xs text-subtle">
                       <span className="flex items-center gap-1">
-                        <span className="h-2 w-2 rounded-sm bg-green-500/30" />
+                        <span className="h-2 w-2 rounded-sm bg-success/30" />
                         Done
                       </span>
                       {times > 1 && (
                         <span className="flex items-center gap-1">
-                          <span className="h-2 w-2 rounded-sm bg-amber-500/30" />
+                          <span className="h-2 w-2 rounded-sm bg-warning/30" />
                           Partial
                         </span>
                       )}
                       <span className="flex items-center gap-1">
-                        <span className="h-2 w-2 rounded-sm bg-foreground/10" />
+                        <span className="h-2 w-2 rounded-sm bg-fill" />
                         Missed
                       </span>
                       <span className="flex items-center gap-1">
-                        <span className="h-2 w-2 rounded-sm bg-foreground/15" />
+                        <span className="h-2 w-2 rounded-sm bg-fill-strong" />
                         Skipped
                       </span>
                     </div>
@@ -626,9 +626,9 @@ export function HabitDetailsModal({
                     )}
 
                     {showLogs && (
-                      <div className="mt-3 flex flex-col gap-1 border-t border-foreground/10 pt-3">
+                      <div className="mt-3 flex flex-col gap-1 border-t border-border pt-3">
                         {periodLogs.length === 0 ? (
-                          <p className="text-xs text-foreground/50">
+                          <p className="text-xs text-subtle">
                             No completions this period.
                           </p>
                         ) : (
@@ -636,16 +636,16 @@ export function HabitDetailsModal({
                             {periodLogs.map((l) => (
                               <div
                                 key={l.id}
-                                className="flex items-center justify-between rounded-lg border border-foreground/10 bg-background px-3 py-2"
+                                className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
                               >
-                                <span className="text-xs text-foreground/60">
+                                <span className="text-xs text-muted">
                                   {l.occurredAt
                                     ? new Date(l.occurredAt).toLocaleString()
                                     : ""}
                                 </span>
                                 <Button
                                   onPress={() => handleDeleteLog(l)}
-                                  className="ml-2 rounded text-foreground/30 transition-colors hover:text-red-500"
+                                  className="ml-2 rounded text-subtle transition-colors hover:text-danger-muted"
                                   variant="ghost"
                                   aria-label="Delete completion"
                                 >

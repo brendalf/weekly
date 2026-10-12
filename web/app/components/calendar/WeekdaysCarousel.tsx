@@ -34,11 +34,11 @@ export function WeekdaysCarousel() {
             className={[
               "flex min-w-[70px] flex-1 cursor-pointer flex-col gap-1 rounded-xl border-2 p-2 text-left transition-colors",
               isSelected
-                ? "border-purple-500 bg-purple-300/10"
-                : "border-foreground/10 bg-background hover:border-foreground/20",
+                ? "border-brand bg-brand-soft"
+                : "border-border bg-background hover:border-border-strong",
             ].join(" ")}
           >
-            <span className="text-xs text-foreground/60">
+            <span className="text-xs text-muted">
               {day.toLocaleDateString("en-US", { weekday: "short" })}
             </span>
             <span className="text-sm font-medium text-foreground">

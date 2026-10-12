@@ -40,7 +40,7 @@ export function NoteItem({ note, workspaceName, onUpdate, onDelete }: NoteItemPr
 
   return (
     <>
-      <div className="flex items-stretch rounded-lg border border-foreground/10 bg-background transition-colors hover:border-foreground/20">
+      <div className="flex items-stretch rounded-lg border border-border bg-background transition-colors hover:border-border-strong">
         <button
           type="button"
           onClick={() => setDetailsOpen(true)}
@@ -51,7 +51,7 @@ export function NoteItem({ note, workspaceName, onUpdate, onDelete }: NoteItemPr
               <PinFill
                 width={12}
                 height={12}
-                className="shrink-0 text-amber-500"
+                className="shrink-0 text-highlight"
                 aria-label="Pinned"
               />
             )}
@@ -60,16 +60,16 @@ export function NoteItem({ note, workspaceName, onUpdate, onDelete }: NoteItemPr
             </span>
           </span>
           {note.body && (
-            <span className="line-clamp-1 text-xs break-words whitespace-pre-wrap text-foreground/50">
+            <span className="line-clamp-1 text-xs break-words whitespace-pre-wrap text-subtle">
               {note.body}
             </span>
           )}
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-foreground/40">
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-subtle">
             {workspaceName && (
-              <Badge className="bg-foreground/10 text-foreground/50">{workspaceName}</Badge>
+              <Badge className="bg-fill-strong text-subtle">{workspaceName}</Badge>
             )}
             <span className="hidden sm:inline">{note.authorDisplayName}</span>
-            {formattedDate && <span className="text-foreground/30">{formattedDate}</span>}
+            {formattedDate && <span className="text-subtle">{formattedDate}</span>}
           </span>
         </button>
         <button
@@ -78,8 +78,8 @@ export function NoteItem({ note, workspaceName, onUpdate, onDelete }: NoteItemPr
           aria-label={note.pinned ? "Unpin note" : "Pin note"}
           className={`flex w-11 shrink-0 cursor-pointer items-center justify-center ${
             note.pinned
-              ? "text-amber-500"
-              : "text-foreground/25 hover:text-foreground/60"
+              ? "text-highlight"
+              : "text-subtle hover:text-muted"
           }`}
         >
           {note.pinned ? <PinFill width={16} height={16} /> : <Pin width={16} height={16} />}

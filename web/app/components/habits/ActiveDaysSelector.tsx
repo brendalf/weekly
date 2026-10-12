@@ -25,8 +25,8 @@ export function ActiveDaysSelector({ activeDays, onChange }: ActiveDaysSelectorP
           className={[
             "flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-xs font-medium transition-colors",
             activeDays.includes(i)
-              ? "bg-purple-500 text-white"
-              : "bg-foreground/10 text-foreground/50 hover:bg-foreground/20",
+              ? "bg-brand text-brand-foreground"
+              : "bg-fill text-muted hover:bg-fill-strong",
           ].join(" ")}
         >
           {label}

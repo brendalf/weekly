@@ -148,7 +148,7 @@ export function WorkspaceSettingsModal({
                 <Surface variant="default">
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium text-foreground/60">
+                      <p className="text-xs font-medium text-muted">
                         Members
                       </p>
                       {isOwner && (
@@ -168,7 +168,7 @@ export function WorkspaceSettingsModal({
                       {workspace.members.map((memberId) => (
                         <div
                           key={memberId}
-                          className="flex items-center justify-between rounded-lg border border-foreground/10 bg-background px-3 py-2"
+                          className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-foreground truncate max-w-40">
@@ -177,7 +177,7 @@ export function WorkspaceSettingsModal({
                                 : memberId.slice(0, 8) + "…"}
                             </span>
                             {memberId === workspace.ownerId && (
-                              <span className="rounded-full bg-purple-500/10 px-1.5 py-0.5 text-[10px] font-medium text-purple-500">
+                              <span className="rounded-full bg-brand-soft px-1.5 py-0.5 text-xs font-medium text-brand-muted">
                                 owner
                               </span>
                             )}
@@ -189,7 +189,7 @@ export function WorkspaceSettingsModal({
                               variant="ghost"
                               aria-label="Remove member"
                               onPress={() => handleRemoveMember(memberId)}
-                              className="text-foreground/30 hover:text-red-500"
+                              className="text-subtle hover:text-danger-muted"
                             >
                               <Xmark />
                             </Button>
@@ -200,19 +200,19 @@ export function WorkspaceSettingsModal({
 
                     {workspace.pendingInviteEmails.length > 0 && (
                       <>
-                        <p className="mt-2 text-xs font-medium text-foreground/60">
+                        <p className="mt-2 text-xs font-medium text-muted">
                           Pending invites
                         </p>
                         <div className="flex flex-col gap-1">
                           {workspace.pendingInviteEmails.map((email) => (
                             <div
                               key={email}
-                              className="flex items-center justify-between rounded-lg border border-foreground/10 bg-background px-3 py-2"
+                              className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
                             >
                               <span className="text-xs text-foreground">
                                 {email}
                               </span>
-                              <span className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[10px] text-foreground/50">
+                              <span className="rounded-full bg-fill-strong px-1.5 py-0.5 text-xs text-subtle">
                                 pending
                               </span>
                             </div>

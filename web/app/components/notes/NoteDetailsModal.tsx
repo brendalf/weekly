@@ -169,7 +169,7 @@ export function NoteDetailsModal({
                       <PinFill
                         width={14}
                         height={14}
-                        className="mt-0.5 shrink-0 text-amber-500"
+                        className="mt-0.5 shrink-0 text-highlight"
                         aria-label="Pinned"
                       />
                     )}
@@ -204,10 +204,10 @@ export function NoteDetailsModal({
                         onChange={(e) => setEditBody(e.target.value)}
                         placeholder="Write something…"
                         rows={4}
-                        className="max-h-[45vh] min-h-28 w-full resize-none overflow-y-auto rounded-lg border border-foreground/10 bg-background px-3 py-2 text-base text-foreground placeholder:text-foreground/30 focus:border-foreground/30 focus:outline-none"
+                        className="max-h-[45vh] min-h-28 w-full resize-none overflow-y-auto rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground placeholder:text-subtle focus:border-border-strong focus:outline-none"
                       />
                     </div>
-                    <p className="text-xs text-foreground/40">
+                    <p className="text-xs text-subtle">
                       {isTouch ? "Tap the check to save." : "⌘/Ctrl + Enter to save · Esc to cancel"}
                     </p>
                   </div>
@@ -215,27 +215,27 @@ export function NoteDetailsModal({
                   <div className="flex flex-col gap-3">
                     {workspaceName && (
                       <span className="w-fit">
-                        <Badge className="bg-foreground/10 text-foreground/50">
+                        <Badge className="bg-fill-strong text-subtle">
                           {workspaceName}
                         </Badge>
                       </span>
                     )}
                     {note.body ? (
-                      <p className="text-sm whitespace-pre-wrap break-words text-foreground/80">
+                      <p className="text-sm whitespace-pre-wrap break-words text-foreground">
                         {note.body}
                       </p>
                     ) : (
-                      <p className="text-sm text-foreground/30">No content yet.</p>
+                      <p className="text-sm text-subtle">No content yet.</p>
                     )}
-                    <div className="flex flex-col gap-0.5 border-t border-foreground/10 pt-3">
-                      <p className="text-xs break-words text-foreground/50">
+                    <div className="flex flex-col gap-0.5 border-t border-border pt-3">
+                      <p className="text-xs break-words text-subtle">
                         By {note.authorDisplayName}
                       </p>
                       {createdLabel && (
-                        <p className="text-xs text-foreground/50">Created {createdLabel}</p>
+                        <p className="text-xs text-subtle">Created {createdLabel}</p>
                       )}
                       {showUpdated && (
-                        <p className="text-xs text-foreground/50">Edited {updatedLabel}</p>
+                        <p className="text-xs text-subtle">Edited {updatedLabel}</p>
                       )}
                     </div>
                   </div>
@@ -255,7 +255,7 @@ export function NoteDetailsModal({
                     <Xmark />
                   </Button>
                   <Button
-                    className="min-h-11 bg-purple-500"
+                    className="min-h-11 bg-brand"
                     isDisabled={!isEditValid || saving}
                     aria-label="Save note"
                     onPress={handleSave}

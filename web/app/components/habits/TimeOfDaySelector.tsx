@@ -17,8 +17,8 @@ export function TimeOfDaySelector({ value, onChange }: TimeOfDaySelectorProps) {
           className={[
             "cursor-pointer rounded-lg px-3 py-1 text-xs font-medium transition-colors",
             value === tod
-              ? "bg-purple-500 text-white"
-              : "bg-foreground/10 text-foreground/50 hover:bg-foreground/20",
+              ? "bg-brand text-brand-foreground"
+              : "bg-fill text-muted hover:bg-fill-strong",
           ].join(" ")}
         >
           {tod.charAt(0).toUpperCase() + tod.slice(1)}

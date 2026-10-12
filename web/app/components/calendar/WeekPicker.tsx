@@ -37,7 +37,7 @@ export function WeekPicker() {
       >
         <ChevronLeft className="h-3.5 w-3.5" />
       </Button>
-      <span className="text-xs font-medium text-foreground/60 min-w-[80px] text-center">
+      <span className="text-xs font-medium text-muted min-w-[80px] text-center">
         Week {week}, {year}
       </span>
       <Button

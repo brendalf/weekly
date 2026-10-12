@@ -149,14 +149,14 @@ export function NoteList() {
         <ChevronsUp
           width={12}
           height={12}
-          className={`shrink-0 text-foreground/40 transition-transform ${
+          className={`shrink-0 text-subtle transition-transform ${
             collapsed ? "" : "rotate-180"
           }`}
         />
-        <p className="text-xs font-semibold tracking-wide text-foreground/40 uppercase">
+        <p className="text-xs font-semibold tracking-wide text-subtle uppercase">
           Notes
         </p>
-        <p className="text-xs text-foreground/30">{scopedNotes.length}</p>
+        <p className="text-xs text-subtle">{scopedNotes.length}</p>
       </button>
 
       <div className={`collapsible${collapsed ? " collapsed" : ""}`}>
@@ -166,7 +166,7 @@ export function NoteList() {
               <Magnifier
                 width={14}
                 height={14}
-                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-foreground/30"
+                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-subtle"
               />
               <input
                 type="text"
@@ -174,14 +174,14 @@ export function NoteList() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Filter notes"
                 aria-label="Filter notes"
-                className="h-11 w-full rounded-lg border border-foreground/10 bg-background pr-11 pl-9 text-base text-foreground placeholder:text-foreground/30 focus:border-foreground/30 focus:outline-none"
+                className="h-11 w-full rounded-lg border border-border bg-background pr-11 pl-9 text-base text-foreground placeholder:text-subtle focus:border-border-strong focus:outline-none"
               />
               {query && (
                 <button
                   type="button"
                   onClick={() => setQuery("")}
                   aria-label="Clear filter"
-                  className="absolute top-1/2 right-0 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center text-foreground/40 hover:text-foreground/70"
+                  className="absolute top-1/2 right-0 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center text-subtle hover:text-muted"
                 >
                   <Xmark width={14} height={14} />
                 </button>
@@ -190,7 +190,7 @@ export function NoteList() {
           )}
 
           {visibleNotes.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-foreground/40">No notes match “{query.trim()}”.</p>
+            <p className="px-3 py-2 text-sm text-subtle">No notes match “{query.trim()}”.</p>
           ) : (
             visibleNotes.map((note) => (
               <NoteItem

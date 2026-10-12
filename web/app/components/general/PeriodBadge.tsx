@@ -2,9 +2,9 @@ import { Period, getPeriodLabel } from "@weekly/domain";
 import { Badge } from "./Badge";
 
 export const PERIOD_COLORS: Record<Period, string> = {
-  [Period.DAY]: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-  [Period.WEEK]: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
-  [Period.MONTH]: "bg-teal-500/15 text-teal-600 dark:text-teal-400",
+  [Period.DAY]: "bg-period-day-soft text-period-day",
+  [Period.WEEK]: "bg-period-week-soft text-period-week",
+  [Period.MONTH]: "bg-period-month-soft text-period-month",
 };
 
 interface PeriodBadgeProps {

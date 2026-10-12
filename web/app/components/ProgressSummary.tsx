@@ -91,7 +91,7 @@ export function ProgressSummary({
   if (active.length === 0) return null;
 
   return (
-    <div className="flex items-stretch gap-0 rounded-xl border border-foreground/10 bg-surface overflow-hidden">
+    <div className="flex items-stretch gap-0 rounded-xl border border-border bg-surface overflow-hidden">
       {active.map((seg, i) => {
         const pct = seg.total > 0 ? (seg.done / seg.total) * 100 : 0;
         const allDone = seg.done === seg.total;
@@ -100,18 +100,18 @@ export function ProgressSummary({
             key={seg.label}
             className={[
               "flex flex-1 flex-col gap-1.5 px-4 py-2.5",
-              i < active.length - 1 ? "border-r border-foreground/10" : "",
+              i < active.length - 1 ? "border-r border-border" : "",
             ].join(" ")}
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-medium text-foreground/50">{seg.short}</span>
-              <span className={["text-xs tabular-nums font-semibold", allDone ? "text-purple-500" : "text-foreground/70"].join(" ")}>
+              <span className="text-xs font-medium text-subtle">{seg.short}</span>
+              <span className={["text-xs tabular-nums font-semibold", allDone ? "text-brand-muted" : "text-muted"].join(" ")}>
                 {seg.done}/{seg.total}
               </span>
             </div>
-            <div className="h-1 w-full rounded-full bg-foreground/10 overflow-hidden">
+            <div className="h-1 w-full rounded-full bg-fill-strong overflow-hidden">
               <div
-                className={["h-full rounded-full transition-all duration-300", allDone ? "bg-purple-500" : "bg-purple-500/60"].join(" ")}
+                className={["h-full rounded-full transition-all duration-250", allDone ? "bg-brand" : "bg-brand/60"].join(" ")}
                 style={{ width: `${pct}%` }}
               />
             </div>

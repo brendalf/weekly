@@ -15,11 +15,11 @@ function CheckboxMark({ checked }: { checked: boolean }) {
   return (
     <span
       className={[
-        "flex h-3 w-3 shrink-0 items-center justify-center rounded border",
-        checked ? "border-primary bg-primary text-white" : "border-foreground/30",
+        "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+        checked ? "border-brand bg-brand text-brand-foreground" : "border-border-strong",
       ].join(" ")}
     >
-      {checked && <span className="text-[8px] leading-none">✓</span>}
+      {checked && <span className="text-xs leading-none">✓</span>}
     </span>
   );
 }
@@ -50,7 +50,7 @@ export function WorkspaceSwitcher() {
 
   if (workspaces.length === 0) {
     return (
-      <span className="inline-flex items-center gap-2 rounded-full border border-foreground/15 bg-surface px-3 py-1 text-xs font-medium text-foreground/40">
+      <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-subtle">
         Setting up…
       </span>
     );
@@ -60,7 +60,7 @@ export function WorkspaceSwitcher() {
     <div className="relative inline-flex items-center gap-2">
       <button
         onClick={() => setDropdownOpen((v) => !v)}
-        className="inline-flex min-h-9 items-center gap-2 rounded-full border border-purple-500 bg-surface px-3 py-1 text-xs font-medium text-primary hover:bg-foreground/5 transition-colors cursor-pointer"
+        className="inline-flex min-h-9 items-center gap-2 rounded-full border border-brand bg-surface px-3 py-1 text-xs font-medium text-brand-muted hover:bg-fill transition-colors cursor-pointer"
       >
         {showHouseIconInButton && <House width={12} height={12} />}
         {buttonLabel}
@@ -69,7 +69,7 @@ export function WorkspaceSwitcher() {
       {singleWorkspace && (
         <button
           onClick={() => setSettingsOpen(true)}
-          className="cursor-pointer text-foreground/40 hover:text-foreground/70 transition-colors"
+          className="cursor-pointer text-subtle hover:text-muted transition-colors"
           aria-label="Workspace settings"
         >
           <Gear width={14} height={14} />
@@ -82,13 +82,13 @@ export function WorkspaceSwitcher() {
             className="fixed inset-0 z-10"
             onClick={() => setDropdownOpen(false)}
           />
-          <div className="absolute left-0 top-full z-20 mt-1 w-56 max-w-[calc(100vw-2rem)] rounded-xl border border-foreground/10 bg-surface p-1 shadow-lg">
+          <div className="absolute left-0 top-full z-20 mt-1 w-56 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-surface p-1 shadow-lg">
             {multiWorkspace && (
               <button
                 onClick={() => workspaceStore.selectAllWorkspaces()}
                 className={[
-                  "flex w-full min-h-9 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-foreground/5 transition-colors",
-                  selection.isAll ? "text-primary font-medium" : "text-foreground",
+                  "flex w-full min-h-9 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-fill transition-colors",
+                  selection.isAll ? "text-brand-muted font-medium" : "text-foreground",
                 ].join(" ")}
               >
                 <CheckboxMark checked={selection.isAll} />
@@ -102,13 +102,13 @@ export function WorkspaceSwitcher() {
               return (
                 <div
                   key={workspace.id}
-                  className="group flex items-center rounded-lg hover:bg-foreground/5 transition-colors"
+                  className="group flex items-center rounded-lg hover:bg-fill transition-colors"
                 >
                   <button
                     onClick={() => workspaceStore.toggleWorkspaceSelection(workspace.id)}
                     className={[
                       "flex min-h-9 min-w-0 flex-1 cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs",
-                      checked ? "text-foreground" : "text-foreground/60",
+                      checked ? "text-foreground" : "text-muted",
                     ].join(" ")}
                   >
                     <CheckboxMark checked={checked} />
@@ -117,7 +117,7 @@ export function WorkspaceSwitcher() {
                   {multiWorkspace && (
                     <button
                       onClick={() => workspaceStore.selectOnlyWorkspace(workspace.id)}
-                      className="mr-1 shrink-0 cursor-pointer rounded-md px-2 py-2 text-[10px] uppercase tracking-wide text-foreground/40 opacity-100 transition-colors hover:text-primary sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+                      className="mr-1 shrink-0 cursor-pointer rounded-md px-2 py-2 text-xs uppercase tracking-wide text-subtle opacity-100 transition-colors hover:text-brand-muted sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
                       aria-label={`Show only ${workspace.name}`}
                     >
                       only
@@ -127,11 +127,11 @@ export function WorkspaceSwitcher() {
               );
             })}
 
-            <div className="my-1 border-t border-foreground/10" />
+            <div className="my-1 border-t border-border" />
 
             <button
               onClick={handleNewWorkspace}
-              className="flex w-full min-h-9 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs text-foreground/60 hover:bg-foreground/5 transition-colors"
+              className="flex w-full min-h-9 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted hover:bg-fill transition-colors"
             >
               <Plus width={12} height={12} />
               New workspace
