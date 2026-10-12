@@ -5,12 +5,15 @@ import {
   habitMatchesSearch,
   habitSearchText,
   matchesSearchTokens,
+  noteMatchesSearch,
+  noteSearchText,
   normalizeSearchText,
   searchTokens,
   taskMatchesSearch,
   taskSearchText,
 } from "./search";
 import type { Habit } from "../models/habit";
+import type { Note } from "../models/note";
 import type { Task } from "../models/task";
 
 function makeHabit(overrides: Partial<Habit> = {}): Habit {
@@ -30,6 +33,19 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     title: "Pay the electricity bill",
     createdAt: "2026-01-01T00:00:00.000Z",
     completed: false,
+    ...overrides,
+  };
+}
+
+function makeNote(overrides: Partial<Note> = {}): Note {
+  return {
+    id: "n1",
+    title: "Retro notes",
+    body: "Ship the week planner before the offsite.",
+    authorId: "u1",
+    authorDisplayName: "Ada",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
   };
 }
@@ -120,4 +136,52 @@ test("taskMatchesSearch matches tokens in any order", () => {
   const task = makeTask();
   assert.equal(taskMatchesSearch(task, searchTokens("bill electricity")), true);
   assert.equal(taskMatchesSearch(task, searchTokens("bill water")), false);
+});
+
+// ---------------------------------------------------------------------------
+// note matching (PLAN WS11 — the global filter covers notes too)
+// ---------------------------------------------------------------------------
+
+test("noteSearchText joins the title and the body", () => {
+  assert.equal(
+    noteSearchText(makeNote({ title: "Retro", body: "Ship it" })),
+    "retro ship it",
+  );
+});
+
+test("noteSearchText normalizes case, accents and whitespace", () => {
+  assert.equal(
+    noteSearchText(makeNote({ title: "  Reunião  ", body: "Pauta\tdo\ndia" })),
+    "reuniao pauta do dia",
+  );
+});
+
+test("noteSearchText handles an empty body without a trailing space", () => {
+  assert.equal(noteSearchText(makeNote({ title: "Retro", body: "" })), "retro");
+});
+
+test("noteMatchesSearch matches on the title", () => {
+  const note = makeNote();
+  assert.equal(noteMatchesSearch(note, searchTokens("retro")), true);
+  assert.equal(noteMatchesSearch(note, searchTokens("RETRO")), true);
+});
+
+test("noteMatchesSearch matches on the body", () => {
+  const note = makeNote();
+  assert.equal(noteMatchesSearch(note, searchTokens("offsite")), true);
+  assert.equal(noteMatchesSearch(note, searchTokens("planner")), true);
+});
+
+test("noteMatchesSearch requires every token, across title and body", () => {
+  const note = makeNote();
+  assert.equal(noteMatchesSearch(note, searchTokens("retro offsite")), true);
+  assert.equal(noteMatchesSearch(note, searchTokens("retro holiday")), false);
+});
+
+test("noteMatchesSearch does not match the author", () => {
+  assert.equal(noteMatchesSearch(makeNote(), searchTokens("ada")), false);
+});
+
+test("noteMatchesSearch keeps every note for a blank query", () => {
+  assert.equal(noteMatchesSearch(makeNote(), searchTokens("   ")), true);
 });

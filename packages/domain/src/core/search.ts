@@ -1,4 +1,5 @@
 import { Habit } from "../models/habit";
+import { Note } from "../models/note";
 import { Task } from "../models/task";
 
 /**
@@ -50,10 +51,28 @@ export function taskSearchText(task: Task): string {
   return normalizeSearchText(task.title);
 }
 
+/**
+ * Searchable text for a note: title **and** body.
+ *
+ * A note is "measured by findability" (DIRECTION §1) and its substance is the
+ * body, so searching the title alone would miss the thing people actually look
+ * for — the link, the decision, the name buried three lines down. The author is
+ * deliberately excluded: "who wrote it" is a different question from "what did
+ * it say", and indexing names would make every note of a prolific member match
+ * their own name.
+ */
+export function noteSearchText(note: Note): string {
+  return normalizeSearchText(note.body ? `${note.title} ${note.body}` : note.title);
+}
+
 export function habitMatchesSearch(habit: Habit, tokens: string[]): boolean {
   return matchesSearchTokens(habitSearchText(habit), tokens);
 }
 
 export function taskMatchesSearch(task: Task, tokens: string[]): boolean {
   return matchesSearchTokens(taskSearchText(task), tokens);
+}
+
+export function noteMatchesSearch(note: Note, tokens: string[]): boolean {
+  return matchesSearchTokens(noteSearchText(note), tokens);
 }

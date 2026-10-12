@@ -11,11 +11,13 @@ import {
   type HabitTimeOfDay,
 } from "@weekly/domain";
 import { Collapsible, EmptyState } from "../../components/ui";
+import { ToggleChip } from "../../components/general/ToggleChip";
 import { HabitAddModal } from "../../components/habits/HabitAddModal";
 import { HabitItem } from "../../components/habits/HabitItem";
 import { useAppData } from "../../components/shell/AppDataProvider";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useActivityLog } from "../../hooks/useActivityLog";
+import { useItemSearch } from "../../hooks/useItemSearch";
 import { useCalendarStore } from "../../stores/calendar";
 import { useWorkspaceSelection } from "../../stores/workspace";
 
@@ -35,13 +37,27 @@ function timeOfDayRank(timeOfDay?: HabitTimeOfDay): number {
  * (DIRECTION §3). Unlike `/app/week`, nothing here is filtered by the selected
  * day: this is the management view.
  *
+ * The header's one filter narrows this list (PLAN WS11) and `showSkipped` is a
+ * chip on the toolbar row rather than an item in a gear popover — it is display
+ * state, not search (DIRECTION §4).
+ *
  * WS5 owns the rest of it: per-row target / streak / active days /
- * completion rate, the period · time-of-day · workspace filters, `showSkipped`
- * as a visible chip, and the archive section.
+ * completion rate, the period · time-of-day · workspace filters, and the
+ * archive section.
  */
 export function HabitsList() {
-  const { habits, pickerWorkspaces, showSkippedHabits, workspaces } =
-    useAppData();
+  const {
+    habits: allHabits,
+    pickerWorkspaces,
+    showSkippedHabits,
+    setShowSkippedHabits,
+    workspaces,
+  } = useAppData();
+  // With no query in the header this is `allHabits`, so everything below just
+  // renders `habits`.
+  const { habits, isActive: isFiltered, appliedQuery } = useItemSearch({
+    habits: allHabits,
+  });
   const { activeRepos, getWorkspaceRepos, getHabitProjectId } =
     useRepositoryContext();
   const logActivity = useActivityLog();
@@ -98,6 +114,18 @@ export function HabitsList() {
     return byPeriod;
   }, [habits, showSkippedHabits, selectedDay]);
 
+  const visibleCount = useMemo(
+    () => [...grouped.values()].reduce((sum, list) => sum + list.length, 0),
+    [grouped],
+  );
+
+  /** Why the list is empty when the workspace is not: filter, or skipped. */
+  let emptyMessage = "No habits to show.";
+  if (isFiltered) emptyMessage = `No habits match “${appliedQuery.trim()}”.`;
+  else if (!showSkippedHabits) {
+    emptyMessage = "Every habit here is skipped. Turn on “Show skipped” to see them.";
+  }
+
   const addButton = (
     <HabitAddModal
       onSubmit={handleAddHabit}
@@ -111,7 +139,10 @@ export function HabitsList() {
     />
   );
 
-  if (habits.length === 0) {
+  // The genuinely empty workspace. The filter never produces this state — a
+  // query that matches nothing says so below instead, so the "add your first
+  // habit" pitch is never shown to someone who already has habits.
+  if (allHabits.length === 0) {
     return (
       <EmptyState
         icon={<ArrowsRotateRight width={20} height={20} />}
@@ -124,7 +155,19 @@ export function HabitsList() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end">{addButton}</div>
+      <div className="flex flex-wrap items-center gap-2">
+        <ToggleChip
+          label="Show skipped"
+          isActive={showSkippedHabits}
+          onChange={setShowSkippedHabits}
+        />
+        <div className="flex-1" />
+        {addButton}
+      </div>
+
+      {visibleCount === 0 && (
+        <p className="px-1 text-sm text-subtle">{emptyMessage}</p>
+      )}
 
       {PERIOD_GROUPS.map(({ period, label }) => {
         const groupHabits = grouped.get(period) ?? [];

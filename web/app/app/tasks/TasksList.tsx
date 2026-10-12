@@ -11,11 +11,13 @@ import {
   type Task,
 } from "@weekly/domain";
 import { Collapsible, EmptyState } from "../../components/ui";
+import { ToggleChip } from "../../components/general/ToggleChip";
 import { TaskAddModal } from "../../components/tasks/TaskAddModal";
 import { TaskItem } from "../../components/tasks/TaskItem";
 import { useAppData } from "../../components/shell/AppDataProvider";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useActivityLog } from "../../hooks/useActivityLog";
+import { useItemSearch } from "../../hooks/useItemSearch";
 import { useWorkspaceSelection } from "../../stores/workspace";
 
 type Bucket = "overdue" | "now" | "later" | "completed";
@@ -48,20 +50,29 @@ function bucketOf(task: Task, today: Date): Bucket {
  * `/app/tasks` — every task, bucketed by whether it is late, live, or waiting
  * (DIRECTION §3).
  *
+ * The header's one filter narrows this list (PLAN WS11) and `showCompleted` is
+ * a chip on the toolbar row rather than an item in a gear popover — it is
+ * display state, not search (DIRECTION §4).
+ *
  * WS6 owns the rest: the one-click "move to this week" on an overdue row
  * (today the row states the problem and offers nothing), the scope / workspace
- * / completion filters, and replacing the raw `<select>` and
- * `<input type="date">` in the task detail with HeroUI `Select` and
- * `DatePicker`.
+ * filters, and replacing the raw `<select>` and `<input type="date">` in the
+ * task detail with HeroUI `Select` and `DatePicker`.
  */
 export function TasksList() {
   const {
-    tasks,
+    tasks: allTasks,
     workspaces,
     pickerWorkspaces,
     showCompletedTasks,
+    setShowCompletedTasks,
     toggleTaskCompleted,
   } = useAppData();
+  // With no query in the header this is `allTasks`, so everything below just
+  // renders `tasks`.
+  const { tasks, isActive: isFiltered, appliedQuery } = useItemSearch({
+    tasks: allTasks,
+  });
   const { activeRepos, getWorkspaceRepos, getTaskProjectId } =
     useRepositoryContext();
   const logActivity = useActivityLog();
@@ -106,7 +117,25 @@ export function TasksList() {
     />
   );
 
-  if (tasks.length === 0) {
+  const visibleCount = BUCKETS.reduce(
+    (sum, { key }) =>
+      key === "completed" && !showCompletedTasks
+        ? sum
+        : sum + (buckets.get(key)?.length ?? 0),
+    0,
+  );
+
+  /** Why the list is empty when the workspace is not: filter, or completed. */
+  let emptyMessage = "No tasks to show.";
+  if (isFiltered) emptyMessage = `No tasks match “${appliedQuery.trim()}”.`;
+  else if (!showCompletedTasks) {
+    emptyMessage = "Everything here is done. Turn on “Show completed” to see it.";
+  }
+
+  // The genuinely empty workspace. A query that matches nothing says so below
+  // instead, so the "add your first task" pitch never greets someone who
+  // already has tasks.
+  if (allTasks.length === 0) {
     return (
       <EmptyState
         icon={<ListCheck width={20} height={20} />}
@@ -119,7 +148,19 @@ export function TasksList() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end">{addButton}</div>
+      <div className="flex flex-wrap items-center gap-2">
+        <ToggleChip
+          label="Show completed"
+          isActive={showCompletedTasks}
+          onChange={setShowCompletedTasks}
+        />
+        <div className="flex-1" />
+        {addButton}
+      </div>
+
+      {visibleCount === 0 && (
+        <p className="px-1 text-sm text-subtle">{emptyMessage}</p>
+      )}
 
       {BUCKETS.map(({ key, label }) => {
         if (key === "completed" && !showCompletedTasks) return null;

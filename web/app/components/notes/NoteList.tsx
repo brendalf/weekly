@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
-import { ChevronsUp, Magnifier, Xmark } from "@gravity-ui/icons";
+import { ChevronsUp } from "@gravity-ui/icons";
 import type { Note } from "@weekly/domain";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useWorkspaceStore, useWorkspaceSelection } from "../../stores/workspace";
@@ -13,9 +13,6 @@ import type { NoteUpdates } from "./NoteDetailsModal";
 
 type NoteEntry = Note & { workspaceId: string };
 
-/** Above this many notes the list gets a client-side filter box. */
-const FILTER_THRESHOLD = 5;
-
 /** Pinned first, then newest first. */
 function compareNotes(a: NoteEntry, b: NoteEntry) {
   const pinDiff = Number(Boolean(b.pinned)) - Number(Boolean(a.pinned));
@@ -23,12 +20,23 @@ function compareNotes(a: NoteEntry, b: NoteEntry) {
   return b.createdAt.localeCompare(a.createdAt);
 }
 
+/**
+ * @deprecated Legacy pre-routing notes section. Nothing imports it; `/app/notes`
+ * is the notes surface now.
+ *
+ * WS11 removed what it was named for in this file: the hand-rolled `<input>`
+ * that appeared only once a workspace had more than five notes, with different
+ * styling and a different scope from the toolbar `SearchBox`. A filter is never
+ * threshold-gated (DIRECTION §4), and notes are filtered by the one field in
+ * the shell header.
+ *
+ * TODO(WS7/WS15): delete this file.
+ */
 export function NoteList() {
   const { getWorkspaceRepos } = useRepositoryContext();
   const workspaces = useWorkspaceStore((s) => s.workspaces);
   const selection = useWorkspaceSelection();
   const [collapsed, setCollapsed] = useState(false);
-  const [query, setQuery] = useState("");
   const [notes, setNotes] = useState<NoteEntry[]>([]);
 
   // Stable key so new `workspaces` array identities don't resubscribe everything.
@@ -125,18 +133,7 @@ export function NoteList() {
     return notes.filter((n) => ids.has(n.workspaceId));
   }, [notes, selection.workspaceIds]);
 
-  const visibleNotes = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return scopedNotes;
-    return scopedNotes.filter(
-      (n) =>
-        n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q),
-    );
-  }, [scopedNotes, query]);
-
   if (scopedNotes.length === 0) return null;
-
-  const showFilter = scopedNotes.length > FILTER_THRESHOLD;
 
   return (
     <div>
@@ -161,51 +158,19 @@ export function NoteList() {
 
       <div className={`collapsible${collapsed ? " collapsed" : ""}`}>
         <div className="flex flex-col gap-0.5 pt-1">
-          {showFilter && (
-            <div className="relative pb-1">
-              <Magnifier
-                width={14}
-                height={14}
-                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-subtle"
-              />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Filter notes"
-                aria-label="Filter notes"
-                className="h-11 w-full rounded-lg border border-border bg-background pr-11 pl-9 text-base text-foreground placeholder:text-subtle focus:border-border-strong focus:outline-none"
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  aria-label="Clear filter"
-                  className="absolute top-1/2 right-0 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center text-subtle hover:text-muted"
-                >
-                  <Xmark width={14} height={14} />
-                </button>
-              )}
-            </div>
-          )}
-
-          {visibleNotes.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-subtle">No notes match “{query.trim()}”.</p>
-          ) : (
-            visibleNotes.map((note) => (
-              <NoteItem
-                key={note.id}
-                note={note}
-                workspaceName={
-                  selection.isSingle
-                    ? undefined
-                    : workspaces.find((w) => w.id === note.workspaceId)?.name
-                }
-                onUpdate={handleUpdate}
-                onDelete={handleDelete}
-              />
-            ))
-          )}
+          {scopedNotes.map((note) => (
+            <NoteItem
+              key={note.id}
+              note={note}
+              workspaceName={
+                selection.isSingle
+                  ? undefined
+                  : workspaces.find((w) => w.id === note.workspaceId)?.name
+              }
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+            />
+          ))}
         </div>
       </div>
     </div>

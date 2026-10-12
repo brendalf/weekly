@@ -8,6 +8,7 @@ import { EmptyState } from "../../components/ui";
 import { NoteAddModal } from "../../components/notes/NoteAddModal";
 import { NoteItem } from "../../components/notes/NoteItem";
 import { useAppData } from "../../components/shell/AppDataProvider";
+import { useItemSearch } from "../../hooks/useItemSearch";
 import { useWorkspaceSelection } from "../../stores/workspace";
 
 /**
@@ -15,13 +16,27 @@ import { useWorkspaceSelection } from "../../stores/workspace";
  * (DIRECTION §3). Notes have no period and no week: they are context, which is
  * why they no longer appear on `/app/week`.
  *
- * WS7 owns the rest: the row `⋯` (Edit, Pin/Unpin, Duplicate, Delete), and
- * deleting the legacy `NoteList`, whose hand-rolled filter input appeared only
- * above five notes — the global filter in the shell header (WS11) covers notes.
+ * Notes are filtered by the one filter in the shell header, on title **and**
+ * body (WS11). The hand-rolled input that used to appear inside the old
+ * `NoteList` once a workspace passed five notes is gone — a filter that
+ * materializes at the sixth note teaches nobody anything (DIRECTION §4).
+ *
+ * WS7 owns the rest: the row `⋯` (Edit, Pin/Unpin, Duplicate, Delete) and
+ * deleting the now-unreferenced legacy `components/notes/NoteList.tsx`.
  */
 export function NotesList() {
-  const { notes, workspaces, pickerWorkspaces, addNote, updateNote, deleteNote } =
-    useAppData();
+  const {
+    notes: allNotes,
+    workspaces,
+    pickerWorkspaces,
+    addNote,
+    updateNote,
+    deleteNote,
+  } = useAppData();
+  // With no query in the header this is `allNotes`.
+  const { notes, isActive: isFiltered, appliedQuery } = useItemSearch({
+    notes: allNotes,
+  });
   const selection = useWorkspaceSelection();
   const [addOpen, setAddOpen] = useState(false);
 
@@ -49,7 +64,9 @@ export function NotesList() {
     </>
   );
 
-  if (notes.length === 0) {
+  // The genuinely empty workspace. A query that matches nothing says so below
+  // instead of pitching notes to someone who already keeps them.
+  if (allNotes.length === 0) {
     return (
       <EmptyState
         icon={<FileText width={20} height={20} />}
@@ -63,6 +80,14 @@ export function NotesList() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-end gap-2">{addButton}</div>
+
+      {notes.length === 0 && (
+        <p className="px-1 text-sm text-subtle">
+          {isFiltered
+            ? `No notes match “${appliedQuery.trim()}”.`
+            : "No notes to show."}
+        </p>
+      )}
 
       <div className="flex flex-col gap-0.5">
         {notes.map((note) => (

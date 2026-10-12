@@ -11,6 +11,7 @@ import { AppSidebar } from "../components/shell/AppSidebar";
 import { AppTabBar } from "../components/shell/AppTabBar";
 import { ShellHeader } from "../components/shell/ShellHeader";
 import { activeNavItem } from "../components/shell/navItems";
+import { KeyboardShortcuts } from "../components/keyboard/KeyboardShortcuts";
 
 /**
  * The authenticated app shell (PLAN WS3) — nav, header, and every
@@ -82,6 +83,10 @@ function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <AppTabBar />
+
+      {/* The keyboard map and its `?` cheatsheet (WS12). Mounted once for the
+          whole shell so `n`, `h`, `t`, `o` work from every route. */}
+      <KeyboardShortcuts />
     </div>
   );
 }
