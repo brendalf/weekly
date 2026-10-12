@@ -1,0 +1,85 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@heroui/react";
+import { FileText, Plus } from "@gravity-ui/icons";
+import { toast } from "sonner";
+import { EmptyState } from "../../components/ui";
+import { NoteAddModal } from "../../components/notes/NoteAddModal";
+import { NoteItem } from "../../components/notes/NoteItem";
+import { useAppData } from "../../components/shell/AppDataProvider";
+import { useWorkspaceSelection } from "../../stores/workspace";
+
+/**
+ * `/app/notes` — the workspace's shared scratchpad, pinned first then newest
+ * (DIRECTION §3). Notes have no period and no week: they are context, which is
+ * why they no longer appear on `/app/week`.
+ *
+ * WS7 owns the rest: the row `⋯` (Edit, Pin/Unpin, Duplicate, Delete), and
+ * deleting the legacy `NoteList`, whose hand-rolled filter input appeared only
+ * above five notes — the global filter in the shell header (WS11) covers notes.
+ */
+export function NotesList() {
+  const { notes, workspaces, pickerWorkspaces, addNote, updateNote, deleteNote } =
+    useAppData();
+  const selection = useWorkspaceSelection();
+  const [addOpen, setAddOpen] = useState(false);
+
+  const addButton = (
+    <>
+      <Button
+        size="sm"
+        variant="outline"
+        className="min-h-11"
+        onPress={() => setAddOpen(true)}
+      >
+        <Plus width={16} height={16} />
+        Add note
+      </Button>
+      <NoteAddModal
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        workspaces={pickerWorkspaces}
+        onSubmit={(title, body, workspaceId) => {
+          addNote(title, body, workspaceId).catch(() => {
+            toast.error("Failed to save note. Please try again.");
+          });
+        }}
+      />
+    </>
+  );
+
+  if (notes.length === 0) {
+    return (
+      <EmptyState
+        icon={<FileText width={20} height={20} />}
+        headline="No notes yet"
+        body="Notes hold the context your habits and tasks don't: a decision you made, a link you keep losing, the plan behind the plan. Everyone in the workspace sees them."
+        action={addButton}
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end gap-2">{addButton}</div>
+
+      <div className="flex flex-col gap-0.5">
+        {notes.map((note) => (
+          <NoteItem
+            key={note.id}
+            note={note}
+            detailHref={`/app/notes/${note.id}`}
+            workspaceName={
+              selection.isSingle
+                ? undefined
+                : workspaces.find((w) => w.id === note.workspaceId)?.name
+            }
+            onUpdate={updateNote}
+            onDelete={deleteNote}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}

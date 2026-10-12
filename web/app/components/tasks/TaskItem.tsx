@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Task } from "@weekly/domain";
 import { toast } from "sonner";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
@@ -14,6 +15,15 @@ interface TaskItemProps {
   projectName?: string;
   openSinceLabel?: string;
   showScopeLabel?: boolean;
+  /**
+   * Route for this task's detail panel (`/app/tasks/:id`). When set the row
+   * navigates there instead of opening the legacy `TaskDetailsModal`
+   * (DIRECTION §5).
+   *
+   * The row is still a `<div onClick>`, so this pushes rather than linking;
+   * WS12 makes rows focusable and WS6 can turn this into a real `<Link>` then.
+   */
+  detailHref?: string;
 }
 
 export function TaskItem({
@@ -22,7 +32,9 @@ export function TaskItem({
   projectName,
   openSinceLabel,
   showScopeLabel = true,
+  detailHref,
 }: TaskItemProps) {
+  const router = useRouter();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [optimisticCompleted, setOptimisticCompleted] = useState<boolean | null>(null);
   const scope = task.scope ?? "week";
@@ -41,7 +53,9 @@ export function TaskItem({
   return (
     <>
       <div
-        onClick={() => setDetailsOpen(true)}
+        onClick={() =>
+          detailHref ? router.push(detailHref) : setDetailsOpen(true)
+        }
         className={[
           "flex items-center gap-2 rounded-lg border border-border bg-background hover:border-border-strong p-2 cursor-pointer transition-opacity",
           displayCompleted ? "opacity-50" : "",
@@ -80,11 +94,13 @@ export function TaskItem({
         </div>
       </div>
 
-      <TaskDetailsModal
-        open={detailsOpen}
-        onOpenChange={setDetailsOpen}
-        task={task}
-      />
+      {!detailHref && (
+        <TaskDetailsModal
+          open={detailsOpen}
+          onOpenChange={setDetailsOpen}
+          task={task}
+        />
+      )}
     </>
   );
 }

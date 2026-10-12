@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   Habit,
   Task,
@@ -12,41 +12,26 @@ import {
   getTaskVisibility,
   PERIOD_TABS,
 } from "@weekly/domain";
-import {
-  Plus,
-  LayoutCells,
-  LayoutColumns,
-  BarsAscendingAlignLeftArrowDown,
-  ChevronsUp,
-} from "@gravity-ui/icons";
-import { Button } from "@heroui/react";
-import type { LayoutPreference, InnerLayoutPreference } from "@weekly/domain";
-import { HabitList } from "./habits/HabitList";
-import { TaskList } from "./tasks/TaskList";
+import { Eye, Plus } from "@gravity-ui/icons";
 import { HabitAddModal } from "./habits/HabitAddModal";
 import { TaskAddModal } from "./tasks/TaskAddModal";
-import { NoteAddModal } from "./notes/NoteAddModal";
-import { NoteList } from "./notes/NoteList";
 import { PeriodPanel } from "./PeriodPanel";
 import { SearchBox } from "./general/SearchBox";
+import { ActionMenu, focusRing } from "./ui";
+import type { ActionMenuEntry } from "./ui";
 import { useHabitTaskSearch } from "../hooks/useHabitTaskSearch";
 import { useRepositoryContext } from "../contexts/RepositoryContext";
+import { useActivityLog } from "../hooks/useActivityLog";
 import { useCalendarStore } from "../stores/calendar";
-import { useWorkspaceSelection, useWorkspaceStore } from "../stores/workspace";
-import { workspaceRepository } from "../repositories";
-import { auth } from "../config/firebase";
+import { useWorkspaceSelection } from "../stores/workspace";
 
 interface HabitsTasksViewProps {
   habits: Habit[];
   tasks: Task[];
   workspaces?: Workspace[];
-  layout: LayoutPreference;
-  innerLayout: InnerLayoutPreference;
   showCompletedTasks: boolean;
   showSkippedHabits: boolean;
   onToggleTaskCompleted: (taskId: string) => Promise<void>;
-  onLayoutChange: (layout: LayoutPreference) => void;
-  onInnerLayoutChange: (il: InnerLayoutPreference) => void;
   onShowCompletedTasksChange: (show: boolean) => void;
   onShowSkippedHabitsChange: (show: boolean) => void;
 }
@@ -89,180 +74,87 @@ function PeriodProgress({ done, total }: { done: number; total: number }) {
   );
 }
 
-function LayoutSettingsButton({
-  layout,
-  innerLayout,
+/**
+ * Display state for the lists: completed tasks and skipped habits.
+ *
+ * All that is left of the old `LayoutSettingsButton`. Its 2×2 `layout` ×
+ * `innerLayout` matrix is gone (DIRECTION §3, "what dies") — one layout per
+ * route — and what remains is on the shared `ActionMenu`, so it closes on
+ * `Esc`, traps focus, and repositions on scroll.
+ *
+ * WS11 promotes these two to visible chips on the list routes; they are display
+ * state, not search, and they do not belong in a gear popover.
+ */
+function DisplayOptionsMenu({
   showCompletedTasks,
   showSkippedHabits,
-  onLayoutChange,
-  onInnerLayoutChange,
   onShowCompletedTasksChange,
   onShowSkippedHabitsChange,
 }: {
-  layout: LayoutPreference;
-  innerLayout: InnerLayoutPreference;
   showCompletedTasks: boolean;
   showSkippedHabits: boolean;
-  onLayoutChange: (layout: LayoutPreference) => void;
-  onInnerLayoutChange: (il: InnerLayoutPreference) => void;
   onShowCompletedTasksChange: (show: boolean) => void;
   onShowSkippedHabitsChange: (show: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
-
-  const icon =
-    layout === "period-tabs" ? <LayoutCells /> : <BarsAscendingAlignLeftArrowDown />;
+  const selectedKeys = useMemo(() => {
+    const keys = new Set<string>();
+    if (showCompletedTasks) keys.add("completed");
+    if (showSkippedHabits) keys.add("skipped");
+    return keys;
+  }, [showCompletedTasks, showSkippedHabits]);
 
   return (
-    <div className="relative">
-      <Button
-        size="sm"
-        isIconOnly
-        aria-label="Layout settings"
-        variant="ghost"
-        onPress={() => setOpen((v) => !v)}
-      >
-        {icon}
-      </Button>
-
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-20 mt-1 min-w-44 rounded-xl border border-border bg-surface p-1 shadow-lg">
-            <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-subtle">
-              Navigation
-            </p>
-            {([
-              { key: "period-tabs", label: "Tabs", Icon: LayoutCells },
-              { key: "period-sequential", label: "Overview", Icon: BarsAscendingAlignLeftArrowDown },
-            ] as { key: LayoutPreference; label: string; Icon: React.ComponentType<{ width?: number; height?: number }> }[]).map(({ key, label, Icon }) => (
-              <button
-                key={key}
-                onClick={() => { onLayoutChange(key); setOpen(false); }}
-                className={[
-                  "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-fill transition-colors",
-                  layout === key ? "text-brand-muted font-medium" : "text-foreground",
-                ].join(" ")}
-              >
-                <Icon width={12} height={12} />
-                {label}
-              </button>
-            ))}
-
-            <div className="my-1 mx-2 border-t border-border" />
-
-            <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-subtle">
-              Period layout
-            </p>
-            {([
-              { key: "sequential" as InnerLayoutPreference, label: "Sequential", Icon: BarsAscendingAlignLeftArrowDown },
-              { key: "side-by-side" as InnerLayoutPreference, label: "Side by side", Icon: LayoutColumns },
-            ]).map(({ key, label, Icon }) => (
-              <button
-                key={key}
-                onClick={() => { onInnerLayoutChange(key); setOpen(false); }}
-                className={[
-                  "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-fill transition-colors",
-                  innerLayout === key ? "text-brand-muted font-medium" : "text-foreground",
-                ].join(" ")}
-              >
-                <Icon width={12} height={12} />
-                {label}
-              </button>
-            ))}
-
-            <div className="my-1 mx-2 border-t border-border" />
-
-            <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-subtle">
-              Display
-            </p>
-            <button
-              onClick={() => onShowCompletedTasksChange(!showCompletedTasks)}
-              className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-fill transition-colors text-foreground"
-            >
-              <span className={[
-                "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
-                showCompletedTasks ? "border-brand bg-brand text-brand-foreground" : "border-border-strong",
-              ].join(" ")}>
-                {showCompletedTasks && <span className="text-xs leading-none">✓</span>}
-              </span>
-              Show completed
-            </button>
-            <button
-              onClick={() => onShowSkippedHabitsChange(!showSkippedHabits)}
-              className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-fill transition-colors text-foreground"
-            >
-              <span className={[
-                "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
-                showSkippedHabits ? "border-brand bg-brand text-brand-foreground" : "border-border-strong",
-              ].join(" ")}>
-                {showSkippedHabits && <span className="text-xs leading-none">✓</span>}
-              </span>
-              Show skipped
-            </button>
-          </div>
-        </>
-      )}
-    </div>
+    <ActionMenu
+      label="Display options"
+      trigger={<Eye width={16} height={16} />}
+      selectionMode="multiple"
+      selectedKeys={selectedKeys}
+      onSelectionChange={(keys) => {
+        const next =
+          keys === "all" ? new Set<string>(["completed", "skipped"]) : keys;
+        onShowCompletedTasksChange(next.has("completed"));
+        onShowSkippedHabitsChange(next.has("skipped"));
+      }}
+      items={[
+        { key: "completed", label: "Show completed" },
+        { key: "skipped", label: "Show skipped habits" },
+      ]}
+    />
   );
 }
 
-function UnifiedAddButton({
+/** Add a habit or a task to the selected week. */
+function AddMenu({
   workspaces,
   onAddHabit,
   onAddTask,
-  onAddNote,
 }: {
   workspaces?: Workspace[];
-  onAddHabit: (name: string, times: number, period: Period, workspaceId?: string, activeDays?: number[], timeOfDay?: HabitTimeOfDay) => void;
+  onAddHabit: (
+    name: string,
+    times: number,
+    period: Period,
+    workspaceId?: string,
+    activeDays?: number[],
+    timeOfDay?: HabitTimeOfDay,
+  ) => void;
   onAddTask: (title: string, workspaceId?: string, scope?: Period) => void;
-  onAddNote: (title: string, body: string, workspaceId?: string) => void;
 }) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [habitModalOpen, setHabitModalOpen] = useState(false);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
-  const [noteModalOpen, setNoteModalOpen] = useState(false);
 
-  const itemClass =
-    "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs text-foreground hover:bg-fill transition-colors";
+  const items: ActionMenuEntry[] = [
+    { key: "habit", label: "Add habit", onAction: () => setHabitModalOpen(true) },
+    { key: "task", label: "Add task", onAction: () => setTaskModalOpen(true) },
+  ];
 
   return (
-    <div className="relative">
-      <Button
-        size="sm"
-        isIconOnly
-        aria-label="Add"
-        variant="ghost"
-        onPress={() => setDropdownOpen((v) => !v)}
-      >
-        <Plus />
-      </Button>
-
-      {dropdownOpen && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
-          <div className="absolute right-0 top-full z-20 mt-1 min-w-36 rounded-xl border border-border bg-surface p-1 shadow-lg">
-            <button
-              className={itemClass}
-              onClick={() => { setDropdownOpen(false); setHabitModalOpen(true); }}
-            >
-              Add Habit
-            </button>
-            <button
-              className={itemClass}
-              onClick={() => { setDropdownOpen(false); setTaskModalOpen(true); }}
-            >
-              Add Task
-            </button>
-            <button
-              className={itemClass}
-              onClick={() => { setDropdownOpen(false); setNoteModalOpen(true); }}
-            >
-              Add Note
-            </button>
-          </div>
-        </>
-      )}
+    <>
+      <ActionMenu
+        label="Add"
+        trigger={<Plus width={16} height={16} />}
+        items={items}
+      />
 
       <HabitAddModal
         isOpen={habitModalOpen}
@@ -278,27 +170,29 @@ function UnifiedAddButton({
         workspaces={workspaces}
         trigger={<span style={{ display: "none" }} />}
       />
-      <NoteAddModal
-        open={noteModalOpen}
-        onOpenChange={setNoteModalOpen}
-        workspaces={workspaces}
-        onSubmit={onAddNote}
-      />
-    </div>
+    </>
   );
 }
 
+/**
+ * The week planner's habits and tasks, in one layout.
+ *
+ * WS3 removed the `layout` / `innerLayout` preferences and with them the second
+ * copy of the habits/tasks sections this file used to hold — `PeriodPanel`
+ * renders them. Notes left too: they are workspace context, not weekly work,
+ * and live at `/app/notes` (DIRECTION §3).
+ *
+ * WS4 owns what is left: folding `WeekPicker` + `WeekdaysCarousel` + these
+ * period tabs into one header, making the week (not the day) the default scope,
+ * and the starter-habit empty state.
+ */
 export function HabitsTasksView({
   habits: allHabits,
   tasks: allTasks,
   workspaces,
-  layout,
-  innerLayout,
   showCompletedTasks,
   showSkippedHabits,
   onToggleTaskCompleted,
-  onLayoutChange,
-  onInnerLayoutChange,
   onShowCompletedTasksChange,
   onShowSkippedHabitsChange,
 }: HabitsTasksViewProps) {
@@ -315,19 +209,14 @@ export function HabitsTasksView({
     tasks,
   } = useHabitTaskSearch(allHabits, allTasks);
   const { activeRepos, getWorkspaceRepos } = useRepositoryContext();
+  const logActivity = useActivityLog();
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const selectedDay = useMemo(
     () => (selectedDayISO ? new Date(selectedDayISO) : new Date()),
     [selectedDayISO],
   );
-  const storeWorkspaces = useWorkspaceStore((s) => s.workspaces);
   const selection = useWorkspaceSelection();
   const singleWorkspaceId = selection.singleId;
-
-  const noteWorkspaceId = useMemo(() => {
-    if (singleWorkspaceId) return singleWorkspaceId;
-    return workspaces?.[0]?.id ?? storeWorkspaces[0]?.id ?? null;
-  }, [singleWorkspaceId, workspaces, storeWorkspaces]);
 
   const handleHabitsCompleted = useCallback((completions: Record<string, boolean>) => {
     setHabitCompletions((prev) => ({ ...prev, ...completions }));
@@ -338,22 +227,13 @@ export function HabitsTasksView({
       const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
       const habitId = await repos?.habit.addHabit(name, times, period, selectedDay, activeDays, timeOfDay);
       if (!habitId) return;
-      const targetWorkspaceId = workspaceId ?? singleWorkspaceId;
-      if (!targetWorkspaceId) return;
-      const workspace = storeWorkspaces.find((w) => w.id === targetWorkspaceId);
-      const user = auth.currentUser;
-      if (!user || !workspace || workspace.members.length < 2) return;
-      workspaceRepository
-        .logActivity(targetWorkspaceId, {
-          type: "habit_added",
-          actorUid: user.uid,
-          actorDisplayName: user.displayName ?? "User",
-          itemId: habitId,
-          itemName: name,
-        })
-        .catch(() => {/* non-critical */});
+      logActivity(workspaceId ?? singleWorkspaceId, {
+        type: "habit_added",
+        itemId: habitId,
+        itemName: name,
+      });
     },
-    [activeRepos, getWorkspaceRepos, selectedDay, storeWorkspaces, singleWorkspaceId],
+    [activeRepos, getWorkspaceRepos, selectedDay, singleWorkspaceId, logActivity],
   );
 
   const handleAddTask = useCallback(
@@ -361,53 +241,13 @@ export function HabitsTasksView({
       const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
       const taskId = await repos?.task.addTask(title, scope, selectedDay);
       if (!taskId) return;
-      const targetWorkspaceId = workspaceId ?? singleWorkspaceId;
-      if (!targetWorkspaceId) return;
-      const workspace = storeWorkspaces.find((w) => w.id === targetWorkspaceId);
-      const user = auth.currentUser;
-      if (!user || !workspace || workspace.members.length < 2) return;
-      workspaceRepository
-        .logActivity(targetWorkspaceId, {
-          type: "task_added",
-          actorUid: user.uid,
-          actorDisplayName: user.displayName ?? "User",
-          itemId: taskId,
-          itemName: title,
-        })
-        .catch(() => {/* non-critical */});
-    },
-    [activeRepos, getWorkspaceRepos, selectedDay, storeWorkspaces, singleWorkspaceId],
-  );
-
-  const handleAddNote = useCallback(
-    async (title: string, body: string, workspaceId?: string) => {
-      const user = auth.currentUser;
-      if (!user) return;
-      const targetId = workspaceId ?? noteWorkspaceId;
-      if (!targetId) return;
-      const repos = targetId === singleWorkspaceId
-        ? activeRepos
-        : getWorkspaceRepos(targetId);
-      if (!repos) return;
-      const noteId = await repos.note.addNote({
-        title,
-        body,
-        authorId: user.uid,
-        authorDisplayName: user.displayName ?? "User",
+      logActivity(workspaceId ?? singleWorkspaceId, {
+        type: "task_added",
+        itemId: taskId,
+        itemName: title,
       });
-      const workspace = storeWorkspaces.find((w) => w.id === targetId);
-      if (!workspace || workspace.members.length < 2) return;
-      workspaceRepository
-        .logActivity(targetId, {
-          type: "note_added",
-          actorUid: user.uid,
-          actorDisplayName: user.displayName ?? "User",
-          itemId: noteId,
-          itemName: title,
-        })
-        .catch(() => {/* non-critical */});
     },
-    [noteWorkspaceId, singleWorkspaceId, activeRepos, getWorkspaceRepos, storeWorkspaces],
+    [activeRepos, getWorkspaceRepos, selectedDay, singleWorkspaceId, logActivity],
   );
 
   const periodProgress = useMemo(() => {
@@ -427,59 +267,31 @@ export function HabitsTasksView({
     });
   }, [habits, tasks, selectedDay, habitCompletions]);
 
-  const isPeriodTabs = layout !== "period-sequential";
-
-  const [collapsedOverviewHabits, setCollapsedOverviewHabits] = useState(false);
-  const [collapsedOverviewTasks, setCollapsedOverviewTasks] = useState(false);
-
-  const overviewHabitTotal = useMemo(
-    () => filterHabitsByDay(habits, selectedDay).filter((h) => !isHabitSkipped(h, selectedDay)).length,
-    [habits, selectedDay],
-  );
-  const overviewHabitDone = Object.values(habitCompletions).filter(Boolean).length;
-  const overviewTaskTotal = useMemo(
-    () => tasks.filter((t) => getTaskVisibility(t, selectedDay) !== "hidden").length,
-    [tasks, selectedDay],
-  );
-  const overviewTaskDone = useMemo(
-    () => tasks.filter((t) => getTaskVisibility(t, selectedDay) !== "hidden" && t.completed).length,
-    [tasks, selectedDay],
-  );
-
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
-        {isPeriodTabs ? (
-          <div className="flex gap-1">
-            {PERIOD_TABS.map(({ period, label }) => {
-              const prog = periodProgress.find((p) => p.period === period);
-              const isActive = activePeriodTab === period;
-              return (
-                <button
-                  key={label}
-                  onClick={() => setActivePeriodTab(period)}
-                  className={[
-                    "flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-fill text-foreground"
-                      : "text-subtle hover:text-foreground",
-                  ].join(" ")}
-                >
-                  {label}
-                  {prog && <PeriodProgress done={prog.done} total={prog.total} />}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium bg-fill text-foreground">
-            Overview
-            <PeriodProgress
-              done={periodProgress.reduce((s, p) => s + p.done, 0)}
-              total={periodProgress.reduce((s, p) => s + p.total, 0)}
-            />
-          </div>
-        )}
+        <div className="flex gap-1">
+          {PERIOD_TABS.map(({ period, label }) => {
+            const prog = periodProgress.find((p) => p.period === period);
+            const isActive = activePeriodTab === period;
+            return (
+              <button
+                key={label}
+                onClick={() => setActivePeriodTab(period)}
+                className={[
+                  "flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-fill text-foreground"
+                    : "text-subtle hover:text-foreground",
+                  focusRing,
+                ].join(" ")}
+              >
+                {label}
+                {prog && <PeriodProgress done={prog.done} total={prog.total} />}
+              </button>
+            );
+          })}
+        </div>
 
         <div className="flex-1" />
 
@@ -493,124 +305,40 @@ export function HabitsTasksView({
         />
 
         {(activeRepos || workspaces) && (
-          <UnifiedAddButton
+          <AddMenu
             workspaces={workspaces}
             onAddHabit={handleAddHabit}
             onAddTask={handleAddTask}
-            onAddNote={handleAddNote}
           />
         )}
-        <LayoutSettingsButton
-          layout={layout}
-          innerLayout={innerLayout}
+        <DisplayOptionsMenu
           showCompletedTasks={showCompletedTasks}
           showSkippedHabits={showSkippedHabits}
-          onLayoutChange={onLayoutChange}
-          onInnerLayoutChange={onInnerLayoutChange}
           onShowCompletedTasksChange={onShowCompletedTasksChange}
           onShowSkippedHabitsChange={onShowSkippedHabitsChange}
         />
       </div>
 
-      <NoteList />
-
-      {isPeriodTabs ? (
-        <div>
-          {PERIOD_TABS.map(({ period }) => (
-            <div key={period} className={activePeriodTab !== period ? "hidden" : ""}>
-              <PeriodPanel
-                period={period}
-                habits={habits}
-                tasks={tasks}
-                workspaces={workspaces}
-                innerLayout={innerLayout}
-                showHabitPeriodLabel={false}
-                showTaskScopeLabel={false}
-                showCompletedTasks={showCompletedTasks}
-                showSkippedHabits={showSkippedHabits}
-                habitsEmptyMessage={isSearchActive ? noHabitMatchesMessage : undefined}
-                tasksEmptyMessage={isSearchActive ? noTaskMatchesMessage : undefined}
-                onToggleTaskCompleted={onToggleTaskCompleted}
-                onHabitsCompleted={handleHabitsCompleted}
-              />
-            </div>
-          ))}
-        </div>
-      ) : (() => {
-        const habitSection = (
-          <div>
-            <div
-              className="flex items-center gap-1.5 cursor-pointer select-none pb-1"
-              onClick={() => setCollapsedOverviewHabits((v) => !v)}
-            >
-              {collapsedOverviewHabits && (
-                <ChevronsUp width={12} height={12} className="text-subtle shrink-0" />
-              )}
-              <p className="text-xs font-semibold uppercase tracking-wide text-subtle">Habits</p>
-              {collapsedOverviewHabits && overviewHabitTotal > 0 && (
-                <p className="text-xs text-subtle">{overviewHabitDone}/{overviewHabitTotal}</p>
-              )}
-            </div>
-            <div className={`collapsible${collapsedOverviewHabits ? " collapsed" : ""}`}>
-              <div>
-                <HabitList
-                  hideHeader
-                  habits={habits}
-                  workspaces={workspaces}
-                  showPeriodLabel={true}
-                  showSkipped={showSkippedHabits}
-                  showCompleted={showCompletedTasks}
-                  emptyMessage={isSearchActive ? noHabitMatchesMessage : undefined}
-                  onHabitsCompleted={handleHabitsCompleted}
-                />
-              </div>
-            </div>
+      <div>
+        {PERIOD_TABS.map(({ period }) => (
+          <div key={period} className={activePeriodTab !== period ? "hidden" : ""}>
+            <PeriodPanel
+              period={period}
+              habits={habits}
+              tasks={tasks}
+              workspaces={workspaces}
+              showHabitPeriodLabel={false}
+              showTaskScopeLabel={false}
+              showCompletedTasks={showCompletedTasks}
+              showSkippedHabits={showSkippedHabits}
+              habitsEmptyMessage={isSearchActive ? noHabitMatchesMessage : undefined}
+              tasksEmptyMessage={isSearchActive ? noTaskMatchesMessage : undefined}
+              onToggleTaskCompleted={onToggleTaskCompleted}
+              onHabitsCompleted={handleHabitsCompleted}
+            />
           </div>
-        );
-        const taskSection = (
-          <div>
-            <div
-              className="flex items-center gap-1.5 cursor-pointer select-none pb-1"
-              onClick={() => setCollapsedOverviewTasks((v) => !v)}
-            >
-              {collapsedOverviewTasks && (
-                <ChevronsUp width={12} height={12} className="text-subtle shrink-0" />
-              )}
-              <p className="text-xs font-semibold uppercase tracking-wide text-subtle">Tasks</p>
-              {collapsedOverviewTasks && overviewTaskTotal > 0 && (
-                <p className="text-xs text-subtle">{overviewTaskDone}/{overviewTaskTotal}</p>
-              )}
-            </div>
-            <div className={`collapsible${collapsedOverviewTasks ? " collapsed" : ""}`}>
-              <div>
-                <TaskList
-                  hideHeader
-                  tasks={tasks}
-                  onToggleCompleted={onToggleTaskCompleted}
-                  workspaces={workspaces}
-                  showScopeLabel={true}
-                  showCompleted={showCompletedTasks}
-                  emptyMessage={isSearchActive ? noTaskMatchesMessage : undefined}
-                />
-              </div>
-            </div>
-          </div>
-        );
-        if (innerLayout === "side-by-side") {
-          return (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <section>{habitSection}</section>
-              <section>{taskSection}</section>
-            </div>
-          );
-        }
-        return (
-          <div className="flex flex-col gap-3">
-            {habitSection}
-            {taskSection}
-          </div>
-        );
-      })()}
+        ))}
+      </div>
     </div>
   );
 }

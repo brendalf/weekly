@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import {
   Period,
   HabitTimeOfDay,
@@ -40,6 +41,15 @@ export interface HabitItemProps {
     hasProgressToday: boolean,
   ) => void;
   projectName?: string;
+  /**
+   * Route for this habit's detail panel (`/app/habits/:id`). When set the row
+   * title becomes a real link and the legacy `HabitDetailsModal` is not
+   * rendered — the panel route owns the detail (DIRECTION §5).
+   *
+   * Omit it and the row keeps the modal, which is what `/app/week` still does
+   * until WS4/WS5 finish moving the modal's body into the panel.
+   */
+  detailHref?: string;
 }
 
 export function HabitItem({
@@ -55,6 +65,7 @@ export function HabitItem({
   showPeriodLabel = false,
   onCompleteChange,
   projectName,
+  detailHref,
 }: HabitItemProps) {
   const { getHabitRepos, getHabitProjectId } = useRepositoryContext();
   const repos = getHabitRepos(id);
@@ -204,6 +215,41 @@ export function HabitItem({
   const size = 28;
   const stroke = 4;
 
+  const titleClassName =
+    "flex flex-1 cursor-pointer items-center justify-between gap-3 overflow-hidden text-left";
+  const titleContent = (
+    <>
+      <span
+        className={[
+          "flex-1 truncate text-sm text-foreground",
+          isSkipped ? "line-through" : "",
+        ].join(" ")}
+      >
+        {name}
+      </span>
+      {showPeriodLabel && !isSkipped && <PeriodBadge period={period} />}
+      {isSkipped && (
+        <Badge className="shrink-0 bg-fill-strong text-subtle">Skipped</Badge>
+      )}
+      {!isSkipped && (
+        <span className="text-xs text-muted">
+          {displayValue}/{target}
+        </span>
+      )}
+      {!isSkipped && streak && streak.currentStrikeLength > 0 && (
+        <span className="flex items-center gap-0.5 rounded-full bg-streak-soft px-1.5 py-0.5 text-xs font-medium text-streak">
+          <Flame className="h-3 w-3" />
+          {streak.currentStrikeLength}
+        </span>
+      )}
+      {!isSkipped && streak?.openSincePeriodKey && (
+        <Badge className="bg-warning-soft text-warning-muted">
+          {formatPeriodKey(streak.openSincePeriodKey, period)}
+        </Badge>
+      )}
+    </>
+  );
+
   return (
     <>
       <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-2 hover:border-border-strong transition-colors">
@@ -229,41 +275,15 @@ export function HabitItem({
             </Badge>
           )}
 
-          <button
-            onClick={() => setDetailsOpen(true)}
-            className="flex flex-1 cursor-pointer items-center justify-between gap-3 overflow-hidden text-left"
-          >
-            <span
-              className={[
-                "flex-1 truncate text-sm text-foreground",
-                isSkipped ? "line-through" : "",
-              ].join(" ")}
-            >
-              {name}
-            </span>
-            {showPeriodLabel && !isSkipped && <PeriodBadge period={period} />}
-            {isSkipped && (
-              <Badge className="shrink-0 bg-fill-strong text-subtle">
-                Skipped
-              </Badge>
-            )}
-            {!isSkipped && (
-              <span className="text-xs text-muted">
-                {displayValue}/{target}
-              </span>
-            )}
-            {!isSkipped && streak && streak.currentStrikeLength > 0 && (
-              <span className="flex items-center gap-0.5 rounded-full bg-streak-soft px-1.5 py-0.5 text-xs font-medium text-streak">
-                <Flame className="h-3 w-3" />
-                {streak.currentStrikeLength}
-              </span>
-            )}
-            {!isSkipped && streak?.openSincePeriodKey && (
-              <Badge className="bg-warning-soft text-warning-muted">
-                {formatPeriodKey(streak.openSincePeriodKey, period)}
-              </Badge>
-            )}
-          </button>
+          {detailHref ? (
+            <Link href={detailHref} className={titleClassName}>
+              {titleContent}
+            </Link>
+          ) : (
+            <button onClick={() => setDetailsOpen(true)} className={titleClassName}>
+              {titleContent}
+            </button>
+          )}
         </div>
 
         {/* ⋯ menu — outside opacity wrapper so dropdown stays fully visible; hidden when complete */}
@@ -295,6 +315,7 @@ export function HabitItem({
         )}
       </div>
 
+      {!detailHref && (
       <HabitDetailsModal
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
@@ -309,6 +330,7 @@ export function HabitItem({
         createdAt={createdAt}
         streak={streak}
       />
+      )}
     </>
   );
 }

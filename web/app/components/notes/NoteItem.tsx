@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Pin, PinFill } from "@gravity-ui/icons";
 import type { Note } from "@weekly/domain";
@@ -13,6 +14,12 @@ interface NoteItemProps {
   workspaceName?: string;
   onUpdate: (noteId: string, updates: NoteUpdates) => Promise<void>;
   onDelete: (noteId: string) => void;
+  /**
+   * Route for this note's detail panel (`/app/notes/:id`). When set the row is
+   * a real link and the legacy `NoteDetailsModal` is not rendered — the panel
+   * route owns the detail (DIRECTION §5).
+   */
+  detailHref?: string;
 }
 
 function formatShortDate(iso: string) {
@@ -27,7 +34,13 @@ function formatShortDate(iso: string) {
   });
 }
 
-export function NoteItem({ note, workspaceName, onUpdate, onDelete }: NoteItemProps) {
+export function NoteItem({
+  note,
+  workspaceName,
+  onUpdate,
+  onDelete,
+  detailHref,
+}: NoteItemProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   function handleTogglePin() {
@@ -37,15 +50,10 @@ export function NoteItem({ note, workspaceName, onUpdate, onDelete }: NoteItemPr
   }
 
   const formattedDate = formatShortDate(note.createdAt);
-
-  return (
+  const rowClassName =
+    "flex min-h-11 min-w-0 flex-1 cursor-pointer flex-col justify-center gap-0.5 px-3 py-2 text-left";
+  const rowContent = (
     <>
-      <div className="flex items-stretch rounded-lg border border-border bg-background transition-colors hover:border-border-strong">
-        <button
-          type="button"
-          onClick={() => setDetailsOpen(true)}
-          className="flex min-h-11 min-w-0 flex-1 cursor-pointer flex-col justify-center gap-0.5 px-3 py-2 text-left"
-        >
           <span className="flex min-w-0 items-center gap-1.5">
             {note.pinned && (
               <PinFill
@@ -71,7 +79,25 @@ export function NoteItem({ note, workspaceName, onUpdate, onDelete }: NoteItemPr
             <span className="hidden sm:inline">{note.authorDisplayName}</span>
             {formattedDate && <span className="text-subtle">{formattedDate}</span>}
           </span>
-        </button>
+    </>
+  );
+
+  return (
+    <>
+      <div className="flex items-stretch rounded-lg border border-border bg-background transition-colors hover:border-border-strong">
+        {detailHref ? (
+          <Link href={detailHref} className={rowClassName}>
+            {rowContent}
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setDetailsOpen(true)}
+            className={rowClassName}
+          >
+            {rowContent}
+          </button>
+        )}
         <button
           type="button"
           onClick={handleTogglePin}
@@ -86,14 +112,16 @@ export function NoteItem({ note, workspaceName, onUpdate, onDelete }: NoteItemPr
         </button>
       </div>
 
-      <NoteDetailsModal
-        open={detailsOpen}
-        onOpenChange={setDetailsOpen}
-        note={note}
-        workspaceName={workspaceName}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      {!detailHref && (
+        <NoteDetailsModal
+          open={detailsOpen}
+          onOpenChange={setDetailsOpen}
+          note={note}
+          workspaceName={workspaceName}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+        />
+      )}
     </>
   );
 }

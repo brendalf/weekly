@@ -1,3 +1,5 @@
 .claude
 .nvmrc
 admin/weekly-*.json
+
+*-debug.log
