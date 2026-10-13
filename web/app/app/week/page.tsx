@@ -17,7 +17,7 @@ import { WeekToolbar } from "../../components/week/WeekToolbar";
 import { useAppData } from "../../components/shell/AppDataProvider";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useActivityLog } from "../../hooks/useActivityLog";
-import { useHabitTaskSearch } from "../../hooks/useHabitTaskSearch";
+import { useItemSearch } from "../../hooks/useItemSearch";
 import { useCalendarStore } from "../../stores/calendar";
 import { useWorkspaceSelection } from "../../stores/workspace";
 
@@ -58,15 +58,13 @@ export default function WeekPage() {
   );
   const dayKey = dayKeyOf(selectedDay);
 
-  // With no query these are the full lists.
+  // With no query these are the full lists. The input itself lives in the
+  // shell header — one filter for the whole app, scoped to this route.
   const {
-    query: searchQuery,
-    setQuery: setSearchQuery,
     isActive: isFiltered,
-    isSearching,
     habits,
     tasks,
-  } = useHabitTaskSearch(allHabits, allTasks);
+  } = useItemSearch({ habits: allHabits, tasks: allTasks });
 
   /* ------------------------------------------------------------ progress -- */
 
@@ -232,9 +230,6 @@ export default function WeekPage() {
             scope={scope}
             progress={progress}
             onScopeChange={setScope}
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-            isSearching={isSearching}
             workspaces={pickerWorkspaces}
             canAdd={canAdd}
             onAddHabit={handleAddHabit}

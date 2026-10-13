@@ -186,20 +186,16 @@ export interface SearchScope {
 /**
  * The routes with a filter.
  *
- * `/app/week` is **not** here yet: it still renders its own `SearchBox` in
- * `components/week/WeekToolbar.tsx` (WS4's file), and a second field in the
- * header would recreate the exact two-filter confusion WS11 exists to remove.
- *
- * TODO(WS4): when the week toolbar drops its `SearchBox` and `app/week/page.tsx`
- * switches to `useItemSearch({ habits, tasks })`, add
- * `{ href: "/app/week", label: "Filter habits and tasks", placeholder: "Filter the week…" }`
- * here and delete `hooks/useHabitTaskSearch.ts`.
- *
  * `/app/review` and `/app/settings` have no list to filter, so they get no
  * field at all — which is route scoping, not threshold-gating: the filter's
  * presence never depends on how many items happen to exist (DIRECTION §4).
  */
 export const SEARCH_SCOPES: SearchScope[] = [
+  {
+    href: "/app/week",
+    label: "Filter habits and tasks",
+    placeholder: "Filter the week…",
+  },
   {
     href: "/app/habits",
     label: "Filter habits",

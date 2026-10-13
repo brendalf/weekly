@@ -10,7 +10,6 @@ import type {
 import { Eye, Plus } from "@gravity-ui/icons";
 import { HabitAddModal } from "../habits/HabitAddModal";
 import { TaskAddModal } from "../tasks/TaskAddModal";
-import { SearchBox } from "../general/SearchBox";
 import { ActionMenu } from "../ui";
 import { ScopeTabs } from "./ScopeTabs";
 
@@ -34,10 +33,6 @@ interface WeekToolbarProps {
   progress: ScopeProgress[];
   onScopeChange: (period: Period) => void;
 
-  searchQuery: string;
-  onSearchQueryChange: (query: string) => void;
-  isSearching: boolean;
-
   /** Shown in the add modals when more than one workspace is in view. */
   workspaces?: Workspace[];
   /** False before a workspace is writable; hides the add control. */
@@ -56,16 +51,16 @@ interface WeekToolbarProps {
  * what to do about it.
  *
  * It wraps rather than overflows — on a 375px phone the scope segments keep
- * the first line and the filter and the two menus drop to a second one, which
- * is the fix for the old toolbar's single non-wrapping flex (PLAN WS13).
+ * the first line and the two menus drop to a second one, which is the fix for
+ * the old toolbar's single non-wrapping flex (PLAN WS13).
+ *
+ * The filter is not here: there is one, in the shell header, scoped to the
+ * active route (PLAN WS11).
  */
 export function WeekToolbar({
   scope,
   progress,
   onScopeChange,
-  searchQuery,
-  onSearchQueryChange,
-  isSearching,
   workspaces,
   canAdd,
   onAddHabit,
@@ -84,17 +79,9 @@ export function WeekToolbar({
       />
 
       {/* Deliberately not `flex-1`: a flex-basis of 0 always "fits", so the
-          row would never wrap and these three would overflow a 375px screen
+          row would never wrap and these would overflow a 375px screen
           instead. At its natural width it wraps to a second line. */}
       <div className="flex shrink-0 items-center gap-1">
-        <SearchBox
-          label="Filter habits and tasks"
-          placeholder="Filter…"
-          value={searchQuery}
-          onChange={onSearchQueryChange}
-          isSearching={isSearching}
-          className="w-32 sm:w-56"
-        />
         <DisplayOptionsMenu
           showCompletedTasks={showCompletedTasks}
           showSkippedHabits={showSkippedHabits}

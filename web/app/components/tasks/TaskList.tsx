@@ -16,8 +16,7 @@ import { TaskItem } from "./TaskItem";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useCalendarStore } from "../../stores/calendar";
 import { useWorkspaceSelection, useWorkspaceStore } from "../../stores/workspace";
-import { workspaceRepository } from "../../repositories";
-import { auth } from "../../config/firebase";
+import { useActivityLog } from "../../hooks/useActivityLog";
 
 interface TaskListProps {
   tasks: Task[];
@@ -47,6 +46,7 @@ export function TaskList({
   const selectedDay = selectedDayISO ? new Date(selectedDayISO) : new Date();
   const storeWorkspaces = useWorkspaceStore((s) => s.workspaces);
   const selection = useWorkspaceSelection();
+  const logActivity = useActivityLog();
 
   const handleAddTask = async (
     title: string,
@@ -56,20 +56,11 @@ export function TaskList({
     const repos = workspaceId ? getWorkspaceRepos(workspaceId) : activeRepos;
     const taskId = await repos?.task.addTask(title, scope, selectedDay);
     if (!taskId) return;
-    const targetWorkspaceId = workspaceId ?? selection.singleId;
-    if (!targetWorkspaceId) return;
-    const workspace = storeWorkspaces.find((w) => w.id === targetWorkspaceId);
-    const user = auth.currentUser;
-    if (!user || !workspace || workspace.members.length < 2) return;
-    workspaceRepository
-      .logActivity(targetWorkspaceId, {
-        type: "task_added",
-        actorUid: user.uid,
-        actorDisplayName: user.displayName ?? "User",
-        itemId: taskId,
-        itemName: title,
-      })
-      .catch(() => {/* non-critical */});
+    logActivity(workspaceId ?? selection.singleId, {
+      type: "task_added",
+      itemId: taskId,
+      itemName: title,
+    });
   };
 
   // Classify tasks by visibility

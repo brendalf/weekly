@@ -9,8 +9,7 @@ import { HabitAddModal } from "./HabitAddModal";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useCalendarStore } from "../../stores/calendar";
 import { useWorkspaceSelection, useWorkspaceStore } from "../../stores/workspace";
-import { workspaceRepository } from "../../repositories";
-import { auth } from "../../config/firebase";
+import { useActivityLog } from "../../hooks/useActivityLog";
 
 
 interface HabitListProps {
@@ -31,6 +30,7 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
   const selectedDayISO = useCalendarStore((s) => s.selectedDayISO);
   const storeWorkspaces = useWorkspaceStore((s) => s.workspaces);
   const selection = useWorkspaceSelection();
+  const logActivity = useActivityLog();
   const [completions, setCompletions] = useState<{ day: string; completedIds: Set<string>; progressTodayIds: Set<string> }>(
     { day: "", completedIds: new Set(), progressTodayIds: new Set() },
   );
@@ -99,20 +99,11 @@ export function HabitList({ habits, workspaces, hideHeader, periodFilter, showPe
     const date = selectedDayISO ? new Date(selectedDayISO) : new Date();
     const habitId = await repos?.habit.addHabit(name, times, period, date, activeDays, timeOfDay);
     if (!habitId) return;
-    const targetWorkspaceId = workspaceId ?? selection.singleId;
-    if (!targetWorkspaceId) return;
-    const workspace = storeWorkspaces.find((w) => w.id === targetWorkspaceId);
-    const user = auth.currentUser;
-    if (!user || !workspace || workspace.members.length < 2) return;
-    workspaceRepository
-      .logActivity(targetWorkspaceId, {
-        type: "habit_added",
-        actorUid: user.uid,
-        actorDisplayName: user.displayName ?? "User",
-        itemId: habitId,
-        itemName: name,
-      })
-      .catch(() => {/* non-critical */});
+    logActivity(workspaceId ?? selection.singleId, {
+      type: "habit_added",
+      itemId: habitId,
+      itemName: name,
+    });
   };
 
   const sorted = useMemo(() => {

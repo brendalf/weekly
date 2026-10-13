@@ -95,6 +95,9 @@ export function NotesList() {
             key={note.id}
             note={note}
             detailHref={`/app/notes/${note.id}`}
+            // The note's own workspace, not whichever is in view — otherwise a
+            // duplicate lands in the wrong one.
+            workspaceId={note.workspaceId}
             workspaceName={
               selection.isSingle
                 ? undefined

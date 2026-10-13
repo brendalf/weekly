@@ -118,10 +118,9 @@ interface Pass<H, T, N> {
  * One abortable filtering pass over the given lists for an already-debounced
  * query. `null` until a pass for exactly that query has completed.
  *
- * @internal Exported only for the deprecated `useHabitTaskSearch` shim, which
- * still owns its own local query. Use {@link useItemSearch}.
+ * Private to this module: {@link useItemSearch} is the only entry point.
  */
-export function useFilterPass<
+function useFilterPass<
   H extends Habit,
   T extends Task,
   N extends Note,

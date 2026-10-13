@@ -13,8 +13,7 @@ import {
 import { toast } from "sonner";
 import type { Comment, CommentTarget } from "@weekly/domain";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
-import { useWorkspaceStore } from "../../stores/workspace";
-import { workspaceRepository } from "../../repositories";
+import { useActivityLog } from "../../hooks/useActivityLog";
 import { auth } from "../../config/firebase";
 
 export interface CommentSectionProps {
@@ -122,7 +121,7 @@ export function CommentSection({
 }: CommentSectionProps) {
   const { getHabitRepos, getTaskRepos } = useRepositoryContext();
   const repos = target === "habit" ? getHabitRepos(itemId) : getTaskRepos(itemId);
-  const workspaces = useWorkspaceStore((s) => s.workspaces);
+  const logActivity = useActivityLog();
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [draft, setDraft] = useState("");
@@ -151,25 +150,15 @@ export function CommentSection({
 
   const logCommentActivity = useCallback(
     (body: string) => {
-      if (!workspaceId) return;
-      const workspace = workspaces.find((w) => w.id === workspaceId);
-      const user = auth.currentUser;
-      if (!user || !workspace || workspace.members.length < 2) return;
-      workspaceRepository
-        .logActivity(workspaceId, {
-          type: "comment_added",
-          actorUid: user.uid,
-          actorDisplayName: user.displayName ?? "User",
-          itemId,
-          itemName,
-          commentTarget: target,
-          commentBody: truncate(body, COMMENT_PREVIEW_LENGTH),
-        })
-        .catch(() => {
-          /* non-critical */
-        });
+      logActivity(workspaceId, {
+        type: "comment_added",
+        itemId,
+        itemName,
+        commentTarget: target,
+        commentBody: truncate(body, COMMENT_PREVIEW_LENGTH),
+      });
     },
-    [workspaceId, workspaces, itemId, itemName, target],
+    [logActivity, workspaceId, itemId, itemName, target],
   );
 
   async function handleAdd() {
