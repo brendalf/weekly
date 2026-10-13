@@ -4,6 +4,48 @@
 > **Phases are a dependency order.** Do not build Phase 2 UI on Phase 1 tokens that
 > don't exist yet. Within a phase, workstreams touch disjoint files and may run in parallel.
 
+---
+
+## Status as of 2026-10-13
+
+**Landed:** WS1, WS2, WS3, WS4, WS10, WS11, WS12, and WS15 in part.
+`main` at `7591b2b`. Lint, web build, both package builds and 116/116 domain tests pass.
+
+**Not yet done — pick up here:**
+
+| | Workstream | What is left |
+|---|---|---|
+| ◻ | **WS5** `/app/habits` | Grouping by period/time-of-day, completion rate, period + time-of-day filters. **The detail panel has no edit form**, so `⋯ → Edit` opens a read-only panel. |
+| ◻ | **WS6** `/app/tasks` | Overdue / this week / upcoming / completed grouping. **Detail panel edit form.** Replace the raw `<select>` + `<input type="date">` in `TaskDetailsModal` with HeroUI `Select` + `DatePicker`. |
+| ◻ | **WS7** `/app/notes` | Empty state explaining what notes are *for*. Verify the detail panel's edit path. |
+| ◻ | **WS8** `/app/review` | Habit completion rates and streaks held/broken — they need the per-habit progress subscriptions, read through `packages/domain`. Must stay read-only. |
+| ◻ | **WS9** `/app/settings` | Fold `WorkspaceSettingsModal` / `CreateWorkspaceModal` into real inline sections. |
+| ◻ | **WS13** | Responsive pass (habit/task detail still centred modals on mobile; the 84-day calendar grid). |
+| ◻ | **WS14** | Accessibility pass, including re-pitching `--muted` / `--subtle` together — see the WS1 note below. |
+| ◻ | **WS15** | `web/README.md` still documents the pre-routing app and is now wrong. |
+
+**Verification debt — the important caveat.** No agent has seen this app render
+with real data. `web/.env` exists so Firebase initializes, but sign-in is interactive
+Google OAuth with no test account, so authenticated routes are unreachable in an agent
+session. What *has* been verified: lint, builds, domain tests, HTTP 200s on every route,
+compiled-CSS checks that each utility actually generates, numeric WCAG contrast, and —
+for the global filter — real headless-Chromium runs against fixture data across
+{light, dark} × {375, 768, 1440}. That last technique works well and found two real bugs
+(a 14px input that would make iPad zoom, and a 40px target); **prefer it over reasoning
+about layout.** A human still needs to open the app once against live data.
+
+**Deferred follow-ups** (model or rules changes, out of scope per DIRECTION §8):
+
+- `archived` field on `Habit` — the menu action ships disabled until it exists.
+- Soft-delete tombstone (`deletedAt`). Undo currently restores content, not identity, so a
+  restored task gets a new id and anything keyed to the old one — a task's comment thread —
+  stays gone.
+- Comments on notes (`CommentTarget` is `'habit' | 'task'`).
+- Per-member habit attribution in shared workspaces.
+- Drag-to-reorder; bulk multi-select.
+- A stray `package-lock.json` sits in this pnpm workspace. Two agents have now tried to
+  "helpfully" bump a dependency through it; decide whether it should exist at all.
+
 Every workstream below is sized for one agent and states its files, its acceptance
 criteria, and what it must not touch. Tick the boxes as they land.
 
