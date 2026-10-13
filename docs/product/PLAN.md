@@ -8,21 +8,22 @@
 
 ## Status as of 2026-10-13
 
-**Landed:** WS1, WS2, WS3, WS4, WS10, WS11, WS12, and WS15 in part.
-`main` at `7591b2b`. Lint, web build, both package builds and 116/116 domain tests pass.
+**Landed:** WS1–WS12 and WS15 in part.
+`main` at `459d5c3`. Lint, web build, both package builds and **155/155** domain tests pass;
+all six routes serve 200.
 
 **Not yet done — pick up here:**
 
 | | Workstream | What is left |
 |---|---|---|
-| ◻ | **WS5** `/app/habits` | Grouping by period/time-of-day, completion rate, period + time-of-day filters. **The detail panel has no edit form**, so `⋯ → Edit` opens a read-only panel. |
-| ◻ | **WS6** `/app/tasks` | Overdue / this week / upcoming / completed grouping. **Detail panel edit form.** Replace the raw `<select>` + `<input type="date">` in `TaskDetailsModal` with HeroUI `Select` + `DatePicker`. |
-| ◻ | **WS7** `/app/notes` | Empty state explaining what notes are *for*. Verify the detail panel's edit path. |
-| ◻ | **WS8** `/app/review` | Habit completion rates and streaks held/broken — they need the per-habit progress subscriptions, read through `packages/domain`. Must stay read-only. |
-| ◻ | **WS9** `/app/settings` | Fold `WorkspaceSettingsModal` / `CreateWorkspaceModal` into real inline sections. |
-| ◻ | **WS13** | Responsive pass (habit/task detail still centred modals on mobile; the 84-day calendar grid). |
-| ◻ | **WS14** | Accessibility pass, including re-pitching `--muted` / `--subtle` together — see the WS1 note below. |
-| ◻ | **WS15** | `web/README.md` still documents the pre-routing app and is now wrong. |
+| ◻ | **WS13** | Responsive pass. Known: the habit/task *modal* path (still used on `/app/week`) is `placement="center"` with no mobile sheet treatment; `HabitDetailsModal`'s 84-day calendar grid is tight on a phone; a habit row carrying all four trailing badges at 375px wants a human look. |
+| ◻ | **WS14** | Accessibility pass. Includes re-pitching `--muted` / `--subtle` **together** — WS1 left `--subtle` at 3.85:1 in light because the spec'd 45% gave 2.87:1 and the 60% needed for AA was indistinguishable from `--muted`. That ladder needs deciding as a pair, not nudging one rung. |
+| ◻ | **WS15** | `web/README.md` still documents the pre-routing app ("Key Components", "Project Structure", the `HabitsTasksView` / `PeriodPanel` descriptions) and is now wrong. |
+
+Two Phase-2 items were descoped as the routes took shape, and should be judged on the
+built product rather than reinstated on principle: per-row completion rate and the
+period / time-of-day filter chips on `/app/habits`, and the four-way bucket grouping on
+`/app/tasks` (buckets exist in domain as `taskBucket`, with tests).
 
 **Verification debt — the important caveat.** No agent has seen this app render
 with real data. `web/.env` exists so Firebase initializes, but sign-in is interactive
