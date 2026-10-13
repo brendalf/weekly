@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Modal,
-  Button,
-  Surface,
-  useOverlayState,
-  Input,
-  TextField,
-} from "@heroui/react";
+import { Modal, Button, Surface, useOverlayState } from "@heroui/react";
 import {
   Flame,
   TrashBin,
@@ -34,9 +27,7 @@ import { ConfirmButton } from "../ui";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { CommentSection } from "../comments/CommentSection";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
-import { ActiveDaysSelector } from "./ActiveDaysSelector";
-import { TimeOfDaySelector } from "./TimeOfDaySelector";
-import { HabitPeriodSelect } from "./HabitPeriodSelect";
+import { HabitEditFields, useHabitEditForm } from "./HabitEditForm";
 
 interface HabitDetailsModalProps {
   open: boolean;
@@ -344,17 +335,17 @@ export function HabitDetailsModal({
 
   const [logs, setLogs] = useState<HabitCompletionLog[]>([]);
   const [editing, setEditing] = useState(defaultEditing);
-  const [editName, setEditName] = useState(name);
-  const [editTimes, setEditTimes] = useState(String(times));
-  const [editPeriod, setEditPeriod] = useState<Period>(period);
-  const [editActiveDays, setEditActiveDays] = useState<number[]>(
-    activeDays ?? [0, 1, 2, 3, 4, 5, 6],
-  );
-  const [editTimeOfDay, setEditTimeOfDay] = useState<
-    HabitTimeOfDay | undefined
-  >(timeOfDay);
-
   const [showLogs, setShowLogs] = useState(false);
+
+  // One form, shared with `/app/habits/:id` — see `HabitEditForm`.
+  const form = useHabitEditForm({
+    id: habitId,
+    name,
+    times,
+    period,
+    activeDays,
+    timeOfDay,
+  });
 
   const state = useOverlayState({
     isOpen: open,
@@ -409,31 +400,11 @@ export function HabitDetailsModal({
   }
 
   async function handleSave() {
-    if (!repos) return;
-    const trimmed = editName.trim();
-    const n = Number(editTimes);
-    if (!trimmed || !Number.isFinite(n) || n <= 0) return;
-    const days =
-      editPeriod === Period.DAY && editActiveDays.length < 7
-        ? editActiveDays
-        : undefined;
-    await repos.habit.updateHabit(
-      habitId,
-      trimmed,
-      n,
-      editPeriod,
-      days,
-      editTimeOfDay,
-    );
-    setEditing(false);
+    if (await form.save()) setEditing(false);
   }
 
   function startEditing() {
-    setEditName(name);
-    setEditTimes(String(times));
-    setEditPeriod(period);
-    setEditActiveDays(activeDays ?? [0, 1, 2, 3, 4, 5, 6]);
-    setEditTimeOfDay(timeOfDay);
+    form.reset();
     setEditing(true);
   }
 
@@ -466,7 +437,6 @@ export function HabitDetailsModal({
 
   const displayCount = periodLogs.length;
   const { progress, complete } = habitProgress(displayCount, times);
-  const isEditValid = Boolean(editName.trim()) && Number(editTimes) > 0;
 
   return (
     <>
@@ -476,60 +446,18 @@ export function HabitDetailsModal({
             <Modal.Dialog>
               <Modal.CloseTrigger />
               <Modal.Header>
-                {editing ? (
-                  <div className="flex flex-col gap-2 w-full pr-8">
-                    <TextField name="editName">
-                      <Input
-                        value={editName}
-                        variant="secondary"
-                        autoFocus
-                        onChange={(e) => setEditName(e.target.value)}
-                      />
-                    </TextField>
-                    <div className="mt-1 flex items-end gap-2">
-                      <Input
-                        type="number"
-                        value={editTimes}
-                        className="max-w-20"
-                        variant="secondary"
-                        onChange={(e) => setEditTimes(e.target.value)}
-                      />
-                      <HabitPeriodSelect
-                        value={editPeriod}
-                        onChange={setEditPeriod}
-                      />
-                    </div>
-                    {editPeriod === Period.DAY && (
-                      <div className="mt-2">
-                        <p className="text-xs text-subtle mb-1">
-                          Active days
-                        </p>
-                        <ActiveDaysSelector
-                          activeDays={editActiveDays}
-                          onChange={setEditActiveDays}
-                        />
-                      </div>
-                    )}
-                    <div className="mt-2">
-                      <p className="text-xs text-subtle mb-1">
-                        Time of day
-                      </p>
-                      <TimeOfDaySelector
-                        value={editTimeOfDay}
-                        onChange={setEditTimeOfDay}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 pr-8 w-full">
-                    <span className="flex-1 text-base font-semibold text-foreground truncate">
-                      {name}
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 pr-8 w-full">
+                  <span className="flex-1 text-base font-semibold text-foreground truncate">
+                    {editing ? `Edit “${name}”` : name}
+                  </span>
+                </div>
               </Modal.Header>
 
               <Modal.Body className="p-1">
+                {editing && (
+                  <HabitEditFields form={form} onSubmit={handleSave} />
+                )}
+
                 {/* Progress + streak row */}
                 {!editing && (
                   <div className="mb-4 flex flex-col gap-2">
@@ -692,7 +620,7 @@ export function HabitDetailsModal({
                     </Button>
                     <Button
                       className="min-h-11"
-                      isDisabled={!isEditValid}
+                      isDisabled={!form.isValid || form.isSaving}
                       onPress={handleSave}
                     >
                       Save

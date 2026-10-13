@@ -1,21 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Modal,
-  Button,
-  Surface,
-  useOverlayState,
-  Input,
-  TextField,
-} from "@heroui/react";
+import { Modal, Button, Surface, useOverlayState } from "@heroui/react";
 import { TrashBin, Pencil } from "@gravity-ui/icons";
 import { Task, Period, weekKeyOf } from "@weekly/domain";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useUndoableDelete } from "../../hooks/useUndoableDelete";
-import { useWorkspaceStore } from "../../stores/workspace";
 import { CommentSection } from "../comments/CommentSection";
-import { ScopeSelector, SCOPE_OPTIONS } from "./ScopeSelector";
+import { SCOPE_OPTIONS } from "./ScopeSelector";
+import { TaskEditFields, useTaskEditForm } from "./TaskEditForm";
 import { PERIOD_COLORS } from "../general/PeriodBadge";
 
 interface TaskDetailsModalProps {
@@ -45,20 +38,16 @@ export function TaskDetailsModal({
   task,
   defaultEditing = false,
 }: TaskDetailsModalProps) {
-  const { getTaskRepos, getWorkspaceRepos, getTaskProjectId } = useRepositoryContext();
+  const { getTaskRepos, getTaskProjectId } = useRepositoryContext();
   const repos = getTaskRepos(task.id);
-  const workspaces = useWorkspaceStore((s) => s.workspaces);
   const currentWorkspaceId = getTaskProjectId(task.id);
-
-  const defaultSchedule = (task.schedule ?? task.createdAt).slice(0, 10);
 
   const deleteWithUndo = useUndoableDelete();
 
   const [editing, setEditing] = useState(defaultEditing);
-  const [editTitle, setEditTitle] = useState(task.title);
-  const [editScope, setEditScope] = useState<Period>(task.scope ?? Period.WEEK);
-  const [editSchedule, setEditSchedule] = useState(defaultSchedule);
-  const [editWorkspaceId, setEditWorkspaceId] = useState<string | null>(null);
+
+  // One form, shared with `/app/tasks/:id` — see `TaskEditForm`.
+  const form = useTaskEditForm(task);
 
   const state = useOverlayState({
     isOpen: open,
@@ -95,47 +84,14 @@ export function TaskDetailsModal({
   }
 
   async function handleSave() {
-    if (!repos) return;
-    const trimmed = editTitle.trim();
-    if (!trimmed) return;
-
-    const targetWsId = editWorkspaceId ?? currentWorkspaceId;
-    const wsChanged = targetWsId && targetWsId !== currentWorkspaceId;
-    const scheduleUnchanged = editSchedule === defaultSchedule;
-    // Parse date string as local time to avoid UTC timezone offset issues
-    const scheduleDate = editSchedule
-      ? new Date(`${editSchedule}T12:00:00`)
-      : null;
-
-    if (wsChanged && targetWsId) {
-      // Workspace move: create in target workspace, delete from current
-      const targetRepos = getWorkspaceRepos(targetWsId);
-      if (!targetRepos) return;
-      // Note: moved task starts as incomplete
-      const newId = await targetRepos.task.addTask(trimmed, editScope, new Date(task.createdAt));
-      if (!scheduleUnchanged && scheduleDate) {
-        await targetRepos.task.updateTask(newId, { schedule: scheduleDate });
-      }
-      await repos.task.deleteTask(task.id);
-    } else {
-      await repos.task.updateTask(task.id, {
-        title: trimmed,
-        scope: editScope,
-        schedule: scheduleUnchanged ? undefined : (scheduleDate ?? null),
-      });
-    }
-    setEditing(false);
+    if (await form.save()) setEditing(false);
   }
 
   function startEditing() {
-    setEditTitle(task.title);
-    setEditScope(task.scope ?? Period.WEEK);
-    setEditSchedule(defaultSchedule);
-    setEditWorkspaceId(null);
+    form.reset();
     setEditing(true);
   }
 
-  const isEditValid = Boolean(editTitle.trim());
   const scope = task.scope ?? Period.WEEK;
 
   // Derived label for the schedule date
@@ -156,34 +112,19 @@ export function TaskDetailsModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header>
-              {editing ? (
-                <div className="w-full pr-8">
-                  <TextField name="editTitle">
-                    <Input
-                      value={editTitle}
-                      variant="secondary"
-                      autoFocus
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleSave();
-                      }}
-                    />
-                  </TextField>
-                </div>
-              ) : (
-                <Modal.Heading>{task.title}</Modal.Heading>
-              )}
+              <Modal.Heading>
+                {editing ? `Edit “${task.title}”` : task.title}
+              </Modal.Heading>
             </Modal.Header>
 
             <Modal.Body className="p-1">
-              <Surface variant="default">
-                <div className="flex flex-col gap-3">
-                  {/* Scope */}
-                  <div className="flex flex-col gap-1.5">
-                    <p className="text-xs text-subtle">Scope</p>
-                    {editing ? (
-                      <ScopeSelector value={editScope} onChange={setEditScope} />
-                    ) : (
+              {editing ? (
+                <TaskEditFields form={form} onSubmit={handleSave} />
+              ) : (
+                <Surface variant="default">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <p className="text-xs text-subtle">Scope</p>
                       <span
                         className={[
                           "w-fit rounded-full px-2.5 py-0.5 text-xs font-medium",
@@ -192,64 +133,35 @@ export function TaskDetailsModal({
                       >
                         {SCOPE_OPTIONS.find((o) => o.value === scope)?.label}
                       </span>
-                    )}
-                  </div>
+                    </div>
 
-                  {/* Schedule */}
-                  <div className="flex flex-col gap-1.5">
-                    <p className="text-xs text-subtle">Schedule</p>
-                    {editing ? (
-                      <input
-                        type="date"
-                        value={editSchedule}
-                        onChange={(e) => setEditSchedule(e.target.value)}
-                        className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-base text-foreground focus:outline-none focus:border-border-strong"
-                      />
-                    ) : (
+                    <div className="flex flex-col gap-1.5">
+                      <p className="text-xs text-subtle">Schedule</p>
                       <span className="text-sm text-foreground">
                         {scheduleLabel}
                         {hasScheduleOverride && (
                           <span className="ml-1.5 text-xs text-subtle">(rescheduled)</span>
                         )}
                       </span>
-                    )}
-                  </div>
-
-                  {/* Workspace selector — only in edit mode with multiple workspaces */}
-                  {editing && workspaces.length > 1 && (
-                    <div className="flex flex-col gap-1.5">
-                      <p className="text-xs text-subtle">Workspace</p>
-                      <select
-                        value={editWorkspaceId ?? currentWorkspaceId ?? ""}
-                        onChange={(e) => setEditWorkspaceId(e.target.value || null)}
-                        className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-base text-foreground focus:outline-none focus:border-border-strong"
-                      >
-                        {workspaces.map((ws) => (
-                          <option key={ws.id} value={ws.id}>
-                            {ws.name}
-                          </option>
-                        ))}
-                      </select>
                     </div>
-                  )}
 
-                  {/* Meta */}
-                  <div className="flex flex-col gap-0.5">
-                    <p className="text-xs text-subtle">
-                      Created{" "}
-                      {new Date(task.createdAt).toLocaleDateString("en-US", {
-                        weekday: "long",
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </p>
-                    <p className="text-xs text-subtle">
-                      Status: {task.completed ? "Completed" : "Pending"}
-                    </p>
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-xs text-subtle">
+                        Created{" "}
+                        {new Date(task.createdAt).toLocaleDateString("en-US", {
+                          weekday: "long",
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
+                      <p className="text-xs text-subtle">
+                        Status: {task.completed ? "Completed" : "Pending"}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Surface>
+                </Surface>
+              )}
 
               {!editing && (
                 <div className="mt-3">
@@ -276,7 +188,7 @@ export function TaskDetailsModal({
                   </Button>
                   <Button
                     className="min-h-11 bg-brand"
-                    isDisabled={!isEditValid}
+                    isDisabled={!form.isValid || form.isSaving}
                     onPress={handleSave}
                   >
                     Save

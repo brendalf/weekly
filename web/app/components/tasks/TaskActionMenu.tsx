@@ -2,10 +2,9 @@
 
 import {
   Period,
-  addDays,
-  getStartOfWeek,
   selectedPeriodKey,
   taskPeriodKey,
+  taskRescheduleTargets,
   type Task,
 } from "@weekly/domain";
 import {
@@ -64,36 +63,6 @@ const SCOPE_LABELS: { value: Period; label: string }[] = [
   { value: Period.WEEK, label: "Week" },
   { value: Period.MONTH, label: "Month" },
 ];
-
-/** Noon, so a date that crosses a DST boundary stays on its own day. */
-function atNoon(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(12, 0, 0, 0);
-  return d;
-}
-
-/** Reschedule targets for a scope: `[label, date]`, current period first. */
-function rescheduleTargets(scope: Period, today: Date): [string, Date][] {
-  if (scope === Period.DAY) {
-    return [
-      ["Today", atNoon(today)],
-      ["Tomorrow", atNoon(addDays(today, 1))],
-      ["Next week", atNoon(getStartOfWeek(addDays(today, 7)))],
-    ];
-  }
-  if (scope === Period.MONTH) {
-    const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-    return [
-      ["This month", atNoon(thisMonth)],
-      ["Next month", atNoon(nextMonth)],
-    ];
-  }
-  return [
-    ["This week", atNoon(getStartOfWeek(today))],
-    ["Next week", atNoon(getStartOfWeek(addDays(today, 7)))],
-  ];
-}
 
 export function TaskActionMenu({ task, onEdit }: TaskActionMenuProps) {
   const { getTaskRepos, getTaskProjectId } = useRepositoryContext();
@@ -165,7 +134,7 @@ export function TaskActionMenu({ task, onEdit }: TaskActionMenuProps) {
     });
   }
 
-  const targets = rescheduleTargets(scope, today);
+  const targets = taskRescheduleTargets(scope, today);
 
   const items: ActionMenuEntry[] = [
     {
@@ -192,7 +161,7 @@ export function TaskActionMenu({ task, onEdit }: TaskActionMenuProps) {
       items: targets
         // The current period is only a *move* for a task that has fallen out of it.
         .filter((_, index) => index > 0 || isOverdue)
-        .map(([label, date]) => ({
+        .map(({ label, date }) => ({
           key: `move-${label}`,
           label,
           onAction: () => reschedule(date),
