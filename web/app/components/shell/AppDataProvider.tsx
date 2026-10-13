@@ -124,7 +124,7 @@ export interface AppDataValue {
   logout: () => Promise<void>;
 }
 
-const AppDataContext = createContext<AppDataValue | null>(null);
+export const AppDataContext = createContext<AppDataValue | null>(null);
 
 /**
  * The shell's data contract. Route components call this instead of

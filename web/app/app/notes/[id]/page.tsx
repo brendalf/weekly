@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Button, Input, Label, TextField } from "@heroui/react";
 import { Pin, PinFill } from "@gravity-ui/icons";
@@ -48,9 +48,32 @@ function formatTimestamp(iso: string) {
  *    modal;
  * 5. while the item has not arrived yet the body is a skeleton, and once the
  *    data is in and the id still matches nothing, it says so and offers the way
- *    back.
+ *    back;
+ * 6. **the edit form is part of the panel**, and `?edit=1` opens straight into
+ *    it, so the row's `⋯ → Edit` lands where it said it would.
  */
 export default function NoteDetailPage() {
+  // `useSearchParams` reads something a prerender cannot know, so it sits
+  // behind its own boundary — same reasoning as the shell header's filter row.
+  return (
+    <Suspense fallback={null}>
+      <NoteDetailRoute />
+    </Suspense>
+  );
+}
+
+function NoteDetailRoute() {
+  const { id } = useParams<{ id: string }>();
+  const wantsEdit = useSearchParams().get("edit") === "1";
+
+  // Remounting on the edit flag lets the panel take it as *initial* state
+  // rather than syncing a prop into state from an effect — the same trick the
+  // rows use for their modals. Pressing `⋯ → Edit` while the panel is already
+  // open therefore still opens the form.
+  return <NoteDetailPanel key={`${id}:${wantsEdit}`} defaultEditing={wantsEdit} />;
+}
+
+function NoteDetailPanel({ defaultEditing }: { defaultEditing: boolean }) {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { notes, workspaces, workspacesLoaded, updateNote, deleteNote } =
@@ -60,11 +83,26 @@ export default function NoteDetailPage() {
 
   const note = notes.find((n) => n.id === id) ?? null;
 
-  const [editing, setEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState("");
-  const [editBody, setEditBody] = useState("");
+  const [editing, setEditing] = useState(defaultEditing);
+  /**
+   * What the user has typed, or `null` while the fields still mirror the note.
+   *
+   * The draft is deliberately not seeded from the note on mount: arriving via
+   * `?edit=1` opens the form *before* the notes snapshot has landed, and a
+   * seeded-on-mount form would then show two empty fields and save them over a
+   * real note. Falling back to the note per render instead means the fields
+   * fill in the moment it arrives.
+   */
+  const [draft, setDraft] = useState<{ title: string; body: string } | null>(
+    null,
+  );
   const [saving, setSaving] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const editTitle = draft?.title ?? note?.title ?? "";
+  const editBody = draft?.body ?? note?.body ?? "";
+  const setEditTitle = (title: string) => setDraft({ title, body: editBody });
+  const setEditBody = (body: string) => setDraft({ title: editTitle, body });
 
   // Auto-grow the body textarea instead of a fixed `rows` box.
   useEffect(() => {
@@ -80,12 +118,12 @@ export default function NoteDetailPage() {
 
   function startEditing() {
     if (!note) return;
-    setEditTitle(note.title);
-    setEditBody(note.body);
+    setDraft(null);
     setEditing(true);
   }
 
   function cancelEditing() {
+    setDraft(null);
     setEditing(false);
   }
 
@@ -95,12 +133,13 @@ export default function NoteDetailPage() {
     if (!title) return;
     const body = editBody.trim();
     if (title === note.title && body === note.body) {
-      setEditing(false);
+      cancelEditing();
       return;
     }
     setSaving(true);
     try {
       await updateNote(note.id, { title, body });
+      setDraft(null);
       setEditing(false);
     } catch {
       toast.error("Failed to save note. Please try again.");
@@ -222,6 +261,10 @@ export default function NoteDetailPage() {
               variant="secondary"
               placeholder="Note title"
               autoFocus={!isTouch}
+              // HeroUI's input slot is `text-base sm:text-sm`; the scale is
+              // locked at `text-base` for every input (DIRECTION §6.3), and a
+              // headless run caught this one rendering at 14px from `sm:` up.
+              className="text-base sm:text-base"
               onChange={(e) => setEditTitle(e.target.value)}
             />
           </TextField>

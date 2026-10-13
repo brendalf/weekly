@@ -39,7 +39,8 @@ import {
   type ThemePreference,
   type LayoutPreference,
   type InnerLayoutPreference,
-  computeStreak,
+  type HabitStats,
+  computeHabitStats,
   prevPeriodDate,
   dayKeyOf,
   monthKeyOf,
@@ -467,10 +468,7 @@ export function createHabitProgressRepository(
       period: Period,
       createdAt: Date,
       referenceDate: Date,
-      onStreak: (streak: {
-        currentStrikeLength: number;
-        openSincePeriodKey: string | null;
-      }) => void,
+      onStats: (stats: HabitStats) => void,
       skippedPeriods?: string[],
       activeDays?: number[],
     ) {
@@ -483,8 +481,8 @@ export function createHabitProgressRepository(
         orderBy("periodKey", "desc"),
       );
       return onSnapshot(q, (snap) => {
-        onStreak(
-          computeStreak(
+        onStats(
+          computeHabitStats(
             buildSummaryMap(snap.docs),
             referenceDate,
             createdAt,
@@ -493,6 +491,37 @@ export function createHabitProgressRepository(
             activeDays,
           ),
         );
+      });
+    },
+    async readHabitProgress(
+      habitId: string,
+      period: Period,
+      fromPeriodKey: string,
+      toPeriodKey: string,
+    ) {
+      // Deliberately the same clause shape as `subscribeHabitStreak` above
+      // (habitId ==, period ==, periodKey range) so it rides the composite
+      // index that query already needs — a second range bound on the same
+      // field is free. `getDocs`, not `onSnapshot`: the caller is a read-only
+      // recap and must not leave a listener behind per habit.
+      const q = query(
+        habitProgressCol(db, projectId),
+        where("habitId", "==", habitId),
+        where("period", "==", period),
+        where("periodKey", ">=", fromPeriodKey),
+        where("periodKey", "<=", toPeriodKey),
+        orderBy("periodKey", "desc"),
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map((d: QueryDocumentSnapshot<DocumentData>) => {
+        const data = d.data() as HabitProgressDoc;
+        return {
+          habitId,
+          period,
+          periodKey: typeof data.periodKey === "string" ? data.periodKey : "",
+          count: typeof data.count === "number" ? data.count : 0,
+          succeeded: data.succeeded === true,
+        };
       });
     },
     async incrementHabit(

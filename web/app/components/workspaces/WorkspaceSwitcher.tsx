@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { House, Plus, Gear } from "@gravity-ui/icons";
 import {
   useWorkspaceSelection,
   useWorkspaceStore,
   workspaceStore,
 } from "../../stores/workspace";
-import { WorkspaceSettingsModal } from "./WorkspaceSettingsModal";
-import { CreateWorkspaceModal } from "./CreateWorkspaceModal";
+import { touchTarget } from "../ui";
 
 /** Small square checkbox, matching the one in HabitsTasksView's layout menu. */
 function CheckboxMark({ checked }: { checked: boolean }) {
@@ -28,8 +28,6 @@ export function WorkspaceSwitcher() {
   const workspaces = useWorkspaceStore((s) => s.workspaces);
   const selection = useWorkspaceSelection();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
 
   const multiWorkspace = workspaces.length > 1;
   const singleWorkspace = selection.singleId
@@ -42,11 +40,6 @@ export function WorkspaceSwitcher() {
       ? "All workspaces"
       : `${selection.workspaceIds.length} workspaces`;
   const showHouseIconInButton = !singleWorkspace && selection.isAll;
-
-  function handleNewWorkspace() {
-    setDropdownOpen(false);
-    setCreateOpen(true);
-  }
 
   if (workspaces.length === 0) {
     return (
@@ -66,15 +59,16 @@ export function WorkspaceSwitcher() {
         {buttonLabel}
       </button>
 
-      {singleWorkspace && (
-        <button
-          onClick={() => setSettingsOpen(true)}
-          className="cursor-pointer text-subtle hover:text-muted transition-colors"
-          aria-label="Workspace settings"
-        >
-          <Gear width={14} height={14} />
-        </button>
-      )}
+      {/* Workspace administration lives on `/app/settings` (WS9), so this is a
+          link to it rather than a modal trigger — one place for one thing. */}
+      <Link
+        href="/app/settings"
+        onClick={() => setDropdownOpen(false)}
+        className={`flex items-center justify-center rounded-lg text-subtle transition-colors hover:text-muted ${touchTarget}`}
+        aria-label="Workspace settings"
+      >
+        <Gear width={14} height={14} />
+      </Link>
 
       {dropdownOpen && (
         <>
@@ -129,26 +123,17 @@ export function WorkspaceSwitcher() {
 
             <div className="my-1 border-t border-border" />
 
-            <button
-              onClick={handleNewWorkspace}
+            <Link
+              href="/app/settings"
+              onClick={() => setDropdownOpen(false)}
               className="flex w-full min-h-9 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted hover:bg-fill transition-colors"
             >
               <Plus width={12} height={12} />
               New workspace
-            </button>
+            </Link>
           </div>
         </>
       )}
-
-      {singleWorkspace && (
-        <WorkspaceSettingsModal
-          open={settingsOpen}
-          onOpenChange={setSettingsOpen}
-          workspace={singleWorkspace}
-        />
-      )}
-
-      <CreateWorkspaceModal open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }

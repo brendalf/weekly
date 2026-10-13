@@ -95,6 +95,9 @@ export function NoteAddModal({ open, onOpenChange, workspaces, onSubmit }: NoteA
                       value={title}
                       variant="secondary"
                       autoFocus={!isTouch}
+                      // HeroUI's input slot is `text-base sm:text-sm`; the
+                      // scale is locked at `text-base` (DIRECTION §6.3).
+                      className="text-base sm:text-base"
                       onChange={(e) => setTitle(e.target.value)}
                     />
                   </TextField>

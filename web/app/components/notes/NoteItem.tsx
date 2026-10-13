@@ -31,6 +31,16 @@ interface NoteItemProps {
   detailHref?: string;
 }
 
+/**
+ * `⋯ → Edit` has to land *in* the edit form, not next to it, so the intent
+ * rides the URL: `/app/notes/:id?edit=1`. That keeps the panel's state in the
+ * one place that already drives it (the route), so Back closes the form and a
+ * pasted link opens it — which a `useState` in the row could not do.
+ */
+export function noteEditHref(detailHref: string): string {
+  return `${detailHref}${detailHref.includes("?") ? "&" : "?"}edit=1`;
+}
+
 function formatShortDate(iso: string) {
   if (!iso) return "";
   const date = new Date(iso);
@@ -72,7 +82,7 @@ export function NoteItem({
 
   function openDetail(editing: boolean) {
     if (detailHref) {
-      router.push(detailHref);
+      router.push(editing ? noteEditHref(detailHref) : detailHref);
       return;
     }
     setDetail({ open: true, editing });

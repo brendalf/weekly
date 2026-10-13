@@ -34,6 +34,141 @@ export function prevPeriodDate(date: Date, period: Period): Date {
   return d;
 }
 
+/**
+ * Safety stop for the backwards walk over a habit's history. 1500 iterations is
+ * four years of days, 28 years of weeks, 125 years of months — past any real
+ * habit, and it keeps a corrupt `createdAt` from spinning forever.
+ */
+const MAX_PERIODS_SCANNED = 1500;
+
+/**
+ * The periods a habit was actually *on the hook* for, most recent first.
+ *
+ * Walks back from the period before `referenceDate` (the current one is still
+ * open, so it can be neither held nor missed) to the one the habit was created
+ * in, dropping every period the habit was excused from: an explicit skip, or a
+ * weekday outside `activeDays`. What comes back is the denominator both the
+ * streak and the completion rate are measured against.
+ */
+function eligiblePeriods(
+  summaryMap: Map<string, boolean>,
+  referenceDate: Date,
+  createdAt: Date,
+  period: Period,
+  skippedPeriods?: string[],
+  activeDays?: number[],
+): { key: string; succeeded: boolean }[] {
+  const createdPeriodKey = periodKeyOf(createdAt, period);
+  const periods: { key: string; succeeded: boolean }[] = [];
+  let current = prevPeriodDate(referenceDate, period);
+
+  for (let scanned = 0; scanned < MAX_PERIODS_SCANNED; scanned++) {
+    const key = periodKeyOf(current, period);
+    if (key < createdPeriodKey) break;
+
+    // Check period key, week key, and month key (but NOT day keys — "skip today" is UI-only)
+    const isSkipped =
+      skippedPeriods !== undefined &&
+      (skippedPeriods.includes(key) ||
+        skippedPeriods.includes(weekKeyOf(current)) ||
+        skippedPeriods.includes(monthKeyOf(current)));
+
+    const isInactiveWeekday =
+      period === Period.DAY &&
+      activeDays !== undefined &&
+      activeDays.length > 0 &&
+      !activeDays.includes(current.getDay());
+
+    if (!isSkipped && !isInactiveWeekday) {
+      periods.push({ key, succeeded: summaryMap.get(key) ?? false });
+    }
+
+    current = prevPeriodDate(current, period);
+  }
+
+  return periods;
+}
+
+/**
+ * Everything a habit row needs to state its record: the live streak, and how
+ * often the habit has been kept overall.
+ *
+ * Both numbers come from one backwards walk over the same period summaries, so
+ * `/app/habits` gets the completion rate off the subscription it already has
+ * for the streak rather than opening a second one per row.
+ *
+ * The rate deliberately counts only **elapsed** periods and only periods the
+ * habit was eligible for: a habit skipped for a holiday week is not punished
+ * for it, and today does not count as a miss before the day is over.
+ */
+export interface HabitStats {
+  /** Consecutive eligible periods met, counting back from the last closed one. */
+  currentStrikeLength: number;
+  /** Earliest period of the current unbroken miss, or `null` when on track. */
+  openSincePeriodKey: string | null;
+  /** Eligible periods that have fully elapsed since the habit was created. */
+  periodsElapsed: number;
+  /** How many of those met the habit's target. */
+  periodsCompleted: number;
+  /**
+   * `periodsCompleted / periodsElapsed`, 0–1. `null` — not `0` — when no
+   * period has elapsed yet, so a habit created today reads "no history" rather
+   * than "0%".
+   */
+  completionRate: number | null;
+}
+
+export function computeHabitStats(
+  summaryMap: Map<string, boolean>,
+  referenceDate: Date,
+  createdAt: Date,
+  period: Period,
+  skippedPeriods?: string[],
+  activeDays?: number[],
+): HabitStats {
+  const periods = eligiblePeriods(
+    summaryMap,
+    referenceDate,
+    createdAt,
+    period,
+    skippedPeriods,
+    activeDays,
+  );
+
+  let streakCount = 0;
+  let openSincePeriodKey: string | null = null;
+  let periodsCompleted = 0;
+  // The streak reads only the most recent run of periods; once that run ends
+  // it freezes, while the walk continues for the all-time rate.
+  let streakSettled = false;
+
+  for (const { key, succeeded } of periods) {
+    if (succeeded) periodsCompleted++;
+    if (streakSettled) continue;
+
+    if (succeeded) {
+      if (openSincePeriodKey !== null) streakSettled = true;
+      else streakCount++;
+    } else {
+      if (streakCount > 0) streakSettled = true;
+      else openSincePeriodKey = key;
+    }
+  }
+
+  return {
+    currentStrikeLength: streakCount,
+    openSincePeriodKey,
+    periodsElapsed: periods.length,
+    periodsCompleted,
+    completionRate:
+      periods.length === 0 ? null : periodsCompleted / periods.length,
+  };
+}
+
+/**
+ * The streak half of {@link computeHabitStats}, kept as its own name because
+ * that is what most callers ask for.
+ */
 export function computeStreak(
   summaryMap: Map<string, boolean>,
   referenceDate: Date,
@@ -42,46 +177,15 @@ export function computeStreak(
   skippedPeriods?: string[],
   activeDays?: number[],
 ): { currentStrikeLength: number; openSincePeriodKey: string | null } {
-  const createdPeriodKey = periodKeyOf(createdAt, period);
-  let streakCount = 0;
-  let openSincePeriodKey: string | null = null;
-  let current = prevPeriodDate(referenceDate, period);
-
-  while (true) {
-    const key = periodKeyOf(current, period);
-    if (key < createdPeriodKey) break;
-
-    // Check period key, week key, and month key (but NOT day keys — "skip today" is UI-only)
-    if (skippedPeriods && (
-      skippedPeriods.includes(key) ||
-      skippedPeriods.includes(weekKeyOf(current)) ||
-      skippedPeriods.includes(monthKeyOf(current))
-    )) {
-      current = prevPeriodDate(current, period);
-      continue;
-    }
-
-    if (period === Period.DAY && activeDays && activeDays.length > 0) {
-      if (!activeDays.includes(current.getDay())) {
-        current = prevPeriodDate(current, period);
-        continue;
-      }
-    }
-
-    const succeeded = summaryMap.get(key) ?? false;
-
-    if (succeeded) {
-      if (openSincePeriodKey !== null) break;
-      streakCount++;
-    } else {
-      if (streakCount > 0) break;
-      openSincePeriodKey = key;
-    }
-
-    current = prevPeriodDate(current, period);
-  }
-
-  return { currentStrikeLength: streakCount, openSincePeriodKey };
+  const { currentStrikeLength, openSincePeriodKey } = computeHabitStats(
+    summaryMap,
+    referenceDate,
+    createdAt,
+    period,
+    skippedPeriods,
+    activeDays,
+  );
+  return { currentStrikeLength, openSincePeriodKey };
 }
 
 export function isHabitSucceeded(count: number, target: number): boolean {

@@ -21,8 +21,12 @@ import { useWorkspaceSelection } from "../../stores/workspace";
  * `NoteList` once a workspace passed five notes is gone — a filter that
  * materializes at the sixth note teaches nobody anything (DIRECTION §4).
  *
- * WS7 owns the rest: the row `⋯` (Edit, Pin/Unpin, Duplicate, Delete) and
- * deleting the now-unreferenced legacy `components/notes/NoteList.tsx`.
+ * The empty state is the one place the product says what a note *is for*
+ * (WS7). Habits and tasks announce their job by their shape — a streak, a
+ * checkbox — and a note's is easy to mistake for either. DIRECTION §1 defines
+ * it: shared context that is not work, timeless, measured by findability. The
+ * copy below says exactly that in the user's words, which is why it names the
+ * three things the other two objects cannot hold and ends on who can see them.
  */
 export function NotesList() {
   const {
@@ -71,7 +75,7 @@ export function NotesList() {
       <EmptyState
         icon={<FileText width={20} height={20} />}
         headline="No notes yet"
-        body="Notes hold the context your habits and tasks don't: a decision you made, a link you keep losing, the plan behind the plan. Everyone in the workspace sees them."
+        body="Notes hold the context a habit or a task can't — a decision, a link, the plan behind the plan. They belong to no week, and everyone in the workspace can find them."
         action={addButton}
       />
     );

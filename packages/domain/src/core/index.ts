@@ -7,3 +7,4 @@ export * from "./note";
 export * from "./activity";
 export * from "./search";
 export * from "./week";
+export * from "./review";

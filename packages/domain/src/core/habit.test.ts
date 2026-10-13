@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  computeHabitStats,
   computeStreak,
   filterHabitsByDay,
   getActiveSkipKey,
@@ -585,4 +586,120 @@ test("getActiveSkipKey returns month key when only month key is present", () => 
 test("getActiveSkipKey returns null when no key covers the given day", () => {
   const key = getActiveSkipKey(["2026-03-29", "2026-W13", "2026-02"], new Date(2026, 2, 30));
   assert.equal(key, null);
+});
+
+// ---------------------------------------------------------------------------
+// computeHabitStats
+// ---------------------------------------------------------------------------
+
+test("computeHabitStats counts every elapsed period, not just the streak", () => {
+  // Daily habit created Mar 1, read on Mar 10: Mar 1–9 have elapsed (9 periods).
+  const map = new Map<string, boolean>([
+    ["2026-03-09", true],
+    ["2026-03-08", true],
+    ["2026-03-06", true],
+    ["2026-03-02", true],
+  ]);
+  const stats = computeHabitStats(
+    map,
+    new Date(2026, 2, 10),
+    new Date(2026, 2, 1),
+    'day',
+  );
+  assert.equal(stats.currentStrikeLength, 2, "streak stops at Mar 7");
+  assert.equal(stats.openSincePeriodKey, null);
+  assert.equal(stats.periodsElapsed, 9);
+  assert.equal(stats.periodsCompleted, 4);
+  assert.equal(stats.completionRate, 4 / 9);
+});
+
+test("computeHabitStats excludes the current, still-open period", () => {
+  // Nothing recorded today, but today cannot be a miss until it is over.
+  const map = new Map<string, boolean>([["2026-03-09", true]]);
+  const stats = computeHabitStats(
+    map,
+    new Date(2026, 2, 10),
+    new Date(2026, 2, 9),
+    'day',
+  );
+  assert.equal(stats.periodsElapsed, 1);
+  assert.equal(stats.periodsCompleted, 1);
+  assert.equal(stats.completionRate, 1);
+});
+
+test("computeHabitStats returns a null rate when no period has elapsed yet", () => {
+  const stats = computeHabitStats(
+    new Map<string, boolean>(),
+    new Date(2026, 2, 10),
+    new Date(2026, 2, 10),
+    'day',
+  );
+  assert.equal(stats.periodsElapsed, 0);
+  assert.equal(stats.completionRate, null, "a habit created today has no record, not a 0% one");
+});
+
+test("computeHabitStats does not count skipped periods against the rate", () => {
+  // Mar 1–9 elapsed; Mar 3–9 skipped, leaving Mar 1 (missed) and Mar 2 (met).
+  const map = new Map<string, boolean>([["2026-03-02", true]]);
+  const stats = computeHabitStats(
+    map,
+    new Date(2026, 2, 10),
+    new Date(2026, 2, 1),
+    'day',
+    ["2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-07", "2026-03-08", "2026-03-09"],
+  );
+  assert.equal(stats.periodsElapsed, 2);
+  assert.equal(stats.periodsCompleted, 1);
+  assert.equal(stats.completionRate, 0.5);
+});
+
+test("computeHabitStats only counts active weekdays for a day habit", () => {
+  // Weekdays only (Mon–Fri). Mar 2–6 and Mar 9 are the eligible days in
+  // Mar 1–9; Mar 1, 7 and 8 fall on a weekend.
+  const map = new Map<string, boolean>([
+    ["2026-03-09", true],
+    ["2026-03-06", true],
+    ["2026-03-05", true],
+  ]);
+  const stats = computeHabitStats(
+    map,
+    new Date(2026, 2, 10),
+    new Date(2026, 2, 1),
+    'day',
+    undefined,
+    [1, 2, 3, 4, 5],
+  );
+  assert.equal(stats.periodsElapsed, 6);
+  assert.equal(stats.periodsCompleted, 3);
+  assert.equal(stats.currentStrikeLength, 3, "the weekend does not break a weekday streak");
+});
+
+test("computeHabitStats reports the earliest period of the current miss run", () => {
+  const map = new Map<string, boolean>([["2026-W09", true]]);
+  const stats = computeHabitStats(
+    map,
+    new Date(2026, 2, 16), // week 12
+    new Date(2026, 1, 23), // created week 09
+    'week',
+  );
+  assert.equal(stats.currentStrikeLength, 0);
+  assert.equal(stats.openSincePeriodKey, "2026-W10");
+  assert.equal(stats.periodsElapsed, 3);
+  assert.equal(stats.periodsCompleted, 1);
+});
+
+test("computeStreak agrees with computeHabitStats on the streak half", () => {
+  const map = new Map<string, boolean>([
+    ["2026-W11", true],
+    ["2026-W10", true],
+    ["2026-W08", true],
+  ]);
+  const args = [map, new Date(2026, 2, 16), new Date(2026, 1, 16), 'week'] as const;
+  const streak = computeStreak(...args);
+  const stats = computeHabitStats(...args);
+  assert.deepEqual(streak, {
+    currentStrikeLength: stats.currentStrikeLength,
+    openSincePeriodKey: stats.openSincePeriodKey,
+  });
+  assert.equal(streak.currentStrikeLength, 2);
 });
