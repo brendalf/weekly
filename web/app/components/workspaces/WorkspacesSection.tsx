@@ -247,7 +247,7 @@ function WorkspaceCard({
                     <span className="truncate text-sm text-foreground">
                       {email}
                     </span>
-                    <Badge className="bg-fill-strong text-subtle">
+                    <Badge className="bg-fill-strong text-muted">
                       pending
                     </Badge>
                   </li>

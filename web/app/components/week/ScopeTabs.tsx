@@ -1,7 +1,7 @@
 "use client";
 
 import type { Period, ScopeProgress } from "@weekly/domain";
-import { focusRing } from "../ui";
+import { focusRing, touchRowCoarse } from "../ui";
 
 /**
  * Which cadence of the week's plan is on screen.
@@ -41,6 +41,7 @@ export function ScopeTabs({
             onClick={() => onScopeChange(period)}
             className={[
               "flex min-h-9 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-sm font-medium transition-colors sm:px-3",
+              touchRowCoarse,
               focusRing,
               isActive
                 ? "bg-background text-foreground"
@@ -55,7 +56,7 @@ export function ScopeTabs({
                     the numbers reach two digits, so below `sm:` the ring
                     carries the value visually and the count stays for screen
                     readers. */}
-                <span className="sr-only text-xs tabular-nums text-subtle sm:not-sr-only">
+                <span className="sr-only text-xs tabular-nums text-muted sm:not-sr-only">
                   {done}/{total}
                 </span>
               </>

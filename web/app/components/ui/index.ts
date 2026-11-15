@@ -35,6 +35,8 @@ export type { DetailPanelProps } from "./DetailPanel";
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
 
+export { LiveRegion } from "./LiveRegion";
+
 export { Skeleton, SkeletonCard, SkeletonList, SkeletonRow } from "./Skeleton";
 export type {
   SkeletonProps,
@@ -43,4 +45,11 @@ export type {
   SkeletonRowProps,
 } from "./Skeleton";
 
-export { focusRing, touchRow, touchRowCoarse, touchTarget } from "./styles";
+export {
+  focusRing,
+  sheetContainer,
+  sheetDialog,
+  touchRow,
+  touchRowCoarse,
+  touchTarget,
+} from "./styles";

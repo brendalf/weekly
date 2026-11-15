@@ -101,7 +101,7 @@ export function StarterHabits({
               onSubmit={onAddHabit}
               workspaces={workspaces}
               trigger={
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" className="min-h-11">
                   Add your own habit
                 </Button>
               }
@@ -110,7 +110,7 @@ export function StarterHabits({
               onSubmit={onAddTask}
               workspaces={workspaces}
               trigger={
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" className="min-h-11">
                   Add a task
                 </Button>
               }

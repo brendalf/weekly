@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Modal, Button, Surface, useOverlayState } from "@heroui/react";
+import { useCallback, useState } from "react";
+import { Button, Surface } from "@heroui/react";
 import { TrashBin, Pencil } from "@gravity-ui/icons";
 import { Task, Period, weekKeyOf } from "@weekly/domain";
+import { DetailPanel } from "../ui";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useUndoableDelete } from "../../hooks/useUndoableDelete";
 import { CommentSection } from "../comments/CommentSection";
@@ -31,6 +32,13 @@ interface TaskDetailsModalProps {
  * cannot restore), and the footer's bare glyphs gained text labels, because a
  * delete button that is only a trash icon looks exactly as safe as the save
  * button beside it (DIRECTION §6.7).
+ *
+ * WS13 changed the shell. It was a `placement="center"` `size="sm"` `Modal`
+ * with no mobile treatment at all — a 384px box floated in the middle of a
+ * 375px phone, while the *note* modals had proper sheet styling. It now renders
+ * through `DetailPanel`, so it is the same surface as `/app/tasks/:id`:
+ * a right-side panel at `lg:`+ and a bottom sheet below it (DIRECTION §5).
+ * The name stays `TaskDetailsModal` only until WS6 finishes retiring it.
  */
 export function TaskDetailsModal({
   open,
@@ -49,18 +57,18 @@ export function TaskDetailsModal({
   // One form, shared with `/app/tasks/:id` — see `TaskEditForm`.
   const form = useTaskEditForm(task);
 
-  const state = useOverlayState({
-    isOpen: open,
-    onOpenChange: (isOpen) => {
+  const handleOpenChange = useCallback(
+    (isOpen: boolean) => {
       if (!isOpen) setEditing(false);
       onOpenChange(isOpen);
     },
-  });
+    [onOpenChange],
+  );
 
   function handleDelete() {
     if (!repos) return;
     const snapshot = task;
-    state.close();
+    handleOpenChange(false);
     deleteWithUndo({
       message: "Task deleted",
       errorMessage: "Failed to delete task. Please try again.",
@@ -105,19 +113,46 @@ export function TaskDetailsModal({
 
   const hasScheduleOverride = Boolean(task.schedule);
 
-  return (
-    <Modal state={state}>
-      <Modal.Backdrop variant="blur">
-        <Modal.Container placement="center" size="sm">
-          <Modal.Dialog>
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {editing ? `Edit “${task.title}”` : task.title}
-              </Modal.Heading>
-            </Modal.Header>
+  /* A prop rather than children, so it stays pinned to the bottom of the
+     panel in both presentations. */
+  const footer = editing ? (
+    <>
+      <Button
+        variant="ghost"
+        className="min-h-11"
+        onPress={() => setEditing(false)}
+      >
+        Cancel
+      </Button>
+      <Button
+        className="min-h-11 bg-brand"
+        isDisabled={!form.isValid || form.isSaving}
+        onPress={handleSave}
+      >
+        Save
+      </Button>
+    </>
+  ) : (
+    <>
+      <Button variant="ghost" className="min-h-11" onPress={startEditing}>
+        <Pencil />
+        Edit
+      </Button>
+      <Button variant="danger" className="min-h-11" onPress={handleDelete}>
+        <TrashBin />
+        Delete task
+      </Button>
+    </>
+  );
 
-            <Modal.Body className="p-1">
+  return (
+    <DetailPanel
+      open={open}
+      onOpenChange={handleOpenChange}
+      title={editing ? `Edit “${task.title}”` : task.title}
+      ariaLabel={editing ? `Edit task ${task.title}` : `Task ${task.title}`}
+      footer={footer}
+    >
               {editing ? (
                 <TaskEditFields form={form} onSubmit={handleSave} />
               ) : (
@@ -174,50 +209,6 @@ export function TaskDetailsModal({
                   />
                 </div>
               )}
-            </Modal.Body>
-
-            <Modal.Footer>
-              {editing ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    className="min-h-11"
-                    onPress={() => setEditing(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    className="min-h-11 bg-brand"
-                    isDisabled={!form.isValid || form.isSaving}
-                    onPress={handleSave}
-                  >
-                    Save
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="ghost"
-                    className="min-h-11"
-                    onPress={startEditing}
-                  >
-                    <Pencil />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="danger"
-                    className="min-h-11"
-                    onPress={handleDelete}
-                  >
-                    <TrashBin />
-                    Delete task
-                  </Button>
-                </>
-              )}
-            </Modal.Footer>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+    </DetailPanel>
   );
 }

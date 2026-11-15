@@ -246,7 +246,7 @@ export function CommentSection({
         <CommentIcon className="h-4 w-4 text-subtle" />
         <p className="text-sm font-semibold text-foreground">Comments</p>
         {comments.length > 0 && (
-          <span className="rounded-full bg-fill-strong px-2 py-0.5 text-xs text-subtle">
+          <span className="rounded-full bg-fill-strong px-2 py-0.5 text-xs text-muted">
             {comments.length}
           </span>
         )}

@@ -289,7 +289,7 @@ function NoteDetailPanel({ defaultEditing }: { defaultEditing: boolean }) {
         <div className="flex flex-col gap-3">
           {workspaceName && (
             <span className="w-fit">
-              <Badge className="bg-fill-strong text-subtle">
+              <Badge className="bg-fill-strong text-muted">
                 {workspaceName}
               </Badge>
             </span>

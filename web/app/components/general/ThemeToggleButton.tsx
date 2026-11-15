@@ -3,6 +3,7 @@
 import { useContext, useState } from "react";
 import { Button } from "@heroui/react";
 import { ThemeContext } from "../../providers";
+import { touchTarget } from "../ui";
 import { Moon, Sun } from "@gravity-ui/icons";
 
 export function ThemeToggleButton({ userId }: { userId: string }) {
@@ -19,6 +20,8 @@ export function ThemeToggleButton({ userId }: { userId: string }) {
       size="sm"
       isIconOnly
       variant="outline"
+      // `size="sm"` is 32px; the 44px floor is not optional (DIRECTION §6.8).
+      className={touchTarget}
       onPress={handleClick}
       aria-label="Toggle theme"
     >

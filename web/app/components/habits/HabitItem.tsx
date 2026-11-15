@@ -24,6 +24,7 @@ import { HabitDetailsModal } from "./HabitDetailsModal";
 import type { RepoSet } from "../../contexts/RepositoryContext";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { useActivityLog } from "../../hooks/useActivityLog";
+import { announce } from "../../hooks/useAnnounce";
 import {
   ROW_ATTR,
   rowControl,
@@ -247,6 +248,13 @@ export function HabitItem({
     if (period === Period.WEEK || period === Period.MONTH) {
       setOptimisticProgressToday(true);
     }
+    // The count is static text and a multi-target habit is not a toggle, so
+    // the optimistic repaint is otherwise silent (WS14, `hooks/useAnnounce`).
+    announce(
+      nextCount >= Math.max(1, target)
+        ? `${name} complete, ${nextCount} of ${target}`
+        : `${name}, ${nextCount} of ${target}`,
+    );
 
     repos.habitProgress
       .incrementHabit(id, period, target, referenceDate, value, dayCounts)
@@ -272,6 +280,7 @@ export function HabitItem({
     if (prevCount <= 0) return;
 
     setOptimisticCount(prevCount - 1);
+    announce(`${name}, ${prevCount - 1} of ${target}`);
     try {
       const logs = await readCompletionsOnce(repos, id);
       const latest = logs
@@ -308,11 +317,20 @@ export function HabitItem({
     setDetail({ open: true, editing });
   }
 
+  /**
+   * A done or skipped row is de-emphasised through the **color ladder**, not
+   * through `opacity` (WS14). The row used to carry `opacity-50`, which
+   * multiplied every colour inside it: the title measured 3.29:1 and the
+   * badges 2.1–2.3:1 in light theme — a whole row of text below AA, on a row
+   * that is still fully interactive (the ring un-marks it). Dropping to
+   * `--muted` says the same thing at 7.17:1.
+   */
   const dimmed = isSkipped || complete;
   const titleContent = (
     <span
       className={[
-        "block truncate text-sm text-foreground",
+        "block truncate text-sm",
+        dimmed ? "text-muted" : "text-foreground",
         isSkipped ? "line-through" : "",
       ].join(" ")}
     >
@@ -324,7 +342,7 @@ export function HabitItem({
     <>
       <div className={`${rowShell} items-center p-2`} {...rowKeys}>
         <CircularCheckboxProgress
-          className={`${rowControl} ${dimmed ? "opacity-50" : ""}`}
+          className={rowControl}
           size={28}
           stroke={4}
           progress={isSkipped ? 0 : progress}
@@ -340,13 +358,10 @@ export function HabitItem({
         />
 
         <div
-          className={[
-            "flex min-w-0 flex-1 items-center gap-2 overflow-hidden",
-            dimmed ? "opacity-50" : "",
-          ].join(" ")}
+          className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden"
         >
           {projectName && !isSkipped && (
-            <Badge className="shrink-0 bg-fill-strong text-subtle">
+            <Badge className="shrink-0 bg-fill-strong text-muted">
               {projectName}
             </Badge>
           )}
@@ -373,7 +388,7 @@ export function HabitItem({
           <span className="flex shrink-0 items-center gap-2">
             {showPeriodLabel && !isSkipped && <PeriodBadge period={period} />}
             {isSkipped && (
-              <Badge className="bg-fill-strong text-subtle">Skipped</Badge>
+              <Badge className="bg-fill-strong text-muted">Skipped</Badge>
             )}
             {!isSkipped && (
               <span className="text-xs text-muted">

@@ -10,6 +10,7 @@ import { Badge } from "../general/Badge";
 import { PeriodBadge } from "../general/PeriodBadge";
 import { TaskActionMenu } from "./TaskActionMenu";
 import { TaskDetailsModal } from "./TaskDetailsModal";
+import { announce } from "../../hooks/useAnnounce";
 import {
   ROW_ATTR,
   rowControl,
@@ -66,6 +67,8 @@ export function TaskItem({
   function handleToggle() {
     const next = !displayCompleted;
     setOptimisticCompleted(next);
+    // The optimistic repaint is a strikethrough; say it too (WS14).
+    announce(`${task.title} ${next ? "completed" : "not completed"}`);
     onToggleCompleted(task.id).catch(() => {
       setOptimisticCompleted(null);
       toast.error("Failed to update task. Please try again.");
@@ -82,11 +85,13 @@ export function TaskItem({
 
   const rowKeys = useRowKeys({ onToggle: handleToggle });
 
+  /* A completed row drops to `--muted` rather than `opacity-50`; see the
+     note on `dimmed` in `HabitItem` for the measurements. */
   const titleContent = (
     <span
       className={[
-        "block truncate text-sm text-foreground",
-        displayCompleted ? "line-through" : "",
+        "block truncate text-sm",
+        displayCompleted ? "text-muted line-through" : "text-foreground",
       ].join(" ")}
     >
       {task.title}
@@ -97,7 +102,7 @@ export function TaskItem({
     <>
       <div className={`${rowShell} items-center p-2`} {...rowKeys}>
         <CircularCheckboxProgress
-          className={`${rowControl} ${displayCompleted ? "opacity-50" : ""}`}
+          className={rowControl}
           size={28}
           stroke={4}
           progress={displayCompleted ? 1 : 0}
@@ -111,13 +116,10 @@ export function TaskItem({
         />
 
         <div
-          className={[
-            "flex min-w-0 flex-1 items-center gap-2 overflow-hidden",
-            displayCompleted ? "opacity-50" : "",
-          ].join(" ")}
+          className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden"
         >
           {projectName && (
-            <Badge className="bg-fill-strong text-subtle">{projectName}</Badge>
+            <Badge className="bg-fill-strong text-muted">{projectName}</Badge>
           )}
 
           {detailHref ? (

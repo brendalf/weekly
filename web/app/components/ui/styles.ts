@@ -26,3 +26,25 @@ export const touchRow = "min-h-11";
  * but a thumb still needs something to hit.
  */
 export const touchRowCoarse = "pointer-coarse:min-h-11";
+
+/* -------------------------------------------------------------- sheets -- */
+
+/**
+ * The mobile bottom-sheet treatment (DIRECTION §2.6, §5), spelled once.
+ *
+ * `NoteDetailsModal` and `NoteAddModal` were the only surfaces in the app that
+ * got this right; `DetailPanel` lifted it, then `HabitDetailsModal`,
+ * `TaskDetailsModal` and `HabitAddModal` still needed it — a fourth copy. So
+ * the two class strings live here and every sheet references them.
+ *
+ * Pair them: `sheetContainer` on `Modal.Container` (which must also carry
+ * `placement="bottom"`), `sheetDialog` on `Modal.Dialog`. Below `sm:` the
+ * dialog is a full-height sheet anchored to the bottom edge, with the home-bar
+ * inset added to its padding; at `sm:` and up it becomes a centered,
+ * `85dvh`-capped dialog again.
+ */
+export const sheetContainer = "p-0 sm:p-10";
+
+/** @see sheetContainer */
+export const sheetDialog =
+  "h-full max-h-full rounded-b-none rounded-t-3xl p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:h-auto sm:max-h-[85dvh] sm:rounded-3xl sm:p-6 sm:pb-6";

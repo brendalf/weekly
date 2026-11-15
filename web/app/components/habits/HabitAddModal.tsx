@@ -15,6 +15,7 @@ import { ActiveDaysSelector } from "./ActiveDaysSelector";
 import { TimeOfDaySelector } from "./TimeOfDaySelector";
 import { HabitPeriodSelect } from "./HabitPeriodSelect";
 import { WorkspaceField } from "../general/WorkspaceField";
+import { sheetContainer, sheetDialog } from "../ui";
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 
@@ -80,10 +81,16 @@ export function HabitAddModal({
         onOpenChange?.(open);
       }}
     >
-      {trigger ?? <Button size="sm">Add habit</Button>}
+      {trigger ?? (
+        <Button size="sm" className="min-h-11">
+          Add habit
+        </Button>
+      )}
       <Modal.Backdrop variant="blur">
-        <Modal.Container placement="center" size="sm">
-          <Modal.Dialog>
+        {/* Add flows stay dialogs (DIRECTION §5) but share the sheet
+            treatment on mobile — WS13. */}
+        <Modal.Container placement="bottom" size="sm" className={sheetContainer}>
+          <Modal.Dialog className={sheetDialog}>
             {({ close }) => (
               <>
                 <Modal.CloseTrigger />
@@ -116,16 +123,17 @@ export function HabitAddModal({
                           onChange={setWorkspaceId}
                         />
                       )}
-                      <div className="mt-4">Frequency</div>
-                      <div className="mt-1 flex items-end gap-2">
-                        <Input
-                          type="number"
-                          value={times}
-                          className="max-w-20"
-                          variant="secondary"
-                          placeholder="Times"
-                          onChange={(e) => setTimes(e.target.value)}
-                        />
+                      <div className="mt-4 flex items-end gap-2">
+                        <TextField name="times" className="max-w-20">
+                          <Label>Frequency</Label>
+                          <Input
+                            type="number"
+                            value={times}
+                            variant="secondary"
+                            placeholder="Times"
+                            onChange={(e) => setTimes(e.target.value)}
+                          />
+                        </TextField>
                         <HabitPeriodSelect value={period} onChange={setPeriod} />
                       </div>
                       {period === Period.DAY && (
@@ -149,11 +157,14 @@ export function HabitAddModal({
                   </Surface>
                 </Modal.Body>
                 <Modal.Footer>
+                  {/* A labeled submit, not a bare glyph (DIRECTION §6.7). */}
                   <Button
+                    className="min-h-11"
                     isDisabled={!isValid}
                     onPress={() => handleSave(close)}
                   >
                     <Check />
+                    Add habit
                   </Button>
                 </Modal.Footer>
               </>

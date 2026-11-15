@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { SkeletonList } from "../components/ui";
+import { LiveRegion, SkeletonList } from "../components/ui";
 import {
   AppDataProvider,
   useAppData,
@@ -87,6 +87,10 @@ function AppShell({ children }: { children: ReactNode }) {
       {/* The keyboard map and its `?` cheatsheet (WS12). Mounted once for the
           whole shell so `n`, `h`, `t`, `o` work from every route. */}
       <KeyboardShortcuts />
+
+      {/* One polite live region for the whole app (WS14) — optimistic row
+          updates speak through it. See `hooks/useAnnounce`. */}
+      <LiveRegion />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { Button } from "@heroui/react";
 import { Bell, BellDot } from "@gravity-ui/icons";
 import { toast } from "sonner";
 import {
@@ -11,6 +12,7 @@ import {
   type ActivityNotification,
 } from "@weekly/domain";
 import { useWorkspaceStore, workspaceStore } from "../../stores/workspace";
+import { ActionPopover } from "../ui";
 import { workspaceRepository, userPreferencesRepository } from "../../repositories";
 import { auth } from "../../config/firebase";
 
@@ -105,10 +107,21 @@ function ActivityRow({
   );
 }
 
+/**
+ * The shell's notification affordance (DIRECTION §6.5, §6.8).
+ *
+ * WS14 rebuilt the shell around it. The trigger was a 32×32 `<button>` with no
+ * focus ring, and the panel was a hand-measured `position: fixed` computed once
+ * on open from `getBoundingClientRect` — so it did not reposition on scroll or
+ * resize, it trapped no focus, it did not close on `Esc`, and nothing told a
+ * screen reader it was expanded. It is an `ActionPopover` now (HeroUI/React
+ * Aria): 44px trigger, focus ring, `aria-haspopup`/`aria-expanded`, focus
+ * containment, `Esc`, collision detection and repositioning.
+ *
+ * `ActionPopover` rather than `ActionMenu` because the rows are not actions —
+ * an invite row carries its own Accept/Decline pair, which a menu row cannot.
+ */
 export function NotificationBell() {
-  const [open, setOpen] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const pendingInvites = useWorkspaceStore((s) => s.pendingInvites);
   const activityNotifications = useWorkspaceStore((s) => s.activityNotifications);
   const lastReadAt = useWorkspaceStore((s) => s.lastNotificationReadAt);
@@ -134,35 +147,19 @@ export function NotificationBell() {
     return new Map(workspaces.map((w) => [w.id, w.name]));
   }, [workspaces]);
 
-  function handleOpen() {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const dropdownWidth = 320;
-      const margin = 16;
-      const top = rect.bottom + 4;
-      const rightEdge = rect.right;
-      const leftEdge = rightEdge - dropdownWidth;
-      const style: React.CSSProperties = {
-        position: "fixed",
-        top,
-        width: Math.min(dropdownWidth, window.innerWidth - margin * 2),
-      };
-      if (leftEdge < margin) {
-        style.left = margin;
-      } else {
-        style.right = window.innerWidth - rightEdge;
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) return;
+      setReadCutoff(lastReadAt);
+      const ts = new Date().toISOString();
+      workspaceStore.setLastNotificationReadAt(ts);
+      const user = auth.currentUser;
+      if (user) {
+        userPreferencesRepository.updateLastNotificationReadAt(user.uid, ts);
       }
-      setDropdownStyle(style);
-    }
-    setOpen(true);
-    setReadCutoff(lastReadAt);
-    const ts = new Date().toISOString();
-    workspaceStore.setLastNotificationReadAt(ts);
-    const user = auth.currentUser;
-    if (user) {
-      userPreferencesRepository.updateLastNotificationReadAt(user.uid, ts);
-    }
-  }
+    },
+    [lastReadAt],
+  );
 
   async function handleRespond(inviteId: string, accept: boolean) {
     const user = auth.currentUser;
@@ -184,105 +181,99 @@ export function NotificationBell() {
     pendingInvites.length > 0 || activityNotifications.length > 0;
 
   return (
-    <div className="relative">
-      <button
-        ref={buttonRef}
-        onClick={() => (open ? setOpen(false) : handleOpen())}
-        className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-surface hover:border-border-strong transition-colors"
-        aria-label={
-          unreadCount > 0
-            ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
-            : "Notifications"
-        }
-      >
-        {unreadCount > 0 ? (
-          <BellDot width={16} height={16} />
-        ) : (
-          <Bell width={16} height={16} />
-        )}
-        {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-brand text-xs leading-none text-brand-foreground font-bold">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </button>
-
-      {open && (
+    <ActionPopover
+      label={
+        unreadCount > 0
+          ? `Notifications, ${unreadCount} unread`
+          : "Notifications"
+      }
+      title="Notifications"
+      className="w-80 max-w-[calc(100vw-2rem)]"
+      triggerClassName="border border-border bg-surface text-muted hover:text-foreground"
+      onOpenChange={handleOpenChange}
+      trigger={
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div style={dropdownStyle} className="z-20 rounded-xl border border-border bg-surface p-2 shadow-lg">
-            <p className="mb-2 px-2 text-xs font-medium text-muted">
-              Notifications
-            </p>
-
-            {!hasNotifications && (
-              <p className="px-2 py-4 text-center text-xs text-subtle">
-                No notifications
-              </p>
-            )}
-
-            {pendingInvites.length > 0 && (
-              <div className="flex flex-col gap-1 mb-2">
-                <p className="px-2 text-xs font-semibold uppercase tracking-wide text-subtle">
-                  Invites
-                </p>
-                {pendingInvites.map((invite) => (
-                  <div
-                    key={invite.id}
-                    className="flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-background p-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {invite.workspaceName}
-                      </p>
-                      <p className="text-xs text-muted">
-                        from {invite.invitedByDisplayName}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleRespond(invite.id, true)}
-                        className="flex-1 cursor-pointer rounded-lg bg-brand py-1 text-xs text-brand-foreground hover:bg-brand-hover transition-colors"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() => handleRespond(invite.id, false)}
-                        className="flex-1 cursor-pointer rounded-lg border border-border-strong py-1 text-xs text-muted hover:bg-fill transition-colors"
-                      >
-                        Decline
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {feed.length > 0 && (
-              <div className="flex max-h-[60vh] flex-col gap-1 overflow-y-auto">
-                {pendingInvites.length > 0 && (
-                  <p className="px-2 text-xs font-semibold uppercase tracking-wide text-subtle">
-                    Activity
-                  </p>
-                )}
-                {feed.map((entry) => (
-                  <ActivityRow
-                    key={entry.key}
-                    entry={entry}
-                    workspaceName={
-                      workspaceNames?.get(entry.activity.workspaceId) ??
-                      undefined
-                    }
-                    unread={
-                      !readCutoff || entry.activity.createdAt > readCutoff
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          {unreadCount > 0 ? (
+            <BellDot width={16} height={16} aria-hidden />
+          ) : (
+            <Bell width={16} height={16} aria-hidden />
+          )}
+          {unreadCount > 0 && (
+            <span
+              aria-hidden
+              className="absolute top-1 right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-brand px-1 text-xs leading-none font-bold text-brand-foreground"
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
         </>
+      }
+    >
+      {!hasNotifications && (
+        <p className="px-2 py-4 text-center text-xs text-muted">
+          No notifications
+        </p>
       )}
-    </div>
+
+      {pendingInvites.length > 0 && (
+        <div className="mb-2 flex flex-col gap-1">
+          <p className="px-2 text-xs font-semibold tracking-wide text-muted uppercase">
+            Invites
+          </p>
+          {pendingInvites.map((invite) => (
+            <div
+              key={invite.id}
+              className="flex flex-col gap-2 rounded-lg border border-border bg-background p-3"
+            >
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {invite.workspaceName}
+                </p>
+                <p className="text-xs text-muted">
+                  from {invite.invitedByDisplayName}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  className="min-h-11 flex-1"
+                  onPress={() => handleRespond(invite.id, true)}
+                >
+                  Accept
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="min-h-11 flex-1 border border-border-strong"
+                  onPress={() => handleRespond(invite.id, false)}
+                >
+                  Decline
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {feed.length > 0 && (
+        <div className="flex max-h-[60vh] flex-col gap-1 overflow-y-auto">
+          {pendingInvites.length > 0 && (
+            <p className="px-2 text-xs font-semibold tracking-wide text-muted uppercase">
+              Activity
+            </p>
+          )}
+          {feed.map((entry) => (
+            <ActivityRow
+              key={entry.key}
+              entry={entry}
+              workspaceName={
+                workspaceNames?.get(entry.activity.workspaceId) ?? undefined
+              }
+              unread={!readCutoff || entry.activity.createdAt > readCutoff}
+            />
+          ))}
+        </div>
+      )}
+    </ActionPopover>
   );
 }

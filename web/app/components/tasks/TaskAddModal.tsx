@@ -56,7 +56,11 @@ export function TaskAddModal({
         onOpenChange?.(open);
       }}
     >
-      {trigger ?? <Button size="sm">Add task</Button>}
+      {trigger ?? (
+        <Button size="sm" className="min-h-11">
+          Add task
+        </Button>
+      )}
       <Modal.Backdrop variant="blur">
         <Modal.Container placement="top" size="sm" className="sm:items-center sm:[&]:mt-0 mt-16">
           <Modal.Dialog>
@@ -106,13 +110,16 @@ export function TaskAddModal({
                   </Surface>
                 </Modal.Body>
                 <Modal.Footer>
+                  {/* A labeled submit, not a bare glyph (DIRECTION §6.7). */}
                   <Button
+                    className="min-h-11"
                     isDisabled={
                       !title.trim() || (Boolean(workspaces?.length) && !workspaceId)
                     }
                     onPress={() => handleSave(close)}
                   >
                     <Check />
+                    Add task
                   </Button>
                 </Modal.Footer>
               </>

@@ -14,6 +14,7 @@ import {
 import { Check } from "@gravity-ui/icons";
 import { WorkspaceField } from "../general/WorkspaceField";
 import { useIsTouch } from "../../hooks/useIsTouch";
+import { focusRing, sheetContainer, sheetDialog } from "../ui";
 
 interface NoteAddModalProps {
   open: boolean;
@@ -72,8 +73,8 @@ export function NoteAddModal({ open, onOpenChange, workspaces, onSubmit }: NoteA
   return (
     <Modal state={state}>
       <Modal.Backdrop variant="blur">
-        <Modal.Container placement="bottom" size="sm" className="p-0 sm:p-10">
-          <Modal.Dialog className="h-full max-h-full rounded-t-3xl rounded-b-none p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:h-auto sm:max-h-[85dvh] sm:rounded-3xl sm:p-6 sm:pb-6">
+        <Modal.Container placement="bottom" size="sm" className={sheetContainer}>
+          <Modal.Dialog className={sheetDialog}>
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading className="pr-10">Add note</Modal.Heading>
@@ -116,20 +117,17 @@ export function NoteAddModal({ open, onOpenChange, workspaces, onSubmit }: NoteA
                       onChange={(e) => setBody(e.target.value)}
                       placeholder="Write something… (optional)"
                       rows={4}
-                      className="max-h-[45vh] min-h-28 w-full resize-none overflow-y-auto rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground placeholder:text-subtle focus:border-border-strong focus:outline-none"
+                      className={`max-h-[45vh] min-h-28 w-full resize-none overflow-y-auto rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground placeholder:text-subtle focus:outline-none ${focusRing}`}
                     />
                   </div>
                 </form>
               </Surface>
             </Modal.Body>
             <Modal.Footer>
-              <Button
-                className="min-h-11"
-                isDisabled={!isValid}
-                aria-label="Add note"
-                onPress={handleAdd}
-              >
+              {/* A labeled submit, not a bare glyph (DIRECTION §6.7). */}
+              <Button className="min-h-11" isDisabled={!isValid} onPress={handleAdd}>
                 <Check />
+                Add note
               </Button>
             </Modal.Footer>
           </Modal.Dialog>

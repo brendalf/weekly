@@ -15,6 +15,7 @@ import {
 import { Pencil, TrashBin, Xmark, Check, Pin, PinFill } from "@gravity-ui/icons";
 import type { Note } from "@weekly/domain";
 import { Badge } from "../general/Badge";
+import { sheetContainer, sheetDialog } from "../ui";
 import { useIsTouch } from "../../hooks/useIsTouch";
 import { useNoteDelete } from "./useNoteDelete";
 
@@ -161,14 +162,8 @@ export function NoteDetailsModal({
   return (
     <Modal state={state}>
       <Modal.Backdrop variant="blur">
-        <Modal.Container
-          placement="bottom"
-          size="sm"
-          className="p-0 sm:p-10"
-        >
-          <Modal.Dialog
-            className="h-full max-h-full rounded-b-none rounded-t-3xl p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:h-auto sm:max-h-[85dvh] sm:rounded-3xl sm:p-6 sm:pb-6"
-          >
+        <Modal.Container placement="bottom" size="sm" className={sheetContainer}>
+          <Modal.Dialog className={sheetDialog}>
             <Modal.CloseTrigger />
             <Modal.Header>
               {editing ? (
@@ -226,7 +221,7 @@ export function NoteDetailsModal({
                   <div className="flex flex-col gap-3">
                     {workspaceName && (
                       <span className="w-fit">
-                        <Badge className="bg-fill-strong text-subtle">
+                        <Badge className="bg-fill-strong text-muted">
                           {workspaceName}
                         </Badge>
                       </span>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Modal, Button, Surface, useOverlayState } from "@heroui/react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { Button, Surface } from "@heroui/react";
 import {
   Flame,
   TrashBin,
@@ -23,12 +23,28 @@ import {
   prevPeriodDate,
 } from "@weekly/domain";
 import { toast } from "sonner";
-import { ConfirmButton } from "../ui";
+import {
+  ConfirmButton,
+  DetailPanel,
+  focusRing,
+  touchRowCoarse,
+} from "../ui";
 import { useRepositoryContext } from "../../contexts/RepositoryContext";
 import { CommentSection } from "../comments/CommentSection";
 import { CircularCheckboxProgress } from "../general/CircularCheckboxProgress";
 import { HabitEditFields, useHabitEditForm } from "./HabitEditForm";
 
+/**
+ * The legacy habit detail, still used by `/app/week` (WS5 is moving its body
+ * into `/app/habits/:id`).
+ *
+ * WS13 replaced its shell. It was a `placement="center"` `size="sm"` `Modal`
+ * with no mobile treatment — the most-used detail view in the product was the
+ * worst one on a phone, while the *note* modals had proper sheet styling. It
+ * now renders through `DetailPanel`: right-side panel at `lg:`+, bottom sheet
+ * below it (DIRECTION §5). The name stays `HabitDetailsModal` only until WS5
+ * finishes retiring it.
+ */
 interface HabitDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -215,11 +231,25 @@ const STATUS_CLASSES: Record<SlotStatus, string> = {
     "bg-success-soft text-success-muted border-success/20",
   partial:
     "bg-warning-soft text-warning-muted border-warning/20",
-  missed: "bg-fill text-subtle border-border",
-  skipped:
-    "bg-fill-strong text-subtle border-border line-through",
+  // Text on a neutral fill is --muted, not --subtle (globals.css, WS14).
+  missed: "bg-fill text-muted border-border",
+  skipped: "bg-fill-strong text-muted border-border line-through",
   inactive: "bg-transparent text-subtle border-transparent",
   future: "bg-transparent text-subtle border-transparent",
+};
+
+/**
+ * What each cell *means*. The grid encodes status in color alone, which is a
+ * 1.4.1 problem on its own and leaves a screen reader with a bare day number;
+ * every cell is a `role="img"` carrying "12 October: done" (WS14).
+ */
+const STATUS_LABELS: Record<SlotStatus, string> = {
+  completed: "done",
+  partial: "partly done",
+  missed: "missed",
+  skipped: "skipped",
+  inactive: "not scheduled",
+  future: "upcoming",
 };
 
 function DayCalendar({ slots }: { slots: CalendarSlot[] }) {
@@ -254,42 +284,51 @@ function DayCalendar({ slots }: { slots: CalendarSlot[] }) {
   if (currentRow.length > 0) rows.push(currentRow);
 
   return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[280px]">
-        {/* Day headers */}
-        <div className="mb-1 grid grid-cols-7 gap-0.5">
-          {DAY_LABELS.map((l, i) => (
-            <div
-              key={i}
-              className="text-center text-xs font-medium text-subtle"
-            >
-              {l}
-            </div>
-          ))}
-        </div>
-        {/* Weeks */}
-        <div className="flex flex-col gap-0.5">
-          {rows.map((row, ri) => (
-            <div key={ri} className="grid grid-cols-7 gap-0.5">
-              {row.map((slot, ci) => (
+    /* 280px wide, capped at the container (WS13). It used to be
+       `overflow-x-auto` around a `min-w-[280px]` child, which is the silent
+       horizontal scroll DIRECTION calls out: in the 303px the sheet leaves at
+       375px the grid *just* fit, and one step narrower it scrolled with no
+       affordance. A `max-w-full` box cannot scroll — it reflows. */
+    <div
+      role="group"
+      aria-label="Completion history, most recent last"
+      className="w-[17.5rem] max-w-full"
+    >
+      {/* Decorative: every cell names its own date (STATUS_LABELS). */}
+      <div aria-hidden className="mb-1 grid grid-cols-7 gap-0.5">
+        {DAY_LABELS.map((l, i) => (
+          <div key={i} className="text-center text-xs font-medium text-muted">
+            {l}
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-col gap-0.5">
+        {rows.map((row, ri) => (
+          <div key={ri} className="grid grid-cols-7 gap-0.5">
+            {row.map((slot, ci) =>
+              slot.label === "" ? (
+                <div key={slot.key || `${ri}-${ci}`} className="h-7" aria-hidden />
+              ) : (
                 <div
                   key={slot.key || `${ri}-${ci}`}
-                  title={slot.key}
+                  role="img"
+                  aria-label={`${slot.key}: ${STATUS_LABELS[slot.status]}`}
+                  title={`${slot.key} — ${STATUS_LABELS[slot.status]}`}
                   className={[
-                    "flex h-7 items-center justify-center rounded border text-xs font-medium",
+                    "flex h-7 min-w-0 items-center justify-center rounded border text-xs font-medium tabular-nums",
                     STATUS_CLASSES[slot.status],
                   ].join(" ")}
                 >
                   {slot.label}
                 </div>
-              ))}
-              {/* Pad tail of last rows */}
-              {Array.from({ length: 7 - row.length }).map((_, i) => (
-                <div key={`tail-${i}`} className="h-7" />
-              ))}
-            </div>
-          ))}
-        </div>
+              ),
+            )}
+            {/* Pad tail of last rows */}
+            {Array.from({ length: 7 - row.length }).map((_, i) => (
+              <div key={`tail-${i}`} className="h-7" aria-hidden />
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -297,11 +336,17 @@ function DayCalendar({ slots }: { slots: CalendarSlot[] }) {
 
 function PeriodStrip({ slots }: { slots: CalendarSlot[] }) {
   return (
-    <div className="flex flex-wrap gap-1">
+    <div
+      role="group"
+      aria-label="Completion history, most recent last"
+      className="flex flex-wrap gap-1"
+    >
       {slots.map((slot) => (
         <div
           key={slot.key}
-          title={slot.key}
+          role="img"
+          aria-label={`${slot.key}: ${STATUS_LABELS[slot.status]}`}
+          title={`${slot.key} — ${STATUS_LABELS[slot.status]}`}
           className={[
             "rounded border px-2 py-0.5 text-xs font-medium",
             STATUS_CLASSES[slot.status],
@@ -333,6 +378,7 @@ export function HabitDetailsModal({
   const repos = getHabitRepos(habitId);
   const workspaceId = getHabitProjectId(habitId);
 
+  const logsRegionId = useId();
   const [logs, setLogs] = useState<HabitCompletionLog[]>([]);
   const [editing, setEditing] = useState(defaultEditing);
   const [showLogs, setShowLogs] = useState(false);
@@ -347,16 +393,16 @@ export function HabitDetailsModal({
     timeOfDay,
   });
 
-  const state = useOverlayState({
-    isOpen: open,
-    onOpenChange: (isOpen) => {
+  const handleOpenChange = useCallback(
+    (isOpen: boolean) => {
       if (!isOpen) {
         setEditing(false);
         setShowLogs(false);
       }
       onOpenChange(isOpen);
     },
-  });
+    [onOpenChange],
+  );
 
   const currentPeriodKey = periodKeyOf(referenceDate, period);
   const periodLogs = logs.filter((l) => l.periodKey === currentPeriodKey);
@@ -388,7 +434,7 @@ export function HabitDetailsModal({
 
   function handleDeleteHabit() {
     if (!repos) return;
-    state.close();
+    handleOpenChange(false);
     repos.habit
       .deleteHabit(habitId)
       .catch(() => toast.error("Failed to delete habit. Please try again."));
@@ -438,22 +484,52 @@ export function HabitDetailsModal({
   const displayCount = periodLogs.length;
   const { progress, complete } = habitProgress(displayCount, times);
 
-  return (
+  /* The footer is a prop rather than children, so it stays pinned to the
+     bottom of the panel in both presentations. */
+  const footer = editing ? (
     <>
-      <Modal state={state}>
-        <Modal.Backdrop variant="blur">
-          <Modal.Container placement="center" size="sm">
-            <Modal.Dialog>
-              <Modal.CloseTrigger />
-              <Modal.Header>
-                <div className="flex items-center gap-2 pr-8 w-full">
-                  <span className="flex-1 text-base font-semibold text-foreground truncate">
-                    {editing ? `Edit “${name}”` : name}
-                  </span>
-                </div>
-              </Modal.Header>
+      <Button
+        variant="ghost"
+        className="min-h-11"
+        onPress={() => setEditing(false)}
+      >
+        Cancel
+      </Button>
+      <Button
+        className="min-h-11"
+        isDisabled={!form.isValid || form.isSaving}
+        onPress={handleSave}
+      >
+        Save
+      </Button>
+    </>
+  ) : (
+    <>
+      <Button variant="ghost" className="min-h-11" onPress={startEditing}>
+        <Pencil />
+        Edit
+      </Button>
+      {/* Two-step, inline — never a modal inside a modal (DIRECTION §5). A
+          habit's history is the one thing in this app an undo toast cannot
+          bring back, so this is the object that confirms. */}
+      <ConfirmButton
+        label="Delete habit"
+        confirmLabel="Delete habit"
+        hint="This also deletes every check-in and the streak built from them."
+        icon={<TrashBin />}
+        onConfirm={handleDeleteHabit}
+      />
+    </>
+  );
 
-              <Modal.Body className="p-1">
+  return (
+    <DetailPanel
+      open={open}
+      onOpenChange={handleOpenChange}
+      title={editing ? `Edit “${name}”` : name}
+      ariaLabel={editing ? `Edit habit ${name}` : `Habit ${name}`}
+      footer={footer}
+    >
                 {editing && (
                   <HabitEditFields form={form} onSubmit={handleSave} />
                 )}
@@ -507,7 +583,7 @@ export function HabitDetailsModal({
                             </span>
                           )}
                           {streak.openSincePeriodKey && (
-                            <span className="rounded-full bg-fill-strong px-2.5 py-0.5 text-xs text-subtle">
+                            <span className="rounded-full bg-fill-strong px-2.5 py-0.5 text-xs text-muted">
                               since{" "}
                               {formatPeriodKey(
                                 streak.openSincePeriodKey,
@@ -529,8 +605,11 @@ export function HabitDetailsModal({
                         History
                       </p>
                       <button
+                        type="button"
+                        aria-expanded={showLogs}
+                        aria-controls={logsRegionId}
                         onClick={() => setShowLogs((v) => !v)}
-                        className="text-xs text-subtle hover:text-muted transition-colors"
+                        className={`cursor-pointer rounded-lg px-2 text-xs text-muted transition-colors hover:text-foreground ${touchRowCoarse} ${focusRing}`}
                       >
                         {showLogs ? "Hide logs" : "Show logs"}
                       </button>
@@ -563,7 +642,10 @@ export function HabitDetailsModal({
                     )}
 
                     {showLogs && (
-                      <div className="mt-3 flex flex-col gap-1 border-t border-border pt-3">
+                      <div
+                        id={logsRegionId}
+                        className="mt-3 flex flex-col gap-1 border-t border-border pt-3"
+                      >
                         {periodLogs.length === 0 ? (
                           <p className="text-xs text-subtle">
                             No completions this period.
@@ -606,54 +688,6 @@ export function HabitDetailsModal({
                     isOpen={open}
                   />
                 )}
-              </Modal.Body>
-
-              <Modal.Footer>
-                {editing ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      className="min-h-11"
-                      onPress={() => setEditing(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      className="min-h-11"
-                      isDisabled={!form.isValid || form.isSaving}
-                      onPress={handleSave}
-                    >
-                      Save
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      variant="ghost"
-                      className="min-h-11"
-                      onPress={startEditing}
-                    >
-                      <Pencil />
-                      Edit
-                    </Button>
-                    {/* Two-step, inline — never a modal inside a modal
-                        (DIRECTION §5). A habit's history is the one thing in
-                        this app an undo toast cannot bring back, so this is
-                        the object that confirms. */}
-                    <ConfirmButton
-                      label="Delete habit"
-                      confirmLabel="Delete habit"
-                      hint="This also deletes every check-in and the streak built from them."
-                      icon={<TrashBin />}
-                      onConfirm={handleDeleteHabit}
-                    />
-                  </>
-                )}
-              </Modal.Footer>
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
-    </>
+    </DetailPanel>
   );
 }

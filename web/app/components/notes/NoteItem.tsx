@@ -111,7 +111,7 @@ export function NoteItem({
       )}
       <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-subtle">
         {workspaceName && (
-          <Badge className="bg-fill-strong text-subtle">{workspaceName}</Badge>
+          <Badge className="bg-fill-strong text-muted">{workspaceName}</Badge>
         )}
         <span className="hidden sm:inline">{note.authorDisplayName}</span>
         {formattedDate && <span className="text-subtle">{formattedDate}</span>}

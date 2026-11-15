@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { Modal, useMediaQuery, useOverlayState } from "@heroui/react";
 import { Xmark } from "@gravity-ui/icons";
-import { focusRing, touchTarget } from "./styles";
+import { focusRing, sheetContainer, sheetDialog, touchTarget } from "./styles";
 
 /**
  * The one detail surface (DIRECTION §5), in two presentations:
@@ -149,16 +149,13 @@ export function DetailPanel({
     );
   }
 
-  // Bottom sheet — styling lifted verbatim from `NoteDetailsModal`, which is
-  // the only place in the app that got the mobile treatment right.
+  // Bottom sheet — `sheetContainer` / `sheetDialog` in `./styles`, which is
+  // where the treatment `NoteDetailsModal` got right now lives for everyone.
   return (
     <Modal state={state}>
       <Modal.Backdrop variant="blur">
-        <Modal.Container placement="bottom" size="sm" className="p-0 sm:p-10">
-          <Modal.Dialog
-            aria-label={label}
-            className="h-full max-h-full rounded-b-none rounded-t-3xl p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:h-auto sm:max-h-[85dvh] sm:rounded-3xl sm:p-6 sm:pb-6"
-          >
+        <Modal.Container placement="bottom" size="sm" className={sheetContainer}>
+          <Modal.Dialog aria-label={label} className={sheetDialog}>
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading className="pr-10 break-words">{title}</Modal.Heading>

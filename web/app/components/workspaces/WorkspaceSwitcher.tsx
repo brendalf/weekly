@@ -1,33 +1,42 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { Checkbox, Separator } from "@heroui/react";
 import { House, Plus, Gear } from "@gravity-ui/icons";
 import {
   useWorkspaceSelection,
   useWorkspaceStore,
   workspaceStore,
 } from "../../stores/workspace";
-import { touchTarget } from "../ui";
+import {
+  ActionPopover,
+  focusRing,
+  touchRow,
+  touchRowCoarse,
+  touchTarget,
+} from "../ui";
 
-/** Small square checkbox, matching the one in HabitsTasksView's layout menu. */
-function CheckboxMark({ checked }: { checked: boolean }) {
-  return (
-    <span
-      className={[
-        "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
-        checked ? "border-brand bg-brand text-brand-foreground" : "border-border-strong",
-      ].join(" ")}
-    >
-      {checked && <span className="text-xs leading-none">✓</span>}
-    </span>
-  );
-}
-
+/**
+ * Workspace context for the shell header: which workspaces the app is
+ * currently showing, and a panel to change it.
+ *
+ * WS14 replaced two things here.
+ *
+ * 1. **The panel.** It was `absolute` + a `fixed inset-0` click-catcher div —
+ *    no focus containment, no `Esc`, no collision detection, no reposition on
+ *    scroll, and `aria-expanded` nowhere. It is now an `ActionPopover`
+ *    (HeroUI/React Aria), which supplies all five. `ActionPopover` rather than
+ *    `ActionMenu` because the rows are not actions: each carries a checkbox
+ *    *and* a secondary "only" control, which a menu row cannot hold.
+ * 2. **The checkboxes.** Each row drew its own 16px square with a
+ *    `<span className="text-xs">✓</span>` inside — 16px of hit area, no
+ *    `aria-checked`, no focus ring, no indeterminate state, no disabled state
+ *    (DIRECTION §6.6). They are HeroUI `Checkbox`es now, so the row *is* the
+ *    control: 44px tall, focus-ringed, and announced as a checkbox.
+ */
 export function WorkspaceSwitcher() {
   const workspaces = useWorkspaceStore((s) => s.workspaces);
   const selection = useWorkspaceSelection();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const multiWorkspace = workspaces.length > 1;
   const singleWorkspace = selection.singleId
@@ -43,97 +52,100 @@ export function WorkspaceSwitcher() {
 
   if (workspaces.length === 0) {
     return (
-      <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-subtle">
+      <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted">
         Setting up…
       </span>
     );
   }
 
   return (
-    <div className="relative inline-flex items-center gap-2">
-      <button
-        onClick={() => setDropdownOpen((v) => !v)}
-        className="inline-flex min-h-9 items-center gap-2 rounded-full border border-brand bg-surface px-3 py-1 text-xs font-medium text-brand-muted hover:bg-fill transition-colors cursor-pointer"
+    <div className="inline-flex min-w-0 items-center gap-1">
+      <ActionPopover
+        label={`Workspaces — showing ${buttonLabel}`}
+        title="Show"
+        placement="bottom start"
+        className="w-64 max-w-[calc(100vw-2rem)]"
+        triggerClassName="min-w-0 border border-brand bg-surface px-3 text-xs font-medium text-brand-muted"
+        trigger={
+          <span className="flex min-w-0 items-center gap-2">
+            {showHouseIconInButton && (
+              <House width={12} height={12} aria-hidden className="shrink-0" />
+            )}
+            <span className="truncate">{buttonLabel}</span>
+          </span>
+        }
       >
-        {showHouseIconInButton && <House width={12} height={12} />}
-        {buttonLabel}
-      </button>
+        {multiWorkspace && (
+          <Checkbox
+            isSelected={selection.isAll}
+            onChange={() => workspaceStore.selectAllWorkspaces()}
+            className={`w-full gap-2 rounded-lg px-3 transition-colors hover:bg-fill ${touchRow} ${
+              selection.isAll ? "font-medium text-brand-muted" : "text-foreground"
+            }`}
+          >
+            <span className="flex min-w-0 items-center gap-2 text-xs">
+              <House width={12} height={12} aria-hidden className="shrink-0" />
+              All workspaces
+            </span>
+          </Checkbox>
+        )}
+
+        {workspaces.map((workspace) => {
+          const checked = selection.workspaceIds.includes(workspace.id);
+          return (
+            <div
+              key={workspace.id}
+              className="group flex items-center rounded-lg transition-colors hover:bg-fill"
+            >
+              <Checkbox
+                isSelected={checked}
+                onChange={() =>
+                  workspaceStore.toggleWorkspaceSelection(workspace.id)
+                }
+                className={`min-w-0 flex-1 gap-2 rounded-lg px-3 ${touchRow} ${
+                  checked ? "text-foreground" : "text-muted"
+                }`}
+              >
+                <span className="min-w-0 truncate text-xs">
+                  {workspace.name}
+                </span>
+              </Checkbox>
+              {multiWorkspace && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    workspaceStore.selectOnlyWorkspace(workspace.id)
+                  }
+                  className={`mr-1 shrink-0 cursor-pointer rounded-md px-2 py-2 text-xs tracking-wide text-muted uppercase transition-colors hover:text-brand-muted sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 ${touchRowCoarse} ${focusRing}`}
+                  aria-label={`Show only ${workspace.name}`}
+                >
+                  only
+                </button>
+              )}
+            </div>
+          );
+        })}
+
+        <Separator className="my-1" />
+
+        <Link
+          href="/app/settings"
+          className={`flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 text-xs text-muted transition-colors hover:bg-fill ${touchRow} ${focusRing}`}
+        >
+          <Plus width={12} height={12} aria-hidden />
+          New workspace
+        </Link>
+      </ActionPopover>
 
       {/* Workspace administration lives on `/app/settings` (WS9), so this is a
           link to it rather than a modal trigger — one place for one thing. */}
       <Link
         href="/app/settings"
-        onClick={() => setDropdownOpen(false)}
-        className={`flex items-center justify-center rounded-lg text-subtle transition-colors hover:text-muted ${touchTarget}`}
+        className={`flex shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:text-foreground ${touchTarget} ${focusRing}`}
         aria-label="Workspace settings"
       >
-        <Gear width={14} height={14} />
+        <Gear width={16} height={16} aria-hidden />
       </Link>
-
-      {dropdownOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setDropdownOpen(false)}
-          />
-          <div className="absolute left-0 top-full z-20 mt-1 w-56 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-surface p-1 shadow-lg">
-            {multiWorkspace && (
-              <button
-                onClick={() => workspaceStore.selectAllWorkspaces()}
-                className={[
-                  "flex w-full min-h-9 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs hover:bg-fill transition-colors",
-                  selection.isAll ? "text-brand-muted font-medium" : "text-foreground",
-                ].join(" ")}
-              >
-                <CheckboxMark checked={selection.isAll} />
-                <House width={12} height={12} className="shrink-0" />
-                All workspaces
-              </button>
-            )}
-
-            {workspaces.map((workspace) => {
-              const checked = selection.workspaceIds.includes(workspace.id);
-              return (
-                <div
-                  key={workspace.id}
-                  className="group flex items-center rounded-lg hover:bg-fill transition-colors"
-                >
-                  <button
-                    onClick={() => workspaceStore.toggleWorkspaceSelection(workspace.id)}
-                    className={[
-                      "flex min-h-9 min-w-0 flex-1 cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs",
-                      checked ? "text-foreground" : "text-muted",
-                    ].join(" ")}
-                  >
-                    <CheckboxMark checked={checked} />
-                    <span className="truncate">{workspace.name}</span>
-                  </button>
-                  {multiWorkspace && (
-                    <button
-                      onClick={() => workspaceStore.selectOnlyWorkspace(workspace.id)}
-                      className="mr-1 shrink-0 cursor-pointer rounded-md px-2 py-2 text-xs uppercase tracking-wide text-subtle opacity-100 transition-colors hover:text-brand-muted sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-                      aria-label={`Show only ${workspace.name}`}
-                    >
-                      only
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-
-            <div className="my-1 border-t border-border" />
-
-            <Link
-              href="/app/settings"
-              onClick={() => setDropdownOpen(false)}
-              className="flex w-full min-h-9 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted hover:bg-fill transition-colors"
-            >
-              <Plus width={12} height={12} />
-              New workspace
-            </Link>
-          </div>
-        </>
-      )}
     </div>
   );
 }

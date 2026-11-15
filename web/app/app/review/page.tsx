@@ -253,12 +253,12 @@ function HabitReviewRow({ review }: { review: HabitWeekReview }) {
           : habitWeekProgressLabel(review)}
       </span>
       {review.skipped > 0 && (
-        <Badge className="bg-fill-strong text-subtle">
+        <Badge className="bg-fill-strong text-muted">
           {review.skipped} skipped
         </Badge>
       )}
       {review.pending > 0 && review.streak === "open" && (
-        <Badge className="bg-fill-strong text-subtle">Still running</Badge>
+        <Badge className="bg-fill-strong text-muted">Still running</Badge>
       )}
       {badge && <Badge className={badge.className}>{badge.label}</Badge>}
     </li>

@@ -1,10 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@heroui/react";
 import { ChevronLeft, ChevronRight, ArrowRotateLeft } from "@gravity-ui/icons";
 import { getISOWeek } from "@weekly/domain";
 import { useCalendarStore, calendarStore } from "../../stores/calendar";
+import { focusRing, touchTarget } from "../ui";
+
+/**
+ * The compact week stepper, used by `/app/review` (`/app/week` has its own
+ * `WeekHeader`).
+ *
+ * WS14 replaced the three HeroUI `size="sm" isIconOnly` buttons: at 32×32 they
+ * were under the 44px minimum (DIRECTION §6.8) and the chevrons inside them
+ * were 14px. They are now plain buttons on the same `touchTarget` + `focusRing`
+ * pair every other icon control in the app uses.
+ */
+const navButton = [
+  "flex cursor-pointer items-center justify-center rounded-lg text-muted",
+  "transition-colors hover:bg-fill hover:text-foreground",
+  touchTarget,
+  focusRing,
+].join(" ");
 
 export function WeekPicker() {
   const weekStart = useCalendarStore((s) => s.weekStart);
@@ -28,37 +44,34 @@ export function WeekPicker() {
 
   return (
     <div className="flex items-center gap-1">
-      <Button
-        size="sm"
-        variant="ghost"
-        isIconOnly
-        onPress={() => calendarStore.prevWeek()}
+      <button
+        type="button"
+        onClick={() => calendarStore.prevWeek()}
         aria-label="Previous week"
+        className={navButton}
       >
-        <ChevronLeft className="h-3.5 w-3.5" />
-      </Button>
-      <span className="text-xs font-medium text-muted min-w-[80px] text-center">
+        <ChevronLeft width={16} height={16} aria-hidden />
+      </button>
+      <span className="min-w-[80px] text-center text-xs font-medium text-muted">
         Week {week}, {year}
       </span>
-      <Button
-        size="sm"
-        variant="ghost"
-        isIconOnly
-        onPress={() => calendarStore.nextWeek()}
+      <button
+        type="button"
+        onClick={() => calendarStore.nextWeek()}
         aria-label="Next week"
+        className={navButton}
       >
-        <ChevronRight className="h-3.5 w-3.5" />
-      </Button>
+        <ChevronRight width={16} height={16} aria-hidden />
+      </button>
       {!isToday && (
-        <Button
-          size="sm"
-          variant="ghost"
-          isIconOnly
-          onPress={goToToday}
+        <button
+          type="button"
+          onClick={goToToday}
           aria-label="Back to today"
+          className={navButton}
         >
-          <ArrowRotateLeft className="h-3.5 w-3.5" />
-        </Button>
+          <ArrowRotateLeft width={16} height={16} aria-hidden />
+        </button>
       )}
     </div>
   );

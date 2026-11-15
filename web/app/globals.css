@@ -26,13 +26,74 @@
   --brand-soft-hover: color-mix(in oklab, var(--brand) 24%, transparent);
   --brand-border: color-mix(in oklab, var(--brand) 45%, transparent);
 
-  /* --- Neutral ladder (DIRECTION §6.4) ------------------------------ */
-  /* --background / --foreground / --surface / --muted / --border come from
-     HeroUI; the rungs below are the ones it does not provide.
-     §6.4 calls for ~45% on --subtle; the light theme needs 55% to stay
-     readable against white while staying a clear step below --muted. */
-  --subtle: color-mix(in oklab, var(--foreground) 55%, transparent);
+  /* --- Neutral ladder (DIRECTION §6.4, re-pitched — see below) ------ */
+  /* --background / --foreground / --surface / --border come from HeroUI;
+     --muted and --subtle are re-pitched here (WS14), --border-strong is
+     the rung HeroUI does not provide at all.
+
+     ====================================================================
+     WHY THIS LADDER IS NOT AN OPACITY LADDER ANY MORE (WS14)
+     ====================================================================
+     §6.4 specifies the two middle rungs as opacities of --foreground
+     (~65% / ~45%). Measured against the real backgrounds, that spec does
+     not reach AA and cannot be nudged into reaching it:
+
+       light, on --background (#f5f5f5)      measured contrast
+         HeroUI --muted  (oklch 55.17%)          4.43:1   ← fails 4.5
+         --subtle at §6.4's 45% of --foreground  2.87:1   ← fails badly
+         --subtle at WS1's stopgap 55%           3.82:1   ← still fails
+         --subtle at the ~60% needed for AA      ≈4.4:1   ← = --muted
+
+     i.e. the bottom two rungs converge on the *same* value, because
+     HeroUI's --muted is itself only just under the AA line in light.
+     Raising --subtle alone collapses a three-rung ladder to two; that is
+     why WS1 left 55% in place and flagged it rather than nudging.
+
+     The fix re-pitches both rungs together and makes them opaque:
+
+       1. --muted drops one step (light ≈ zinc-600, dark ≈ zinc-400), so
+          it has room above --subtle instead of sitting on the AA line.
+       2. --subtle rises to clear 4.5:1 on --background and --surface,
+          landing roughly where HeroUI's --muted used to be.
+       3. They are opaque rather than color-mix(--foreground N%, transparent).
+          A translucent rung's contrast depends on whatever it happens to
+          be painted over, so "is --subtle AA?" had no single answer — it
+          measured 3.94:1 on --surface, 3.82:1 on --background and 3.59:1
+          on a --fill-strong pill. Opaque values measure once and hold.
+
+     Measured result (Chrome compositing, WCAG 2.1 relative luminance):
+
+       rung         light: on --background / --surface   dark: bg / surface
+       foreground            16.25 / 17.72                 19.74 / 17.27
+       --muted                7.19 /  7.84                  8.11 /  7.09
+       --subtle               4.63 /  5.05                  5.54 /  4.85
+
+     All three rungs clear AA (4.5:1) for normal text in both themes, and
+     the steps between them are ~1.5× apart so they stay three visibly
+     distinct rungs rather than two.
+
+     ====================================================================
+     THE RULE THAT KEEPS --subtle AA (it is NOT "the lightest text")
+     ====================================================================
+     --subtle is AA *on --background and --surface only*. Painting it on a
+     --fill / --fill-strong pill subtracts ~1 point of contrast and pushes
+     it under the line. So:
+
+         text on a neutral fill (chips, badges, pills) uses --muted,
+         never --subtle.
+
+     --muted clears 4.5:1 on a --fill-strong pill too (5.61:1 light /
+     4.97:1 dark), which is what makes that rule safe. --subtle is for
+     de-emphasized text sitting directly on the page: placeholders,
+     timestamps, inactive calendar cells, hint lines.
+     ==================================================================== */
+  --muted: oklch(44% 0.015 286);
+  --subtle: oklch(54% 0.015 286);
   --border-strong: color-mix(in oklab, var(--foreground) 22%, transparent);
+  /* HeroUI points --field-placeholder at --muted. A placeholder is
+     de-emphasized text on a field background, which is the --subtle rung
+     (§6.4) — at --muted it reads as a filled-in value. */
+  --field-placeholder: var(--subtle);
   /* Translucent fills: hover rows, chips, inactive segments. */
   --fill: color-mix(in oklab, var(--foreground) 6%, transparent);
   --fill-strong: color-mix(in oklab, var(--foreground) 12%, transparent);
@@ -70,7 +131,14 @@
   --brand-foreground: oklch(99.11% 0 0);
   --brand-muted: oklch(71.4% 0.203 305.504);
 
-  --subtle: color-mix(in oklab, var(--foreground) 45%, transparent);
+  /* The same ladder, pitched for a dark page: --muted steps *up* one
+     (HeroUI's 70.5% measures 6.75:1 on --surface, which is fine for
+     --muted itself but leaves no room beneath it) and --subtle lands
+     where HeroUI's --muted used to be. Rationale and measurements are in
+     the light block above. */
+  --muted: oklch(72% 0.015 286);
+  --subtle: oklch(62% 0.015 286);
+  --field-placeholder: var(--subtle);
 
   --success-muted: oklch(79.2% 0.209 151.711);
   --warning-muted: oklch(82.8% 0.189 84.429);
