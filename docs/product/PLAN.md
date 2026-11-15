@@ -6,24 +6,33 @@
 
 ---
 
-## Status as of 2026-10-13
+## Status — the plan is complete
 
-**Landed:** WS1–WS12 and WS15 in part.
-`main` at `459d5c3`. Lint, web build, both package builds and **155/155** domain tests pass;
-all six routes serve 200.
+**All fifteen workstreams have landed.** `main` at `f86ec5b`. Lint (`--max-warnings 0`),
+web build, both package builds, **155/155** domain tests, six routes at 200.
 
-**Not yet done — pick up here:**
+**One standing caveat: nobody has seen this run against live data.** `web/.env` exists so
+Firebase initializes, but sign-in is interactive Google OAuth with no test account, so no
+agent reached an authenticated route with real Firestore content. Verification was builds,
+tests, route status, compiled-CSS checks (that each utility actually generates rather than
+silently no-oping), numeric WCAG contrast, and headless-Chromium runs against fixture data
+across {light, dark} × {375, 768, 1440}. That caught real bugs — a 14px input that would
+make iPad zoom, a 40px touch target, a silently h-scrolling calendar — but **a human
+should still open the app once before trusting it.**
 
-| | Workstream | What is left |
-|---|---|---|
-| ◻ | **WS13** | Responsive pass. Known: the habit/task *modal* path (still used on `/app/week`) is `placement="center"` with no mobile sheet treatment; `HabitDetailsModal`'s 84-day calendar grid is tight on a phone; a habit row carrying all four trailing badges at 375px wants a human look. |
-| ◻ | **WS14** | Accessibility pass. Includes re-pitching `--muted` / `--subtle` **together** — WS1 left `--subtle` at 3.85:1 in light because the spec'd 45% gave 2.87:1 and the 60% needed for AA was indistinguishable from `--muted`. That ladder needs deciding as a pair, not nudging one rung. |
-| ◻ | **WS15** | `web/README.md` still documents the pre-routing app ("Key Components", "Project Structure", the `HabitsTasksView` / `PeriodPanel` descriptions) and is now wrong. |
+### Superseded by the built product
 
-Two Phase-2 items were descoped as the routes took shape, and should be judged on the
-built product rather than reinstated on principle: per-row completion rate and the
-period / time-of-day filter chips on `/app/habits`, and the four-way bucket grouping on
-`/app/tasks` (buckets exist in domain as `taskBucket`, with tests).
+Two Phase-2 items were descoped as the routes took shape. Judge them against the shipped
+UI rather than reinstating them on principle: per-row completion rate and the
+period / time-of-day filter chips on `/app/habits`, and four-way bucket grouping on
+`/app/tasks` (the buckets exist in domain as `taskBucket`, with tests, just unwired).
+
+### Amendment to DIRECTION §6.4
+
+§6.4's opacity ladder could not reach AA and was replaced in WS14 by **opaque**
+`--muted` / `--subtle` rungs, re-pitched as a pair. The measurements and the rule that
+falls out of it — *text on a neutral fill uses `--muted`, never `--subtle`* — are
+documented beside the tokens in `web/app/globals.css`. Read that before touching them.
 
 **Verification debt — the important caveat.** No agent has seen this app render
 with real data. `web/.env` exists so Firebase initializes, but sign-in is interactive
